@@ -14,7 +14,7 @@ export class RolService {
   private readonly api = `${this.baseUrl}/rol`;
   private readonly STORAGE_KEY = 'rol_nombre_cache';
   private readonly rolNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.rolNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Rol[]> {
     return this.http.get<Rol[]>(`${this.api}/buscar`);

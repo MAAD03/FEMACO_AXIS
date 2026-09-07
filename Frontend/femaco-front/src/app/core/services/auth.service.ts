@@ -9,6 +9,20 @@ import { MenuService } from './menu.service';
 import { ModuloService } from './modulo.service';
 import { OpcionService } from './opcion.service';
 import { UsuarioService } from './usuario.service';
+import { AreaArticuloService } from './area-articulo.service';
+import { ArticuloService } from './articulo.service';
+import { UnidadMedidaService } from './unidad-medida.service';
+import { RolService } from './rol.service';
+import { SucursalService } from './sucursal.service';
+import { EstadoArticuloService } from './catalogo-services/estado-articulo.service';
+import { EstadoClienteService } from './catalogo-services/estado-cliente.service';
+import { EstadoOrdenCompraService } from './catalogo-services/estado-orden-compra.service';
+import { EstadoPedidoService } from './catalogo-services/estado-pedido.service';
+import { EstadoProveedorService } from './catalogo-services/estado-proveedor.service';
+import { EstadoSucursalService } from './catalogo-services/estado-sucursal.service';
+import { EstadoUsuarioService } from './catalogo-services/estado-usuario.service';
+import { EstadoVentaService } from './catalogo-services/estado-venta.service';
+import { GeneroService } from './catalogo-services/genero.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +36,20 @@ export class AuthService {
   private moduloService = inject(ModuloService);
   private opcionService = inject(OpcionService);
   private usuarioService = inject(UsuarioService);
+    private areaArticuloService = inject(AreaArticuloService);
+    private articuloService = inject(ArticuloService);
+    private unidadMedidaService = inject(UnidadMedidaService);
+    private rolService = inject(RolService);
+    private sucursalService = inject(SucursalService);
+    private estadoArticuloService = inject(EstadoArticuloService);
+    private estadoClienteService = inject(EstadoClienteService);
+    private estadoOrdenCompraService = inject(EstadoOrdenCompraService);
+    private estadoPedidoService = inject(EstadoPedidoService);
+    private estadoProveedorService = inject(EstadoProveedorService);
+    private estadoSucursalService = inject(EstadoSucursalService);
+    private estadoUsuarioService = inject(EstadoUsuarioService);
+    private estadoVentaService = inject(EstadoVentaService);
+    private generoService = inject(GeneroService);
 
   private readonly STORAGE_KEY = 'auth_user';
   private currentUserSubject = new BehaviorSubject<UserData | null>(this.getUserFromStorage());
@@ -49,6 +77,20 @@ export class AuthService {
         this.moduloService.clearCache();
         this.opcionService.clearCache();
         this.usuarioService.clearCache();
+        this.areaArticuloService.clearCache();
+        this.articuloService.clearCache();
+        this.unidadMedidaService.clearCache();
+        this.rolService.clearCache();
+        this.sucursalService.clearCache();
+        this.estadoArticuloService.clearCache();
+        this.estadoClienteService.clearCache();
+        this.estadoOrdenCompraService.clearCache();
+        this.estadoPedidoService.clearCache();
+        this.estadoProveedorService.clearCache();
+        this.estadoSucursalService.clearCache();
+        this.estadoUsuarioService.clearCache();
+        this.estadoVentaService.clearCache();
+        this.generoService.clearCache();
         this.router.navigate(['/login']);
     }
 

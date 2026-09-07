@@ -697,3 +697,118 @@ VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
  'administrador@femaco.com', 0, NULL, NULL, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
  
+ 
+-- 13. Datos de ejemplos para Articulos
+ 
+-- 13.1 Áreas de artículo (15 registros)
+-- ---------------------------------------------------------
+INSERT INTO `area_articulo`
+(`Nombre`, `Descripcion`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
+VALUES
+('Ferretería General', 'Artículos varios de uso general para ferretería', NOW(), 1, NOW(), 1),
+('Plomería', 'Tuberías, accesorios y materiales para instalaciones hidráulicas', NOW(), 1, NOW(), 1),
+('Electricidad', 'Cables, dispositivos y materiales para instalaciones eléctricas', NOW(), 1, NOW(), 1),
+('Pintura y Acabados', 'Pinturas, esmaltes y accesorios para acabados', NOW(), 1, NOW(), 1),
+('Herramientas Manuales', 'Herramientas de uso manual para construcción y mantenimiento', NOW(), 1, NOW(), 1),
+('Herramientas Eléctricas', 'Herramientas eléctricas portátiles para construcción e industria', NOW(), 1, NOW(), 1),
+('Tornillería y Fijaciones', 'Tornillos, clavos, tuercas, pernos y elementos de fijación', NOW(), 1, NOW(), 1),
+('Construcción y Cemento', 'Materiales base para obra gris y construcción', NOW(), 1, NOW(), 1),
+('Jardinería', 'Herramientas y accesorios para jardín y áreas verdes', NOW(), 1, NOW(), 1),
+('Seguridad Industrial', 'Equipo de protección personal para trabajo e industria', NOW(), 1, NOW(), 1),
+('Cerrajería', 'Candados, cerraduras, bisagras y accesorios de cerrajería', NOW(), 1, NOW(), 1),
+('Adhesivos y Selladores', 'Pegamentos, siliconas y selladores de uso general', NOW(), 1, NOW(), 1),
+('Iluminación', 'Bombillos, lámparas y accesorios de iluminación', NOW(), 1, NOW(), 1),
+('Limpieza Industrial', 'Insumos y equipo para limpieza comercial e industrial', NOW(), 1, NOW(), 1),
+('Ferretería Automotriz', 'Repuestos y consumibles básicos para vehículos', NOW(), 1, NOW(), 1);
+ 
+-- ---------------------------------------------------------
+-- 13.2 Unidades de medida (15 registros)
+-- ---------------------------------------------------------
+INSERT INTO `unidad_medida`
+(`Nombre`, `Abreviatura`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
+VALUES
+('Unidad', 'UND', NOW(), 1, NOW(), 1),
+('Caja', 'CJA', NOW(), 1, NOW(), 1),
+('Docena', 'DOC', NOW(), 1, NOW(), 1),
+('Metro', 'MT', NOW(), 1, NOW(), 1),
+('Kilogramo', 'KG', NOW(), 1, NOW(), 1),
+('Litro', 'LT', NOW(), 1, NOW(), 1),
+('Galón', 'GAL', NOW(), 1, NOW(), 1),
+('Rollo', 'ROL', NOW(), 1, NOW(), 1),
+('Par', 'PAR', NOW(), 1, NOW(), 1),
+('Juego', 'JGO', NOW(), 1, NOW(), 1),
+('Bolsa', 'BOL', NOW(), 1, NOW(), 1),
+('Paquete', 'PAQ', NOW(), 1, NOW(), 1),
+('Pulgada', 'PLG', NOW(), 1, NOW(), 1),
+('Libra', 'LB', NOW(), 1, NOW(), 1),
+('Yarda', 'YDA', NOW(), 1, NOW(), 1);
+ 
+-- ---------------------------------------------------------
+-- 13.3 Artículos (60 registros)
+-- ---------------------------------------------------------
+INSERT INTO `articulo`
+(`Codigo`, `Nombre`, `Descripcion`, `StockActual`, `StockMinimo`, `PrecioCompraUltimoProveedor`,
+ `MargenGanancia`, `CantidadMinimaDescuento`, `DescuentoMayorista`, `IdAreaArticulo`, `IdUnidadMedida`,
+ `IdEstadoArticulo`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
+VALUES
+('FER-0001', 'Cinta métrica de bolsillo 3m', 'Cinta métrica retráctil de 3 metros, uso general', 0.00, 10.00, 18.50, 35.00, 12.00, 8.00, 1, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0002', 'Set de llaves allen 9 piezas', 'Juego de llaves hexagonales allen de 9 piezas, milimétricas', 0.00, 8.00, 35.00, 30.00, 6.00, 10.00, 1, 10, 1, NOW(), 1, NOW(), 1),
+('FER-0003', 'Linterna recargable LED', 'Linterna LED recargable de alta duración, uso rudo', 0.00, 10.00, 45.00, 32.00, 6.00, 10.00, 1, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0004', 'Caja de herramientas plástica 16 pulgadas', 'Caja organizadora plástica con compartimentos, 16 pulgadas', 0.00, 6.00, 55.00, 28.00, 4.00, 10.00, 1, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0005', 'Tubo PVC 1/2 pulgada x 6m', 'Tubo de PVC para agua potable, 1/2 pulgada, tramo de 6 metros', 0.00, 20.00, 22.00, 25.00, 20.00, 12.00, 2, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0006', 'Tubo PVC 3/4 pulgada x 6m', 'Tubo de PVC para agua potable, 3/4 pulgada, tramo de 6 metros', 0.00, 20.00, 28.00, 25.00, 20.00, 12.00, 2, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0007', 'Codo PVC 1/2 pulgada 90 grados', 'Codo de PVC de 90 grados para tubería de 1/2 pulgada', 0.00, 30.00, 2.50, 40.00, 25.00, 10.00, 2, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0008', 'Llave de paso 1/2 pulgada', 'Llave de paso de bronce para agua, 1/2 pulgada', 0.00, 15.00, 35.00, 30.00, 10.00, 10.00, 2, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0009', 'Cable eléctrico THHN #12 AWG', 'Cable de cobre THHN calibre 12 AWG, por metro', 0.00, 100.00, 4.20, 30.00, 50.00, 10.00, 3, 4, 1, NOW(), 1, NOW(), 1),
+('FER-0010', 'Cable eléctrico THHN #14 AWG', 'Cable de cobre THHN calibre 14 AWG, por metro', 0.00, 100.00, 3.10, 30.00, 50.00, 10.00, 3, 4, 1, NOW(), 1, NOW(), 1),
+('FER-0011', 'Interruptor sencillo', 'Interruptor sencillo para instalación eléctrica residencial', 0.00, 25.00, 8.50, 35.00, 15.00, 8.00, 3, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0012', 'Breaker termomagnético 20A', 'Breaker termomagnético de 20 amperios, uso residencial', 0.00, 15.00, 48.00, 28.00, 6.00, 10.00, 3, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0013', 'Pintura de aceite blanca', 'Pintura esmaltada de aceite color blanco, galón', 0.00, 12.00, 145.00, 25.00, 4.00, 12.00, 4, 7, 1, NOW(), 1, NOW(), 1),
+('FER-0014', 'Esmalte sintético negro', 'Esmalte sintético color negro para metal y madera, galón', 0.00, 10.00, 150.00, 25.00, 4.00, 12.00, 4, 7, 1, NOW(), 1, NOW(), 1),
+('FER-0015', 'Brocha de cerda 3 pulgadas', 'Brocha de cerda natural de 3 pulgadas', 0.00, 20.00, 15.00, 35.00, 12.00, 10.00, 4, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0016', 'Rodillo para pintura 9 pulgadas', 'Rodillo de espuma para pintura, 9 pulgadas con mango', 0.00, 20.00, 18.00, 35.00, 12.00, 10.00, 4, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0017', 'Martillo de uña 16oz', 'Martillo de uña con mango de fibra, 16 onzas', 0.00, 10.00, 55.00, 30.00, 6.00, 10.00, 5, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0018', 'Destornillador plano 1/4 x 6 pulgadas', 'Destornillador plano punta 1/4 pulgada, hoja de 6 pulgadas', 0.00, 15.00, 20.00, 35.00, 12.00, 10.00, 5, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0019', 'Alicate universal 8 pulgadas', 'Alicate universal profesional de 8 pulgadas', 0.00, 10.00, 42.00, 30.00, 8.00, 10.00, 5, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0020', 'Nivel de burbuja 24 pulgadas', 'Nivel de burbuja de aluminio, 24 pulgadas', 0.00, 8.00, 65.00, 28.00, 6.00, 10.00, 5, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0021', 'Taladro percutor 1/2 pulgada 750W', 'Taladro percutor eléctrico de 750W, mandril 1/2 pulgada', 0.00, 5.00, 650.00, 22.00, 2.00, 10.00, 6, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0022', 'Amoladora angular 4.5 pulgadas', 'Amoladora angular eléctrica de 4.5 pulgadas', 0.00, 5.00, 480.00, 22.00, 2.00, 10.00, 6, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0023', 'Sierra circular 7 1/4 pulgadas', 'Sierra circular eléctrica, disco de 7 1/4 pulgadas', 0.00, 4.00, 750.00, 22.00, 2.00, 10.00, 6, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0024', 'Rotomartillo SDS Plus', 'Rotomartillo eléctrico con sistema SDS Plus', 0.00, 4.00, 980.00, 20.00, 2.00, 10.00, 6, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0025', 'Tornillo autorroscante 1 x 8 caja 100u', 'Tornillo autorroscante para lámina, 1 pulgada, caja de 100 unidades', 0.00, 15.00, 28.00, 40.00, 10.00, 12.00, 7, 2, 1, NOW(), 1, NOW(), 1),
+('FER-0026', 'Clavo de acero 2 pulgadas caja 1kg', 'Clavo de acero con cabeza, 2 pulgadas, caja de 1 kilogramo', 0.00, 15.00, 14.00, 35.00, 10.00, 12.00, 7, 2, 1, NOW(), 1, NOW(), 1),
+('FER-0027', 'Tuerca hexagonal 1/4 pulgada bolsa 100u', 'Tuerca hexagonal de acero 1/4 pulgada, bolsa de 100 unidades', 0.00, 15.00, 18.00, 40.00, 10.00, 12.00, 7, 11, 1, NOW(), 1, NOW(), 1),
+('FER-0028', 'Perno hexagonal 3/8 x 2 caja 50u', 'Perno hexagonal galvanizado 3/8 x 2 pulgadas, caja de 50 unidades', 0.00, 10.00, 32.00, 35.00, 8.00, 12.00, 7, 2, 1, NOW(), 1, NOW(), 1),
+('FER-0029', 'Cemento gris bolsa 42.5kg', 'Cemento Portland gris, bolsa de 42.5 kilogramos', 0.00, 50.00, 68.00, 15.00, 50.00, 10.00, 8, 11, 1, NOW(), 1, NOW(), 1),
+('FER-0030', 'Cal hidratada bolsa 25kg', 'Cal hidratada para construcción, bolsa de 25 kilogramos', 0.00, 30.00, 32.00, 18.00, 30.00, 10.00, 8, 11, 1, NOW(), 1, NOW(), 1),
+('FER-0031', 'Varilla de hierro 3/8 x 6m', 'Varilla de hierro corrugado 3/8 pulgada, tramo de 6 metros', 0.00, 25.00, 38.00, 18.00, 20.00, 10.00, 8, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0032', 'Malla electrosoldada 6x2.15m', 'Malla electrosoldada para losa, lámina de 6 x 2.15 metros', 0.00, 10.00, 145.00, 18.00, 5.00, 10.00, 8, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0033', 'Manguera de jardín 15m', 'Manguera de jardín reforzada, tramo de 15 metros', 0.00, 10.00, 95.00, 30.00, 6.00, 10.00, 9, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0034', 'Tijera podadora', 'Tijera podadora manual para jardinería', 0.00, 10.00, 55.00, 32.00, 8.00, 10.00, 9, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0035', 'Pala de jardín', 'Pala de jardín con mango de madera', 0.00, 10.00, 48.00, 30.00, 8.00, 10.00, 9, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0036', 'Rastrillo metálico', 'Rastrillo metálico de jardín con mango largo', 0.00, 10.00, 42.00, 30.00, 8.00, 10.00, 9, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0037', 'Guantes de cuero para trabajo', 'Guantes de cuero reforzado para trabajo pesado, par', 0.00, 20.00, 25.00, 35.00, 12.00, 10.00, 10, 9, 1, NOW(), 1, NOW(), 1),
+('FER-0038', 'Casco de seguridad', 'Casco de seguridad industrial ajustable', 0.00, 15.00, 45.00, 32.00, 10.00, 10.00, 10, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0039', 'Gafas de protección', 'Gafas de protección visual transparentes', 0.00, 20.00, 12.00, 40.00, 15.00, 10.00, 10, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0040', 'Mascarilla para polvo caja 50u', 'Mascarilla desechable para polvo, caja de 50 unidades', 0.00, 10.00, 55.00, 30.00, 6.00, 10.00, 10, 2, 1, NOW(), 1, NOW(), 1),
+('FER-0041', 'Candado de seguridad 50mm', 'Candado de seguridad de acero, cuerpo de 50mm', 0.00, 15.00, 38.00, 32.00, 10.00, 10.00, 11, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0042', 'Cerradura de pomo', 'Cerradura de pomo para puerta interior, incluye llaves', 0.00, 10.00, 65.00, 28.00, 6.00, 10.00, 11, 10, 1, NOW(), 1, NOW(), 1),
+('FER-0043', 'Bisagra de 3 pulgadas', 'Bisagra de acero 3 pulgadas, par', 0.00, 25.00, 10.00, 35.00, 15.00, 10.00, 11, 9, 1, NOW(), 1, NOW(), 1),
+('FER-0044', 'Llave maestra tubular', 'Llave tubular de seguridad para candados y cerraduras', 0.00, 10.00, 22.00, 35.00, 10.00, 10.00, 11, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0045', 'Pegamento para PVC', 'Pegamento solvente para unión de tubería PVC', 0.00, 20.00, 18.00, 35.00, 12.00, 10.00, 12, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0046', 'Silicón transparente', 'Silicón transparente de uso general, cartucho', 0.00, 25.00, 22.00, 32.00, 12.00, 10.00, 12, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0047', 'Pegamento de contacto', 'Pegamento de contacto para madera y cuero, galón', 0.00, 10.00, 120.00, 25.00, 4.00, 12.00, 12, 7, 1, NOW(), 1, NOW(), 1),
+('FER-0048', 'Cinta doble cara industrial', 'Cinta adhesiva doble cara de uso industrial, rollo', 0.00, 15.00, 25.00, 35.00, 10.00, 10.00, 12, 8, 1, NOW(), 1, NOW(), 1),
+('FER-0049', 'Bombillo LED 9W luz cálida', 'Bombillo LED 9W, luz cálida, base E27', 0.00, 30.00, 15.00, 40.00, 20.00, 10.00, 13, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0050', 'Bombillo LED 12W luz fría', 'Bombillo LED 12W, luz fría, base E27', 0.00, 30.00, 18.00, 40.00, 20.00, 10.00, 13, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0051', 'Panel LED 24W para techo', 'Panel LED de 24W para techo, luz blanca', 0.00, 15.00, 65.00, 32.00, 10.00, 10.00, 13, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0052', 'Lámpara reflectora LED 50W', 'Lámpara reflectora LED de 50W para exteriores', 0.00, 10.00, 95.00, 30.00, 6.00, 10.00, 13, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0053', 'Escoba industrial', 'Escoba de cerdas plásticas para uso industrial', 0.00, 15.00, 28.00, 35.00, 10.00, 10.00, 14, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0054', 'Desengrasante industrial', 'Desengrasante multiusos de uso industrial, galón', 0.00, 10.00, 85.00, 28.00, 6.00, 10.00, 14, 7, 1, NOW(), 1, NOW(), 1),
+('FER-0055', 'Trapeador industrial', 'Trapeador de algodón de uso industrial', 0.00, 15.00, 25.00, 35.00, 10.00, 10.00, 14, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0056', 'Guantes de látex para limpieza caja 100u', 'Guantes de látex desechables, caja de 100 unidades', 0.00, 10.00, 60.00, 30.00, 6.00, 10.00, 14, 2, 1, NOW(), 1, NOW(), 1),
+('FER-0057', 'Aceite para motor 20W50', 'Aceite lubricante para motor, 20W50, galón', 0.00, 15.00, 95.00, 25.00, 6.00, 10.00, 15, 7, 1, NOW(), 1, NOW(), 1),
+('FER-0058', 'Filtro de aceite universal', 'Filtro de aceite universal para automóvil', 0.00, 20.00, 28.00, 32.00, 10.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0059', 'Batería para automóvil 12V', 'Batería de 12V para automóvil, libre de mantenimiento', 0.00, 5.00, 450.00, 18.00, 2.00, 8.00, 15, 1, 1, NOW(), 1, NOW(), 1),
+('FER-0060', 'Foco H4 para automóvil', 'Foco H4 halógeno para faro de automóvil', 0.00, 20.00, 22.00, 35.00, 12.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1);
+ 

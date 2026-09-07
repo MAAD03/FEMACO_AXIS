@@ -14,7 +14,7 @@ export class UnidadMedidaService {
   private readonly api = `${this.baseUrl}/unidadMedida`;
   private readonly STORAGE_KEY = 'unidad_medida_abreviatura_cache';
   private readonly unidadAbreviaturaCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.unidadAbreviaturaCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<UnidadMedida[]> {
     return this.http.get<UnidadMedida[]>(`${this.api}/buscar`);
@@ -54,8 +54,6 @@ export class UnidadMedidaService {
     const cachedMap = this.restoreCacheFromStorage();
     if (cachedMap.size > 0) {
       this.unidadAbreviaturaCache.set(cachedMap);
-      this.cacheLoaded = true;
-      return of(void 0);
     }
 
     return this.buscarTodos().pipe(

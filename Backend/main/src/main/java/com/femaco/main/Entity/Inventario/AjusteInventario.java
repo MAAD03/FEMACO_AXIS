@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -26,7 +25,6 @@ public class AjusteInventario  {
     @Column(name = "CantidadAjuste", precision = 12, scale = 2)
     private BigDecimal cantidadAjuste;
 
-    @Lob
     @Column(name = "Motivo", columnDefinition = "TEXT")
     private String motivo;
 

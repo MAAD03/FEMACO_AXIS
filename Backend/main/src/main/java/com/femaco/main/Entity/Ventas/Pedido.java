@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -25,11 +24,9 @@ public class Pedido  {
     @Column(name = "FechaEntrega")
     private LocalDate fechaEntrega;
 
-    @Lob
     @Column(name = "DireccionEntrega", columnDefinition = "TEXT")
     private String direccionEntrega;
 
-    @Lob
     @Column(name = "NotasEntrega", columnDefinition = "TEXT")
     private String notasEntrega;
 

@@ -1,7 +1,9 @@
 package com.femaco.main.Controller.Inventario;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.ArticuloFiltroDTO;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Service.Inventario.ArticuloService;
 
@@ -26,9 +29,21 @@ public class ArticuloController {
         this.articuloService = articuloService;
     }
 
+/* 
     @GetMapping("/buscar")
     public ResponseEntity<List<Articulo>> buscar() {
         return ResponseEntity.ok(articuloService.buscarTodos());
+    }
+*/
+
+  @GetMapping("/buscar-paginado")
+    public ResponseEntity<Page<Articulo>> buscarPaginado(
+            ArticuloFiltroDTO filtro,
+            @PageableDefault(size = 20, sort = "nombre", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+
+        Page<Articulo> resultado = articuloService.buscarConFiltros(filtro, pageable);
+        return ResponseEntity.ok(resultado);
     }
 
     @PostMapping("/crear")

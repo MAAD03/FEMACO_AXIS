@@ -14,7 +14,7 @@ export class AreaArticuloService {
   private readonly api = `${this.baseUrl}/areaArticulo`;
   private readonly STORAGE_KEY = 'area_articulo_nombre_cache';
   private readonly areaNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.areaNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<AreaArticulo[]> {
     return this.http.get<AreaArticulo[]>(`${this.api}/buscar`);
@@ -54,8 +54,6 @@ export class AreaArticuloService {
     const cachedMap = this.restoreCacheFromStorage();
     if (cachedMap.size > 0) {
       this.areaNombreCache.set(cachedMap);
-      this.cacheLoaded = true;
-      return of(void 0);
     }
 
     return this.buscarTodos().pipe(

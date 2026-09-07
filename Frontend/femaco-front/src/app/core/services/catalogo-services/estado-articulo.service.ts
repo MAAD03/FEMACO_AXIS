@@ -13,7 +13,7 @@ export class EstadoArticuloService {
   private readonly api = `${this.baseUrl}/estadoArticulo`;
   private readonly STORAGE_KEY = 'estado_articulo_nombre_cache';
   private readonly estadoArticuloNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.estadoArticuloNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<EstadoArticulo[]> {
     return this.http.get<EstadoArticulo[]>(`${this.api}/buscar`);
@@ -27,8 +27,6 @@ export class EstadoArticuloService {
     const cachedMap = this.restoreCacheFromStorage();
     if (cachedMap.size > 0) {
       this.estadoArticuloNombreCache.set(cachedMap);
-      this.cacheLoaded = true;
-      return of(void 0);
     }
 
     return this.buscarTodos().pipe(

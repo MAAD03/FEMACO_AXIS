@@ -1,12 +1,16 @@
 package com.femaco.main.Service.Inventario;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.ArticuloFiltroDTO;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Repository.Inventario.ArticuloRepository;
 
@@ -25,10 +29,19 @@ public class ArticuloService {
         return articuloRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Page<Articulo> buscarConFiltros(ArticuloFiltroDTO filtro, Pageable pageable) {
+        return articuloRepository.findAll(
+            ArticuloSpecification.conFiltros(filtro),
+            pageable
+        );
+    }
+
     @Transactional
     public Articulo crear(Articulo articulo) {
         LocalDateTime ahora = LocalDateTime.now();
         articulo.setIdArticulo(null);
+        articulo.setStockActual(BigDecimal.ZERO);
         articulo.setFechaCreacion(ahora);
         articulo.setFechaModif(ahora);
         articulo.setUsuarioModif(articulo.getUsuarioCreacion());

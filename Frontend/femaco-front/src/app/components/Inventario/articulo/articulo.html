@@ -1,1 +1,94 @@
-<p>articulo works!</p>
+<div class="crud-container">
+	<h2 class="crud-title">Artículos</h2>
+
+	@if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
+	@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+	@if (puedeCrear || (editando && puedeEditar)) {
+		<div class="card form-card">
+			<h3 class="card-title">{{ editando ? 'Editar artículo' : 'Nuevo artículo' }}</h3>
+			<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+				<div class="article-form-grid">
+					<div class="form-group form-span-2">
+						<label for="nombre">Nombre *</label>
+						<input id="nombre" type="text" formControlName="nombre" class="form-control" maxlength="200" placeholder="Nombre del artículo" />
+						@if (f['nombre'].touched && f['nombre'].invalid) { <div class="error-msg">El nombre es obligatorio y admite máximo 200 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="codigo">Código</label>
+						<input id="codigo" type="text" formControlName="codigo" class="form-control" maxlength="50" placeholder="Código interno" />
+					</div>
+					<div class="form-group form-span-2">
+						<label for="descripcion">Descripción</label>
+						<textarea id="descripcion" formControlName="descripcion" class="form-control" rows="3" maxlength="5000" placeholder="Descripción del artículo"></textarea>
+					</div>
+					<div class="form-group">
+						<label for="idAreaArticulo">Área de artículo *</label>
+						<select id="idAreaArticulo" formControlName="idAreaArticulo" class="form-control">
+							<option [ngValue]="null">Seleccione un área</option>
+							@for (area of areas(); track area.idAreaArticulo) { <option [ngValue]="area.idAreaArticulo">{{ area.nombre }}</option> }
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="idUnidadMedida">Unidad de medida *</label>
+						<select id="idUnidadMedida" formControlName="idUnidadMedida" class="form-control">
+							<option [ngValue]="null">Seleccione una unidad</option>
+							@for (unidad of unidades(); track unidad.idUnidadMedida) { <option [ngValue]="unidad.idUnidadMedida">{{ unidad.nombre }} ({{ unidad.abreviatura }})</option> }
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="idEstadoArticulo">Estado *</label>
+						<select id="idEstadoArticulo" formControlName="idEstadoArticulo" class="form-control">
+							<option [ngValue]="null">Seleccione un estado</option>
+							@for (estado of estados(); track estado.idEstadoArticulo) { <option [ngValue]="estado.idEstadoArticulo">{{ estado.nombre }}</option> }
+						</select>
+					</div>
+					<div class="form-group"><label for="stockMinimo">Stock mínimo</label><input id="stockMinimo" type="number" min="0" step="0.01" formControlName="stockMinimo" class="form-control" /></div>
+					<div class="form-group"><label for="precioCompraUltimoProveedor">Último precio de compra (Q)</label><input id="precioCompraUltimoProveedor" type="number" min="0" step="0.01" formControlName="precioCompraUltimoProveedor" class="form-control" /></div>
+					<div class="form-group"><label for="margenGanancia">Margen de ganancia (%)</label><input id="margenGanancia" type="number" min="0" max="100" step="0.01" formControlName="margenGanancia" class="form-control" /></div>
+					<div class="form-group"><label for="cantidadMinimaDescuento">Cantidad mínima descuento</label><input id="cantidadMinimaDescuento" type="number" min="0" step="0.01" formControlName="cantidadMinimaDescuento" class="form-control" /></div>
+					<div class="form-group"><label for="descuentoMayorista">Descuento mayorista (%)</label><input id="descuentoMayorista" type="number" min="0" max="100" step="0.01" formControlName="descuentoMayorista" class="form-control" /></div>
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">{{ editando ? 'Actualizar' : 'Guardar' }}</button>
+					@if (editando) { <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button> }
+				</div>
+			</form>
+		</div>
+	}
+
+	<div class="card filters-card">
+		<div class="filters-heading"><div><h3 class="card-title">Buscar artículos</h3><p>Combina texto, catálogos y rangos para refinar el listado.</p></div><span class="result-count">{{ totalElementos() }} resultados</span></div>
+		<form [formGroup]="filtrosForm" (ngSubmit)="buscar()" class="filters-form">
+			<div class="search-row"><div class="form-group search-field"><label for="q">Búsqueda</label><input id="q" type="search" formControlName="q" class="form-control" placeholder="Código, nombre o descripción" /></div><button type="submit" class="btn btn-primary search-button" [disabled]="cargando()">Buscar</button><button type="button" class="btn btn-secondary clear-button" (click)="limpiarFiltros()" [disabled]="cargando()">Limpiar filtros</button></div>
+			<div class="filters-grid">
+				<div class="form-group"><label for="idArea">Área</label><select id="idArea" formControlName="idArea" class="form-control"><option [ngValue]="null">Todas</option>@for (area of areas(); track area.idAreaArticulo) { <option [ngValue]="area.idAreaArticulo">{{ area.nombre }}</option> }</select></div>
+				<div class="form-group"><label for="idUnidad">Unidad</label><select id="idUnidad" formControlName="idUnidad" class="form-control"><option [ngValue]="null">Todas</option>@for (unidad of unidades(); track unidad.idUnidadMedida) { <option [ngValue]="unidad.idUnidadMedida">{{ unidad.nombre }}</option> }</select></div>
+				<div class="form-group"><label for="idEstado">Estado</label><select id="idEstado" formControlName="idEstado" class="form-control"><option [ngValue]="null">Todos</option>@for (estado of estados(); track estado.idEstadoArticulo) { <option [ngValue]="estado.idEstadoArticulo">{{ estado.nombre }}</option> }</select></div>
+				<div class="range-filter-group"><label>Stock</label><div class="range-values"><input id="stockMin" type="number" min="0" step="0.01" formControlName="stockMin" class="form-control" placeholder="Desde" aria-label="Stock desde" /><input id="stockMax" type="number" min="0" step="0.01" formControlName="stockMax" class="form-control" placeholder="Hasta" aria-label="Stock hasta" /></div></div>
+				<div class="range-filter-group"><label>Precio (Q)</label><div class="range-values"><input id="precioMin" type="number" min="0" step="0.01" formControlName="precioMin" class="form-control" placeholder="Desde" aria-label="Precio desde en quetzales" /><input id="precioMax" type="number" min="0" step="0.01" formControlName="precioMax" class="form-control" placeholder="Hasta" aria-label="Precio hasta en quetzales" /></div></div>
+			</div>
+			<div class="filter-checks"><label><input type="checkbox" formControlName="stockBajo" /> Stock bajo</label><label><input type="checkbox" formControlName="sinStock" /> Sin stock</label></div>
+		</form>
+	</div>
+
+	<div class="card table-card">
+		<h3 class="card-title">Listado de artículos</h3>
+		@if (cargando() && lista().length === 0) { <p class="loading">Cargando...</p> }
+		@else if (lista().length === 0) { <p class="empty">No hay artículos que coincidan con la búsqueda.</p> }
+		@else {
+			<div class="article-list">
+				@for (item of lista(); track item.idArticulo) {
+					<article class="article-item">
+						<div class="article-item-header"><div><span class="article-item-id">ID {{ item.idArticulo }}{{ item.codigo ? ' · ' + item.codigo : '' }}</span><h4>{{ item.nombre }}</h4></div><div class="article-item-actions">@if (puedeEditar) { <button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">Editar</button> } @if (puedeEliminar) { <button class="btn-icon btn-delete" (click)="eliminar(item.idArticulo!)" title="Eliminar">Eliminar</button> }</div></div>
+						<p class="article-description">{{ item.descripcion || 'Sin descripción' }}</p>
+						<div class="article-metrics"><div><span>Stock actual</span><strong>{{ item.stockActual ?? 0 | number:'1.2-2' }}</strong></div><div><span>Stock mínimo</span><strong>{{ item.stockMinimo ?? 0 | number:'1.2-2' }}</strong></div><div><span>Precio compra</span><strong>{{ item.precioCompraUltimoProveedor == null ? '—' : (item.precioCompraUltimoProveedor | number:'1.2-2') }}</strong></div><div><span>Margen</span><strong>{{ item.margenGanancia == null ? '—' : (item.margenGanancia | number:'1.2-2') + '%' }}</strong></div><div><span>Cantidad mínima descuento</span><strong>{{ item.cantidadMinimaDescuento == null ? '—' : (item.cantidadMinimaDescuento | number:'1.2-2') }}</strong></div><div><span>Descuento mayorista</span><strong>{{ item.descuentoMayorista == null ? '—' : (item.descuentoMayorista | number:'1.2-2') + '%' }}</strong></div></div>
+						<div class="article-tags"><span>{{ item.idAreaArticulo | areaArticuloNombre }}</span><span>{{ item.idUnidadMedida | unidadMedidaAbreviatura }}</span><span>{{ item.idEstadoArticulo | estadoArticuloNombre }}</span></div>
+						<div class="article-item-details"><div><span>Última modificación</span><strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong></div><div><span>Usuario modificación</span><strong>{{ item.usuarioModif | userEmail }}</strong></div></div>
+					</article>
+				}
+			</div>
+		}
+		<div class="pagination"><span>Mostrando {{ lista().length }} de {{ totalElementos() }}</span><label for="size">Por página</label><div [formGroup]="filtrosForm"><select id="size" formControlName="size" (change)="cambiarTamano()"><option [ngValue]="6">6</option><option [ngValue]="9">9</option><option [ngValue]="12">12</option><option [ngValue]="18">18</option><option [ngValue]="24">24</option></select></div><button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button><button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button><strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong><button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button><button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button></div>
+	</div>
+</div>

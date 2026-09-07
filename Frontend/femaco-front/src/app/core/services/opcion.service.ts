@@ -13,7 +13,7 @@ export class OpcionService {
   private readonly api = `${this.baseUrl}/opcion`;
   private readonly STORAGE_KEY = 'opcion_nombre_cache';
   private readonly opcionNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.opcionNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Opcion[]> {
     return this.http.get<Opcion[]>(`${this.api}/buscar`);

@@ -13,7 +13,7 @@ export class GeneroService {
   private readonly api = `${this.baseUrl}/genero`;
   private readonly STORAGE_KEY = 'genero_nombre_cache';
   private readonly generoNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.generoNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Genero[]> {
     return this.http.get<Genero[]>(`${this.api}/buscar`);

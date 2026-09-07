@@ -133,7 +133,7 @@ html, body {
 }
  
 .btn-primary {
-  background: var(--crud-primary);
+  background: var(--crud-primary-dark);
   color: white;
 }
  
@@ -148,7 +148,7 @@ html, body {
 }
  
 .btn-secondary {
-  background: var(--crud-gray-200);
+  background: var(--crud-gray-300);
   color: var(--crud-primary-dark);
 }
  
@@ -204,10 +204,19 @@ html, body {
   background: transparent;
   border: none;
   font-size: 1.15rem;
+  font-weight: 600;
   cursor: pointer;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
   transition: background 0.2s;
+}
+
+.btn-edit {
+  color: var(--crud-primary-dark);
+}
+
+.btn-delete {
+  color: var(--crud-danger);
 }
  
 .btn-edit:hover {

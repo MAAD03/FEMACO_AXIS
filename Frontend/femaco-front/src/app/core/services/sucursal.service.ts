@@ -14,7 +14,7 @@ export class SucursalService {
   private readonly api = `${this.baseUrl}/sucursal`;
   private readonly STORAGE_KEY = 'sucursal_nombre_cache';
   private readonly sucursalNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.sucursalNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Sucursal[]> {
     return this.http.get<Sucursal[]>(`${this.api}/buscar`);

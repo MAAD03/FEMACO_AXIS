@@ -13,7 +13,7 @@ export class ModuloService {
   private readonly api = `${this.baseUrl}/modulo`;
   private readonly STORAGE_KEY = 'modulo_nombre_cache';
   private readonly moduloNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.moduloNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Modulo[]> {
     return this.http.get<Modulo[]>(`${this.api}/buscar`);

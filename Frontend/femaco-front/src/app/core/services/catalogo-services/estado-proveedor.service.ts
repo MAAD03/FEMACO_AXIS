@@ -13,7 +13,7 @@ export class EstadoProveedorService {
   private readonly api = `${this.baseUrl}/estadoProveedor`;
   private readonly STORAGE_KEY = 'estado_proveedor_nombre_cache';
   private readonly estadoProveedorNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.estadoProveedorNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<EstadoProveedor[]> {
     return this.http.get<EstadoProveedor[]>(`${this.api}/buscar`);

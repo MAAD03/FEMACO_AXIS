@@ -13,7 +13,7 @@ export class MenuService {
   private readonly api = `${this.baseUrl}/menu`;
   private readonly STORAGE_KEY = 'menu_nombre_cache';
   private readonly menuNombreCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.menuNombreCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Menu[]> {
     return this.http.get<Menu[]>(`${this.api}/buscar`);

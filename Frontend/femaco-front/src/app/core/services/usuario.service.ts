@@ -13,7 +13,7 @@ export class UsuarioService {
   private readonly api = `${this.baseUrl}/usuario`;
   private readonly STORAGE_KEY = 'usuario_email_cache';
   private readonly emailCache = signal<Map<number, string>>(this.restoreCacheFromStorage());
-  private cacheLoaded = this.emailCache().size > 0;
+  private cacheLoaded = false;
 
   buscarTodos(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(`${this.api}/buscar`);

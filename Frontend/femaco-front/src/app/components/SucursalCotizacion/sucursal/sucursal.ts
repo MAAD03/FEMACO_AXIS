@@ -1,34 +1,29 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EstadoSucursal } from '../../../core/models/catalogo-models/estado-sucursal.model';
 import { Sucursal as SucursalModel } from '../../../core/models/sucursal.model';
-import { EstadoSucursalNombrePipe } from '../../../core/pipes/catalogo-pipes/estado-sucursal-nombre-pipe';
 import { UsuariosEmailPipe } from '../../../core/pipes/usuarios-email';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
-import { EstadoSucursalService } from '../../../core/services/catalogo-services/estado-sucursal.service';
 import { SucursalService } from '../../../core/services/sucursal.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 
 @Component({
   selector: 'app-sucursal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UsuariosEmailPipe, EstadoSucursalNombrePipe],
+  imports: [CommonModule, ReactiveFormsModule, UsuariosEmailPipe],
   templateUrl: './sucursal.html',
   styleUrl: './sucursal.css',
 })
 export class Sucursal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly sucursalService = inject(SucursalService);
-  private readonly estadoSucursalService = inject(EstadoSucursalService);
   private readonly authService = inject(AuthService);
   private readonly conjuntoMenuService = inject(ConjuntoMenuService);
   private readonly usuarioService = inject(UsuarioService);
 
   form!: FormGroup;
   lista = signal<SucursalModel[]>([]);
-  estados = signal<EstadoSucursal[]>([]);
   cargando = signal(false);
   mensaje = signal('');
   error = signal('');
@@ -54,7 +49,6 @@ export class Sucursal implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.cargarLista();
-    this.cargarEstados();
     this.usuarioService.loadEmailCache().subscribe();
   }
 
@@ -63,16 +57,7 @@ export class Sucursal implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(150)]],
       direccion: ['', Validators.maxLength(255)],
       telefono: ['', Validators.maxLength(45)],
-      idEstadoSucursal: [null, Validators.required],
     });
-  }
-
-  private cargarEstados(): void {
-    this.estadoSucursalService.buscarTodos().subscribe({
-      next: (data) => this.estados.set(data ?? []),
-      error: () => this.error.set('Error al cargar los estados de sucursal'),
-    });
-    this.estadoSucursalService.loadNombreCache().subscribe();
   }
 
   cargarLista(): void {
@@ -124,7 +109,6 @@ export class Sucursal implements OnInit {
       nombre: this.form.value.nombre,
       direccion: this.form.value.direccion || undefined,
       telefono: this.form.value.telefono || undefined,
-      idEstadoSucursal: Number(this.form.value.idEstadoSucursal),
       usuarioCreacion: usuarioId,
     };
 
@@ -161,7 +145,6 @@ export class Sucursal implements OnInit {
       nombre: item.nombre,
       direccion: item.direccion ?? '',
       telefono: item.telefono ?? '',
-      idEstadoSucursal: item.idEstadoSucursal ?? null,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -189,7 +172,6 @@ export class Sucursal implements OnInit {
       nombre: '',
       direccion: '',
       telefono: '',
-      idEstadoSucursal: null,
     });
     this.editando = false;
     this.idEditando = null;

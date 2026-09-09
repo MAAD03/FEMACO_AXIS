@@ -38,7 +38,6 @@ public class SucursalService {
         return sucursalRepository.findById(idSucursal).map(existente -> {
             existente.setNombre(datosNuevos.getNombre());
             existente.setDireccion(datosNuevos.getDireccion());
-            existente.setIdEstadoSucursal(datosNuevos.getIdEstadoSucursal());
             existente.setTelefono(datosNuevos.getTelefono());
 
             existente.setUsuarioModif(datosNuevos.getUsuarioModif());

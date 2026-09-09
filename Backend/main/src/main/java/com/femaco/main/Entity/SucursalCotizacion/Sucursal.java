@@ -41,6 +41,4 @@ public class Sucursal {
     @Column(name = "UsuarioModif", nullable = false)
     private Integer usuarioModif;
 
-    @Column(name = "IdEstadoSucursal", nullable = false)
-    private Long idEstadoSucursal;
 }

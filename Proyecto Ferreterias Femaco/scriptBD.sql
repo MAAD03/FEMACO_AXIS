@@ -31,19 +31,6 @@ CREATE TABLE IF NOT EXISTS `estado_usuario` (
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Tabla: estado_sucursal
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `estado_sucursal` (
-  `IdEstadoSucursal` INT NOT NULL AUTO_INCREMENT,
-  `Nombre` VARCHAR(45) NOT NULL,
-  `FechaCreacion` DATETIME NOT NULL,
-  `UsuarioCreacion` INT NOT NULL,
-  `FechaModif` DATETIME NOT NULL,
-  `UsuarioModif` INT NOT NULL,
-  PRIMARY KEY (`IdEstadoSucursal`)
-) ENGINE = InnoDB;
-
--- -----------------------------------------------------
 -- Tabla: sucursal
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sucursal` (
@@ -455,19 +442,6 @@ CREATE TABLE IF NOT EXISTS `movimiento_inventario` (
 -- -----------------------------------------------------
 -- Tablas de relación y cotizaciones
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sucursal_articulo` (
-  `IdSucursalArticulo` INT NOT NULL AUTO_INCREMENT,
-  `IdSucursal` INT NOT NULL,
-  `IdArticulo` INT NOT NULL,
-  `FechaCreacion` DATETIME NOT NULL,
-  `UsuarioCreacion` INT NOT NULL,
-  `FechaModif` DATETIME NOT NULL,
-  `UsuarioModif` INT NOT NULL,
-  PRIMARY KEY (`IdSucursalArticulo`),
-  CONSTRAINT `fk_sa_suc` FOREIGN KEY (`IdSucursal`) REFERENCES `sucursal`(`IdSucursal`),
-  CONSTRAINT `fk_sa_art` FOREIGN KEY (`IdArticulo`) REFERENCES `articulo`(`IdArticulo`)
-) ENGINE = InnoDB;
-
 CREATE TABLE IF NOT EXISTS `cotizacion` (
   `IdCotizacion` INT NOT NULL AUTO_INCREMENT,
   `Nombre` VARCHAR(100) NULL,
@@ -513,12 +487,6 @@ VALUES
 (2, 'Inactivo', NOW(), 1, NOW(), 1),
 (3, 'Bloqueado', NOW(), 1, NOW(), 1);
 
--- 2. estado_sucursal
-INSERT INTO `estado_sucursal` 
-(`IdEstadoSucursal`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
-VALUES
-(1, 'Activo', NOW(), 1, NOW(), 1),
-(2, 'Inactivo', NOW(), 1, NOW(), 1);
 
 -- 3. genero
 INSERT INTO `genero` 
@@ -652,17 +620,16 @@ VALUES
 
 -- Sucursales y Cotizaciones
 (14, 'Sucursales', 1, 'sucursal', 6, NOW(), 1, NOW(), 1),
-(15, 'Sucursal - Artículos', 2, 'sucursal-articulo', 6, NOW(), 1, NOW(), 1),
-(16, 'Cotizaciones', 3, 'cotizacion', 6, NOW(), 1, NOW(), 1),
+(15, 'Cotizaciones', 3, 'cotizacion', 6, NOW(), 1, NOW(), 1),
 
 -- Suministro
-(17, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
-(18, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
+(16, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
+(17, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
 
 -- Ventas
-(19, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
-(20, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
-(21, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1);
+(18, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
+(19, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
+(20, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1);
 
 -- 5. ROL_OPCION (Super Usuario con TODOS los permisos: Alta, Baja y Cambio = 1)
 INSERT INTO `rol_opcion` (`IdRol`, `IdOpcion`, `Alta`, `Baja`, `Cambio`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
@@ -680,7 +647,6 @@ VALUES
 (1, 12, 1, 1, 1, NOW(), 1, NOW(), 1), -- Ajuste de Inventario
 (1, 13, 1, 1, 1, NOW(), 1, NOW(), 1), -- Movimientos de Inventario
 (1, 14, 1, 1, 1, NOW(), 1, NOW(), 1), -- Sucursales
-(1, 15, 1, 1, 1, NOW(), 1, NOW(), 1), -- Sucursal - Artículos
 (1, 16, 1, 1, 1, NOW(), 1, NOW(), 1), -- Cotizaciones
 (1, 17, 1, 1, 1, NOW(), 1, NOW(), 1), -- Proveedores
 (1, 18, 1, 1, 1, NOW(), 1, NOW(), 1), -- Órdenes de Compra
@@ -696,6 +662,9 @@ INSERT INTO `usuario`
 VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
  'administrador@femaco.com', 0, NULL, NULL, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
+ 
+ 
+ 
  
  
 -- 13. Datos de ejemplos para Articulos

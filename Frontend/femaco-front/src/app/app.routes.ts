@@ -87,11 +87,6 @@ export const routes: Routes = [
           import('./components/SucursalCotizacion/sucursal/sucursal').then(m => m.Sucursal)
       },
       {
-        path: 'sucursal-articulo',
-        loadComponent: () =>
-          import('./components/SucursalCotizacion/sucursal-articulo/sucursal-articulo').then(m => m.SucursalArticulo)
-      },
-      {
         path: 'orden-compra',
         loadComponent: () =>
           import('./components/Suministro/orden-compra/orden-compra').then(m => m.OrdenCompra)

@@ -26,19 +26,6 @@
 					</div>
 
 					<div class="form-group">
-						<label for="idEstadoSucursal">Estado *</label>
-						<select id="idEstadoSucursal" formControlName="idEstadoSucursal" class="form-control">
-							<option [ngValue]="null">Seleccione un estado</option>
-							@for (estado of estados(); track estado.idEstadoSucursal) {
-								<option [ngValue]="estado.idEstadoSucursal">{{ estado.nombre }}</option>
-							}
-						</select>
-						@if (f['idEstadoSucursal'].touched && f['idEstadoSucursal'].invalid) {
-							<div class="error-msg">El estado es obligatorio</div>
-						}
-					</div>
-
-					<div class="form-group">
 						<label for="direccion">Dirección</label>
 						<input id="direccion" type="text" formControlName="direccion" class="form-control" placeholder="Dirección de la sucursal" maxlength="255" />
 						@if (f['direccion'].touched && f['direccion'].invalid) {
@@ -94,8 +81,7 @@
 						<div class="sucursal-contact">
 							<div><span>Dirección</span><strong>{{ item.direccion || 'Sin dirección' }}</strong></div>
 							<div><span>Teléfono</span><strong>{{ item.telefono || 'Sin teléfono' }}</strong></div>
-							<div><span>Estado</span><strong>{{ item.idEstadoSucursal | estadoSucursalNombre }}</strong></div>
-						</div>
+							</div>
 
 						<div class="sucursal-item-details">
 							<div class="sucursal-detail"><span>Creación</span><strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong></div>

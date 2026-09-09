@@ -19,7 +19,6 @@ import { EstadoClienteService } from './catalogo-services/estado-cliente.service
 import { EstadoOrdenCompraService } from './catalogo-services/estado-orden-compra.service';
 import { EstadoPedidoService } from './catalogo-services/estado-pedido.service';
 import { EstadoProveedorService } from './catalogo-services/estado-proveedor.service';
-import { EstadoSucursalService } from './catalogo-services/estado-sucursal.service';
 import { EstadoUsuarioService } from './catalogo-services/estado-usuario.service';
 import { EstadoVentaService } from './catalogo-services/estado-venta.service';
 import { GeneroService } from './catalogo-services/genero.service';
@@ -46,7 +45,6 @@ export class AuthService {
     private estadoOrdenCompraService = inject(EstadoOrdenCompraService);
     private estadoPedidoService = inject(EstadoPedidoService);
     private estadoProveedorService = inject(EstadoProveedorService);
-    private estadoSucursalService = inject(EstadoSucursalService);
     private estadoUsuarioService = inject(EstadoUsuarioService);
     private estadoVentaService = inject(EstadoVentaService);
     private generoService = inject(GeneroService);
@@ -87,7 +85,6 @@ export class AuthService {
         this.estadoOrdenCompraService.clearCache();
         this.estadoPedidoService.clearCache();
         this.estadoProveedorService.clearCache();
-        this.estadoSucursalService.clearCache();
         this.estadoUsuarioService.clearCache();
         this.estadoVentaService.clearCache();
         this.generoService.clearCache();

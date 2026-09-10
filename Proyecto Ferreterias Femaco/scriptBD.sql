@@ -1,4 +1,3 @@
-
 CREATE SCHEMA IF NOT EXISTS `femacodb` DEFAULT CHARACTER SET utf8mb4;
 USE `femacodb`;
 
@@ -38,13 +37,11 @@ CREATE TABLE IF NOT EXISTS `sucursal` (
   `Nombre` VARCHAR(150) NOT NULL,
   `Direccion` VARCHAR(255) NULL,
   `Telefono` VARCHAR(45) NULL,
-  `IdEstadoSucursal` INT NOT NULL,
   `FechaCreacion` DATETIME NOT NULL,
   `UsuarioCreacion` INT NOT NULL,
   `FechaModif` DATETIME NOT NULL,
   `UsuarioModif` INT NOT NULL,
-  PRIMARY KEY (`IdSucursal`),
-  CONSTRAINT `fk_sucursal_estado` FOREIGN KEY (`IdEstadoSucursal`) REFERENCES `estado_sucursal`(`IdEstadoSucursal`)
+  PRIMARY KEY (`IdSucursal`)
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -193,7 +190,7 @@ CREATE TABLE IF NOT EXISTS `estado_articulo` (
 
 CREATE TABLE IF NOT EXISTS `articulo` (
   `IdArticulo` INT NOT NULL AUTO_INCREMENT,
-  `Codigo` VARCHAR(50) NULL,
+  `Codigo` VARCHAR(50) NOT NULL,
   `Nombre` VARCHAR(200) NOT NULL,
   `Descripcion` TEXT NULL,
   `StockActual` DECIMAL(12,2) NULL DEFAULT 0.00,
@@ -212,7 +209,8 @@ CREATE TABLE IF NOT EXISTS `articulo` (
   PRIMARY KEY (`IdArticulo`),
   CONSTRAINT `fk_art_area` FOREIGN KEY (`IdAreaArticulo`) REFERENCES `area_articulo`(`IdAreaArticulo`),
   CONSTRAINT `fk_art_unidad` FOREIGN KEY (`IdUnidadMedida`) REFERENCES `unidad_medida`(`IdUnidadMedida`),
-  CONSTRAINT `fk_art_estado` FOREIGN KEY (`IdEstadoArticulo`) REFERENCES `estado_articulo`(`IdEstadoArticulo`)
+  CONSTRAINT `fk_art_estado` FOREIGN KEY (`IdEstadoArticulo`) REFERENCES `estado_articulo`(`IdEstadoArticulo`),
+  CONSTRAINT `chk_articulo_stock_no_negativo` CHECK (`StockActual` >= 0)
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -487,7 +485,6 @@ VALUES
 (2, 'Inactivo', NOW(), 1, NOW(), 1),
 (3, 'Bloqueado', NOW(), 1, NOW(), 1);
 
-
 -- 3. genero
 INSERT INTO `genero` 
 (`IdGenero`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
@@ -516,11 +513,10 @@ INSERT INTO `estado_orden_compra`
 (`IdEstadoOrdenCompra`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
 VALUES
 (1, 'Pendiente', NOW(), 1, NOW(), 1),
-(2, 'Aprobada', NOW(), 1, NOW(), 1),
+(2, 'Completada', NOW(), 1, NOW(), 1),
 (3, 'Parcialmente recibida', NOW(), 1, NOW(), 1),
-(4, 'Pospuesta', NOW(), 1, NOW(), 1),
-(5, 'Cancelada', NOW(), 1, NOW(), 1),
-(6, 'Finalizada', NOW(), 1, NOW(), 1);
+(4, 'Cancelada', NOW(), 1, NOW(), 1),
+(5, 'Entregado', NOW(), 1, NOW(), 1);
 
 -- 7. estado_cliente
 INSERT INTO `estado_cliente` 
@@ -545,16 +541,16 @@ VALUES
 (3, 'Cancelado', NOW(), 1, NOW(), 1),
 (4, 'Entrega Parcial', NOW(), 1, NOW(), 1);
 
--- 10. sucursal (depende de estado_sucursal)
+-- 10. sucursal
 INSERT INTO `sucursal` 
-(`IdSucursal`, `Nombre`, `Direccion`, `Telefono`, `IdEstadoSucursal`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
+(`IdSucursal`, `Nombre`, `Direccion`, `Telefono`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
 VALUES
-(1, 'Sucursal Femaco', 'Direccion 123', '1234-5678', 1, NOW(), 1, NOW(), 1);
-
+(1, 'Sucursal Femaco', 'Direccion 123', '1234-5678', NOW(), 1, NOW(), 1);
 
 -- =====================================================
 -- 11. INSERTS PARA SUPER USUARIO
 -- =====================================================
+
 -- 1. ROL
 INSERT INTO `rol` (`IdRol`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -577,84 +573,72 @@ VALUES
 (1, 'Dashboard', 1, 1, NOW(), 1, NOW(), 1),
 (2, 'Configuración de Seguridad', 2, 1, NOW(), 1, NOW(), 1),
 (3, 'Usuarios y Catálogos Seguridad', 3, 1, NOW(), 1, NOW(), 1),
-
 -- Catálogo
 (4, 'Catálogos Generales', 1, 2, NOW(), 1, NOW(), 1),
-
 -- Inventario
 (5, 'Artículos e Inventario', 1, 3, NOW(), 1, NOW(), 1),
-
 -- Sucursales y Cotizaciones
 (6, 'Sucursales y Cotizaciones', 1, 4, NOW(), 1, NOW(), 1),
-
 -- Suministro
 (7, 'Compras y Proveedores', 1, 5, NOW(), 1, NOW(), 1),
-
 -- Ventas
 (8, 'Clientes y Ventas', 1, 6, NOW(), 1, NOW(), 1);
 
--- 4. OPCIONES (Pagina = path exacto )
+-- 4. OPCIONES
 INSERT INTO `opcion` (`IdOpcion`, `Nombre`, `OrdenMenu`, `Pagina`, `IdMenu`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
 -- Dashboard
 (1, 'Dashboard', 1, 'dashboard', 1, NOW(), 1, NOW(), 1),
-
 -- Configuración de Seguridad
 (2, 'Módulos', 1, 'modulo', 2, NOW(), 1, NOW(), 1),
 (3, 'Menús', 2, 'menu', 2, NOW(), 1, NOW(), 1),
 (4, 'Opciones', 3, 'opcion', 2, NOW(), 1, NOW(), 1),
 (5, 'Roles', 4, 'rol', 2, NOW(), 1, NOW(), 1),
 (6, 'Roles - Opciones', 5, 'rol-opcion', 2, NOW(), 1, NOW(), 1),
-
 -- Usuarios y Catálogos Seguridad
 (7, 'Usuarios', 1, 'usuario', 3, NOW(), 1, NOW(), 1),
-
 -- Catálogo
 (9, 'Unidades de Medida', 1, 'unidad-medida', 4, NOW(), 1, NOW(), 1),
-
 -- Inventario
 (10, 'Artículos', 1, 'articulo', 5, NOW(), 1, NOW(), 1),
 (11, 'Áreas de Artículo', 2, 'area-articulo', 5, NOW(), 1, NOW(), 1),
 (12, 'Ajuste de Inventario', 3, 'ajuste-inventario', 5, NOW(), 1, NOW(), 1),
 (13, 'Movimientos de Inventario', 4, 'movimiento-inventario', 5, NOW(), 1, NOW(), 1),
-
 -- Sucursales y Cotizaciones
 (14, 'Sucursales', 1, 'sucursal', 6, NOW(), 1, NOW(), 1),
 (15, 'Cotizaciones', 3, 'cotizacion', 6, NOW(), 1, NOW(), 1),
-
 -- Suministro
 (16, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
 (17, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
-
 -- Ventas
 (18, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
 (19, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
 (20, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1);
 
--- 5. ROL_OPCION (Super Usuario con TODOS los permisos: Alta, Baja y Cambio = 1)
+-- 5. ROL_OPCION (Super Usuario con TODOS los permisos)
 INSERT INTO `rol_opcion` (`IdRol`, `IdOpcion`, `Alta`, `Baja`, `Cambio`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
-(1, 1, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Dashboard
-(1, 2, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Módulos
-(1, 3, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Menús
-(1, 4, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Opciones
-(1, 5, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Roles
-(1, 6, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Roles - Opciones
-(1, 7, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Usuarios
-(1, 9, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Unidades de Medida
-(1, 10, 1, 1, 1, NOW(), 1, NOW(), 1), -- Artículos
-(1, 11, 1, 1, 1, NOW(), 1, NOW(), 1), -- Áreas de Artículo
-(1, 12, 1, 1, 1, NOW(), 1, NOW(), 1), -- Ajuste de Inventario
-(1, 13, 1, 1, 1, NOW(), 1, NOW(), 1), -- Movimientos de Inventario
-(1, 14, 1, 1, 1, NOW(), 1, NOW(), 1), -- Sucursales
-(1, 16, 1, 1, 1, NOW(), 1, NOW(), 1), -- Cotizaciones
-(1, 17, 1, 1, 1, NOW(), 1, NOW(), 1), -- Proveedores
-(1, 18, 1, 1, 1, NOW(), 1, NOW(), 1), -- Órdenes de Compra
-(1, 19, 1, 1, 1, NOW(), 1, NOW(), 1), -- Clientes
-(1, 20, 1, 1, 1, NOW(), 1, NOW(), 1), -- Pedidos
-(1, 21, 1, 1, 1, NOW(), 1, NOW(), 1); -- Ventas
+(1, 1, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Dashboard
+(1, 2, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Módulos
+(1, 3, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Menús
+(1, 4, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Opciones
+(1, 5, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Roles
+(1, 6, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Roles - Opciones
+(1, 7, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Usuarios
+(1, 9, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Unidades de Medida
+(1, 10, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Artículos
+(1, 11, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Áreas de Artículo
+(1, 12, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Ajuste de Inventario
+(1, 13, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Movimientos de Inventario
+(1, 14, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Sucursales
+(1, 15, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Cotizaciones
+(1, 16, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Proveedores
+(1, 17, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Órdenes de Compra
+(1, 18, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Clientes
+(1, 19, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Pedidos
+(1, 20, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Ventas
 
- -- 12. usuario (Super Administrador) - password: Admin2026+
+-- 12. usuario (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
 (`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, 
  `Pregunta`, `Respuesta`, `IdGenero`, `IdEstadoUsuario`, `IdSucursal`, `IdRol`, 
@@ -662,15 +646,12 @@ INSERT INTO `usuario`
 VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
  'administrador@femaco.com', 0, NULL, NULL, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
- 
- 
- 
- 
- 
+
+-- =====================================================
 -- 13. Datos de ejemplos para Articulos
- 
+-- =====================================================
+
 -- 13.1 Áreas de artículo (15 registros)
--- ---------------------------------------------------------
 INSERT INTO `area_articulo`
 (`Nombre`, `Descripcion`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -689,10 +670,8 @@ VALUES
 ('Iluminación', 'Bombillos, lámparas y accesorios de iluminación', NOW(), 1, NOW(), 1),
 ('Limpieza Industrial', 'Insumos y equipo para limpieza comercial e industrial', NOW(), 1, NOW(), 1),
 ('Ferretería Automotriz', 'Repuestos y consumibles básicos para vehículos', NOW(), 1, NOW(), 1);
- 
--- ---------------------------------------------------------
+
 -- 13.2 Unidades de medida (15 registros)
--- ---------------------------------------------------------
 INSERT INTO `unidad_medida`
 (`Nombre`, `Abreviatura`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -711,10 +690,8 @@ VALUES
 ('Pulgada', 'PLG', NOW(), 1, NOW(), 1),
 ('Libra', 'LB', NOW(), 1, NOW(), 1),
 ('Yarda', 'YDA', NOW(), 1, NOW(), 1);
- 
--- ---------------------------------------------------------
+
 -- 13.3 Artículos (60 registros)
--- ---------------------------------------------------------
 INSERT INTO `articulo`
 (`Codigo`, `Nombre`, `Descripcion`, `StockActual`, `StockMinimo`, `PrecioCompraUltimoProveedor`,
  `MargenGanancia`, `CantidadMinimaDescuento`, `DescuentoMayorista`, `IdAreaArticulo`, `IdUnidadMedida`,
@@ -780,4 +757,3 @@ VALUES
 ('FER-0058', 'Filtro de aceite universal', 'Filtro de aceite universal para automóvil', 0.00, 20.00, 28.00, 32.00, 10.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1),
 ('FER-0059', 'Batería para automóvil 12V', 'Batería de 12V para automóvil, libre de mantenimiento', 0.00, 5.00, 450.00, 18.00, 2.00, 8.00, 15, 1, 1, NOW(), 1, NOW(), 1),
 ('FER-0060', 'Foco H4 para automóvil', 'Foco H4 halógeno para faro de automóvil', 0.00, 20.00, 22.00, 35.00, 12.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1);
- 

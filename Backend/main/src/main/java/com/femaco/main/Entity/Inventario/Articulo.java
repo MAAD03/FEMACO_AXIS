@@ -30,22 +30,22 @@ public class Articulo  {
     @Column(name = "Descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "StockActual", precision = 12, scale = 2)
+    @Column(name = "StockActual", precision = 12, scale = 2, nullable = false)
     private BigDecimal stockActual;
 
-    @Column(name = "StockMinimo", precision = 12, scale = 2)
+    @Column(name = "StockMinimo", precision = 12, scale = 2, nullable = false)
     private BigDecimal stockMinimo;
 
-    @Column(name = "PrecioCompraUltimoProveedor", precision = 12, scale = 2)
+    @Column(name = "PrecioCompraUltimoProveedor", precision = 12, scale = 2, nullable = false)
     private BigDecimal precioCompraUltimoProveedor;
 
-    @Column(name = "MargenGanancia", precision = 5, scale = 2)
+    @Column(name = "MargenGanancia", precision = 5, scale = 2, nullable = false)
     private BigDecimal margenGanancia;
 
-    @Column(name = "CantidadMinimaDescuento", precision = 12, scale = 2)
+    @Column(name = "CantidadMinimaDescuento", precision = 12, scale = 2, nullable = false)
     private BigDecimal cantidadMinimaDescuento;
     
-    @Column(name = "DescuentoMayorista", precision = 5, scale = 2)
+    @Column(name = "DescuentoMayorista", precision = 5, scale = 2, nullable = false)
     private BigDecimal descuentoMayorista;
 
     @Column(name = "FechaCreacion", nullable = false, updatable = false)

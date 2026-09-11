@@ -54,6 +54,8 @@ export class AreaArticuloService {
     const cachedMap = this.restoreCacheFromStorage();
     if (cachedMap.size > 0) {
       this.areaNombreCache.set(cachedMap);
+      this.cacheLoaded = true;
+      return of(void 0);
     }
 
     return this.buscarTodos().pipe(

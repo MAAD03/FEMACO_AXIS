@@ -550,7 +550,6 @@ VALUES
 -- =====================================================
 -- 11. INSERTS PARA SUPER USUARIO
 -- =====================================================
-
 -- 1. ROL
 INSERT INTO `rol` (`IdRol`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -602,18 +601,19 @@ VALUES
 -- Inventario
 (10, 'Artículos', 1, 'articulo', 5, NOW(), 1, NOW(), 1),
 (11, 'Áreas de Artículo', 2, 'area-articulo', 5, NOW(), 1, NOW(), 1),
-(12, 'Ajuste de Inventario', 3, 'ajuste-inventario', 5, NOW(), 1, NOW(), 1),
+(12, 'Generar Ajuste de Inventario', 3, 'ajuste-inventario', 5, NOW(), 1, NOW(), 1),
 (13, 'Movimientos de Inventario', 4, 'movimiento-inventario', 5, NOW(), 1, NOW(), 1),
+(14, 'Lista Ajuste de Inventario', 5, 'lista-ajuste-inventario', 5, NOW(), 1, NOW(), 1),
 -- Sucursales y Cotizaciones
-(14, 'Sucursales', 1, 'sucursal', 6, NOW(), 1, NOW(), 1),
-(15, 'Cotizaciones', 3, 'cotizacion', 6, NOW(), 1, NOW(), 1),
+(15, 'Sucursales', 1, 'sucursal', 6, NOW(), 1, NOW(), 1),
+(16, 'Cotizaciones', 3, 'cotizacion', 6, NOW(), 1, NOW(), 1),
 -- Suministro
-(16, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
-(17, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
+(17, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
+(18, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
 -- Ventas
-(18, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
-(19, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
-(20, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1);
+(19, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
+(20, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
+(21, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1);
 
 -- 5. ROL_OPCION (Super Usuario con TODOS los permisos)
 INSERT INTO `rol_opcion` (`IdRol`, `IdOpcion`, `Alta`, `Baja`, `Cambio`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
@@ -628,17 +628,18 @@ VALUES
 (1, 9, 1, 1, 1, NOW(), 1, NOW(), 1),   -- Unidades de Medida
 (1, 10, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Artículos
 (1, 11, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Áreas de Artículo
-(1, 12, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Ajuste de Inventario
+(1, 12, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Generar Ajuste de Inventario
 (1, 13, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Movimientos de Inventario
-(1, 14, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Sucursales
-(1, 15, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Cotizaciones
-(1, 16, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Proveedores
-(1, 17, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Órdenes de Compra
-(1, 18, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Clientes
-(1, 19, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Pedidos
-(1, 20, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Ventas
+(1, 14, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Lista Ajuste de Inventario
+(1, 15, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Sucursales
+(1, 16, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Cotizaciones
+(1, 17, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Proveedores
+(1, 18, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Órdenes de Compra
+(1, 19, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Clientes
+(1, 20, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Pedidos
+(1, 21, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Ventas
 
--- 12. usuario (Super Administrador) - password: Admin2026+
+-- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
 (`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, 
  `Pregunta`, `Respuesta`, `IdGenero`, `IdEstadoUsuario`, `IdSucursal`, `IdRol`, 
@@ -646,7 +647,6 @@ INSERT INTO `usuario`
 VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
  'administrador@femaco.com', 0, NULL, NULL, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
-
 -- =====================================================
 -- 13. Datos de ejemplos para Articulos
 -- =====================================================

@@ -28,7 +28,6 @@ public class ConjuntoMenuService {
     private final UsuarioRepository usuarioRepository;
     
     public List<ModuloMenuDto> obtenerMenuDelUsuarioAutenticado() {
-        // 1. Obtener el correo del token (principal)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         if (authentication == null || !authentication.isAuthenticated() 
@@ -36,7 +35,7 @@ public class ConjuntoMenuService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado");
         }
 
-        String correo = authentication.getName(); // es el correo que pusiste en el filtro
+        String correo = authentication.getName();
 
         Usuario usuario = usuarioRepository.findByCorreoElectronico(correo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));

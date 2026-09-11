@@ -110,6 +110,11 @@ export const routes: Routes = [
         path: 'ventas',
         loadComponent: () =>
           import('./components/Ventas/ventas/ventas').then(m => m.Ventas)
+      },
+      {
+        path: 'lista-ajuste-inventario',
+        loadComponent: () =>
+          import('./components/Inventario/lista-ajuste-inventario/lista-ajuste-inventario').then(m => m.ListaAjusteInventario)
       }
     ]
   },

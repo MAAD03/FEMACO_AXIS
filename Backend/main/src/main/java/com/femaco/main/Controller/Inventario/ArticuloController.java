@@ -1,5 +1,7 @@
 package com.femaco.main.Controller.Inventario;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,12 +31,12 @@ public class ArticuloController {
         this.articuloService = articuloService;
     }
 
-/* 
+
     @GetMapping("/buscar")
     public ResponseEntity<List<Articulo>> buscar() {
         return ResponseEntity.ok(articuloService.buscarTodos());
     }
-*/
+
 
   @GetMapping("/buscar-paginado")
     public ResponseEntity<Page<Articulo>> buscarPaginado(

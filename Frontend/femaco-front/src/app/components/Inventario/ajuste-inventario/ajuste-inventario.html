@@ -1,1 +1,228 @@
-<p>ajuste-inventario works!</p>
+<div class="crud-container">
+  <h2 class="crud-title">Ajuste de inventario</h2>
+
+  @if (mensaje()) {
+    <div class="alert alert-success">{{ mensaje() }}</div>
+  }
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  @if (puedeCrear) {
+    <div class="card form-card">
+      <h3 class="card-title">Nuevo ajuste</h3>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+        <div class="ajuste-selected-panel">
+          <h4>Artículo seleccionado</h4>
+
+          @if (articuloSeleccionado(); as articulo) {
+            <div class="ajuste-selected-grid">
+              <div class="ajuste-selected-stat">
+                <span>ID</span>
+                <strong>{{ articulo.idArticulo }}</strong>
+              </div>
+              <div class="ajuste-selected-stat">
+                <span>Código</span>
+                <strong>{{ articulo.codigo || '—' }}</strong>
+              </div>
+              <div class="ajuste-selected-stat form-span-2">
+                <span>Nombre</span>
+                <strong>{{ articulo.nombre }}</strong>
+              </div>
+              <div class="ajuste-selected-stat form-span-2">
+                <span>Descripción</span>
+                <strong>{{ articulo.descripcion || 'Sin descripción' }}</strong>
+              </div>
+              <div class="ajuste-selected-stat">
+                <span>Stock actual</span>
+                <strong>{{ articulo.stockActual ?? 0 | number:'1.2-2' }}</strong>
+              </div>
+              <div class="ajuste-selected-stat">
+                <span>Stock mínimo</span>
+                <strong>{{ articulo.stockMinimo ?? 0 | number:'1.2-2' }}</strong>
+              </div>
+              <div class="ajuste-selected-stat">
+                <span>Área</span>
+                <strong>{{ articulo.idAreaArticulo | areaArticuloNombre }}</strong>
+              </div>
+              <div class="ajuste-selected-stat">
+                <span>Unidad</span>
+                <strong>{{ articulo.idUnidadMedida | unidadMedidaAbreviatura }}</strong>
+              </div>
+              <div class="ajuste-selected-stat">
+                <span>Estado</span>
+                <strong>{{ articulo.idEstadoArticulo | estadoArticuloNombre }}</strong>
+              </div>
+            </div>
+          } @else {
+            <p class="selection-empty">Seleccione un artículo activo de la lista para completar el ajuste.</p>
+          }
+        </div>
+
+        <div class="ajuste-form-grid">
+          <div class="form-group">
+            <label for="tipoAjuste">Tipo de ajuste</label>
+            <div class="segmented-options">
+              <label>
+                <input type="radio" formControlName="tipoAjuste" value="agregar" />
+                Agregar
+              </label>
+              <label>
+                <input type="radio" formControlName="tipoAjuste" value="quitar" />
+                Quitar
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cantidadAjuste">Cantidad a ajustar</label>
+            <input id="cantidadAjuste" type="number" min="0.01" step="0.01" formControlName="cantidadAjuste" class="form-control" placeholder="Ej. 5.00" />
+            @if (f['cantidadAjuste'].touched && f['cantidadAjuste'].errors?.['min']) {
+              <div class="error-msg">La cantidad debe ser mayor que cero.</div>
+            }
+            @if (f['cantidadAjuste'].touched && f['cantidadAjuste'].errors?.['stockInsuficiente']) {
+              <div class="error-msg">La cantidad excede el stock actual del artículo seleccionado.</div>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="motivo">Motivo</label>
+          <textarea id="motivo" formControlName="motivo" class="form-control" rows="3" maxlength="1000" placeholder="Describa el motivo del ajuste"></textarea>
+          @if (f['motivo'].touched && f['motivo'].invalid) {
+            <div class="error-msg">El motivo admite máximo 1000 caracteres.</div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">Guardar ajuste</button>
+          <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <div class="card filters-card">
+    <div class="filters-heading">
+      <div>
+        <h3 class="card-title">Buscar artículos activos</h3>
+        <p>Busca y selecciona el artículo que deseas ajustar.</p>
+      </div>
+      <span class="result-count">{{ totalElementos() }} resultados</span>
+    </div>
+
+    <form [formGroup]="filtrosForm" (ngSubmit)="buscar()" class="filters-form">
+      <div class="ajuste-search-row">
+        <div class="form-group search-field">
+          <label for="q">Búsqueda</label>
+          <input id="q" type="search" formControlName="q" class="form-control" placeholder="Código, nombre o descripción" />
+        </div>
+        <button type="submit" class="btn btn-primary search-button" [disabled]="cargando()">Buscar</button>
+        <button type="button" class="btn btn-secondary clear-button" (click)="limpiarFiltros()" [disabled]="cargando()">Limpiar filtros</button>
+      </div>
+
+      <div class="ajuste-filters-grid">
+        <div class="form-group">
+          <label for="idArea">Área</label>
+          <select id="idArea" formControlName="idArea" class="form-control">
+            <option [ngValue]="null">Todas</option>
+            @for (area of areas(); track area.idAreaArticulo) {
+              <option [ngValue]="area.idAreaArticulo">{{ area.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="idUnidad">Unidad</label>
+          <select id="idUnidad" formControlName="idUnidad" class="form-control">
+            <option [ngValue]="null">Todas</option>
+            @for (unidad of unidades(); track unidad.idUnidadMedida) {
+              <option [ngValue]="unidad.idUnidadMedida">{{ unidad.nombre }} ({{ unidad.abreviatura }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="range-filter-group">
+          <label>Stock</label>
+          <div class="range-values">
+            <input id="stockMin" type="number" min="0" step="0.01" formControlName="stockMin" class="form-control" placeholder="Desde" aria-label="Stock desde" />
+            <input id="stockMax" type="number" min="0" step="0.01" formControlName="stockMax" class="form-control" placeholder="Hasta" aria-label="Stock hasta" />
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card table-card">
+    <h3 class="card-title">Artículos activos disponibles</h3>
+
+    @if (cargando() && lista().length === 0) {
+      <p class="loading">Cargando...</p>
+    } @else if (lista().length === 0) {
+      <p class="empty">No hay artículos activos que coincidan con la búsqueda.</p>
+    } @else {
+      <div class="ajuste-article-list">
+        @for (item of lista(); track item.idArticulo) {
+          <article class="ajuste-article-item" [class.selected]="articuloSeleccionado()?.idArticulo === item.idArticulo">
+            <div class="ajuste-article-header">
+              <div>
+                <span class="article-item-id">ID {{ item.idArticulo }}{{ item.codigo ? ' · ' + item.codigo : '' }}</span>
+                <h4>{{ item.nombre }}</h4>
+              </div>
+            </div>
+
+            <p class="article-description">{{ item.descripcion || 'Sin descripción' }}</p>
+
+            <div class="article-metrics">
+              <div>
+                <span>Stock actual</span>
+                <strong>{{ item.stockActual ?? 0 | number:'1.2-2' }}</strong>
+              </div>
+              <div>
+                <span>Stock mínimo</span>
+                <strong>{{ item.stockMinimo ?? 0 | number:'1.2-2' }}</strong>
+              </div>
+              <div>
+                <span>Área</span>
+                <strong>{{ item.idAreaArticulo | areaArticuloNombre }}</strong>
+              </div>
+              <div>
+                <span>Unidad</span>
+                <strong>{{ item.idUnidadMedida | unidadMedidaAbreviatura }}</strong>
+              </div>
+            </div>
+
+            <div class="article-tags">
+              <span>{{ item.idEstadoArticulo | estadoArticuloNombre }}</span>
+            </div>
+
+            <div class="ajuste-selection-actions">
+              <button type="button" class="btn btn-primary" (click)="seleccionarArticulo(item)">
+                {{ articuloSeleccionado()?.idArticulo === item.idArticulo ? 'Seleccionado' : 'Seleccionar' }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <div class="pagination">
+      <span>Mostrando {{ lista().length }} de {{ totalElementos() }}</span>
+      <label for="size">Por página</label>
+      <div [formGroup]="filtrosForm">
+        <select id="size" formControlName="size" (change)="cambiarTamano()">
+          @for (tamano of tamanosPagina; track tamano) {
+            <option [ngValue]="tamano">{{ tamano }}</option>
+          }
+        </select>
+      </div>
+      <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
+      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
+      <strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
+      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+      <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+    </div>
+  </div>
+</div>

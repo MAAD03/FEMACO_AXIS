@@ -4,17 +4,17 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.OrdenCompraCreateDTO;
 import com.femaco.main.Entity.Suministro.OrdenCompra;
 import com.femaco.main.Service.Suministro.OrdenCompraService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/ordenCompra")
@@ -31,6 +31,12 @@ public class OrdenCompraController {
         return ResponseEntity.ok(ordenCompraService.buscarTodos());
     }
 
+     @PostMapping("/crear-con-detalles")
+    public ResponseEntity<OrdenCompra> crearConDetalles(@Valid @RequestBody OrdenCompraCreateDTO dto) {
+        OrdenCompra creada = ordenCompraService.crearConDetalles(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    }
+    /* 
     @PostMapping("/crear")
     public ResponseEntity<OrdenCompra> crear(@RequestBody OrdenCompra ordenCompra) {
         OrdenCompra creado = ordenCompraService.crear(ordenCompra);
@@ -53,5 +59,5 @@ public class OrdenCompraController {
         }
         return ResponseEntity.noContent().build();
     }
-
+    */
 }

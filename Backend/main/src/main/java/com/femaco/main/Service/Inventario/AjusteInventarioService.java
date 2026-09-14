@@ -6,18 +6,19 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.femaco.main.DTOs.AjusteInventarioFiltroDTO;
 import com.femaco.main.DTOs.AjusteInventarioRequestDTO;
 import com.femaco.main.Entity.Inventario.AjusteInventario;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Entity.Seguridad.Usuario;
+import com.femaco.main.Exception.BusinessException;
+import com.femaco.main.Exception.ResourceNotFoundException;
+import com.femaco.main.Exception.UnauthorizedException;
 import com.femaco.main.Repository.Inventario.AjusteInventarioRepository;
 import com.femaco.main.Repository.Inventario.ArticuloRepository;
 import com.femaco.main.Repository.Seguridad.UsuarioRepository;
@@ -52,36 +53,36 @@ public class AjusteInventarioService {
     @Transactional
     public AjusteInventario crear(AjusteInventarioRequestDTO dto) {
         if (dto == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud no puede ser nula.");
+            throw new BusinessException("La solicitud no puede ser nula.");
         }
 
         if (dto.getCantidad() == null || dto.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo cantidad debe ser mayor que cero.");
+            throw new BusinessException("El campo cantidad debe ser mayor que cero.");
         }
 
         if (dto.getIdArticulo() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo idArticulo es obligatorio.");
+            throw new BusinessException("El campo idArticulo es obligatorio.");
         }
 
         boolean agregar = Boolean.TRUE.equals(dto.getAgregar());
         boolean quitar = Boolean.TRUE.equals(dto.getQuitar());
 
         if (agregar && quitar) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Los campos agregar y quitar no pueden estar activos al mismo tiempo.");
+            throw new BusinessException("Los campos agregar y quitar no pueden estar activos al mismo tiempo.");
         }
 
         if (!agregar && !quitar) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar si es un ajuste de agregar o quitar.");
+            throw new BusinessException("Debe indicar si es un ajuste de agregar o quitar.");
         }
 
         Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
 
         Articulo articulo = articuloRepository.findById(dto.getIdArticulo())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el artículo con idArticulo " + dto.getIdArticulo() + "."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe el artículo con idArticulo " + dto.getIdArticulo() + "."));
 
         if (articulo.getIdEstadoArticulo() == null || !Long.valueOf(1L).equals(articulo.getIdEstadoArticulo())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new BusinessException(
                     "No se puede realizar el ajuste porque el artículo con idArticulo " + dto.getIdArticulo()
                             + " no está activo."
             );
@@ -90,8 +91,7 @@ public class AjusteInventarioService {
         BigDecimal cantidadAbs = dto.getCantidad().abs();
 
         if (quitar && articulo.getStockActual().compareTo(cantidadAbs) < 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new BusinessException(
                     "No se puede quitar " + cantidadAbs + " del artículo " + dto.getIdArticulo()
                             + " porque el stock actual es " + articulo.getStockActual() + "."
             );
@@ -129,16 +129,13 @@ public class AjusteInventarioService {
         if (authentication == null || !authentication.isAuthenticated()
                 || authentication.getPrincipal() == null
                 || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado");
+            throw new UnauthorizedException("Usuario no autenticado");
         }
 
         String correo = authentication.getName();
 
         return usuarioRepository.findByCorreoElectronico(correo)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuario autenticado no encontrado"
-                ));
+                .orElseThrow(() -> new UnauthorizedException("Usuario autenticado no encontrado"));
     }
 /* 
     @Transactional

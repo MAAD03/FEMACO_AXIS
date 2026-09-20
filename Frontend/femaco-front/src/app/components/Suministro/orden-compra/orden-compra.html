@@ -1,1 +1,252 @@
-<p>orden-compra works!</p>
+<div class="crud-container">
+  <h2 class="crud-title">Orden de compra</h2>
+
+  @if (mensaje()) {
+    <div class="alert alert-success">{{ mensaje() }}</div>
+  }
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  @if (puedeCrear) {
+    <div class="card form-card">
+      <h3 class="card-title">Nueva orden de compra</h3>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+        <div class="order-form-grid">
+          <div class="form-group">
+            <label for="idProveedor">Proveedor *</label>
+            <select id="idProveedor" formControlName="idProveedor" class="form-control">
+              <option [ngValue]="null">Seleccione un proveedor</option>
+              @for (proveedor of proveedores(); track proveedor.idProveedor) {
+                <option [ngValue]="proveedor.idProveedor">
+                  {{ proveedor.idProveedor | proveedorNombre }}
+                </option>
+              }
+            </select>
+            @if (f['idProveedor'].touched && f['idProveedor'].invalid) {
+              <div class="error-msg">El proveedor es obligatorio</div>
+            }
+          </div>
+
+          <div class="form-group form-span-2">
+            <label for="notas">Notas</label>
+            <textarea
+              id="notas"
+              formControlName="notas"
+              class="form-control"
+              rows="3"
+              maxlength="2000"
+              placeholder="Observaciones generales de la orden"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="card cart-card">
+          <div class="cart-header">
+            <h3 class="card-title">Carrito de Orden</h3>
+            <span class="result-count">{{ items().length }} artículos</span>
+          </div>
+
+          <div class="cart-items">
+            @if (items().length === 0) {
+              <p class="empty">El carrito está vacío. Selecciona artículos del listado inferior.</p>
+            } @else {
+              <div class="cart-list-header">
+                <span>ID</span>
+                <span>Nombre</span>
+                <span>Cantidad</span>
+                <span>Precio</span>
+                <span>Acción</span>
+              </div>
+
+              @for (item of items(); track item.idArticulo; let i = $index) {
+                <div class="cart-item">
+                  <div class="cart-item-cell id-cell">{{ item.codigo || item.idArticulo }}</div>
+                  <div class="cart-item-cell name-cell">{{ item.nombre }}</div>
+
+                  <div class="cart-item-cell quantity-cell">
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="form-control compact-input"
+                      [ngModel]="item.cantidad"
+                      (ngModelChange)="actualizarCantidad(i, $event < 0 ? 0 : $event)"
+                      [ngModelOptions]="{ standalone: true }"
+                    />
+                  </div>
+
+                  <div class="cart-item-cell price-cell">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="form-control compact-input"
+                      [ngModel]="item.precioUnitario"
+                      (ngModelChange)="actualizarPrecio(i, $event < 0 ? 0 : $event)"
+                      [ngModelOptions]="{ standalone: true }"
+                    />
+                  </div>
+
+                  <div class="cart-item-cell action-cell">
+                    <button type="button" class="btn-icon btn-delete" (click)="eliminarArticulo(i)" title="Quitar artículo">
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          <div class="order-summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong>Q {{ totalOrden | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid || items().length === 0">
+            Guardar orden
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card filters-card">
+      <div class="filters-heading">
+        <div>
+          <h3 class="card-title">Buscar artículos activos</h3>
+          <p>Selecciona los productos que deseas incluir en la orden.</p>
+        </div>
+        <span class="result-count">{{ totalElementos() }} resultados</span>
+      </div>
+
+      <form [formGroup]="filtrosForm" (ngSubmit)="buscarArticulos()" class="filters-form">
+        <div class="ajuste-search-row">
+          <div class="form-group search-field">
+            <label for="q">Búsqueda</label>
+            <input id="q" type="search" formControlName="q" class="form-control" placeholder="Código, nombre o descripción" />
+          </div>
+          <button type="submit" class="btn btn-primary search-button" [disabled]="buscandoArticulos()">Buscar</button>
+          <button type="button" class="btn btn-secondary clear-button" (click)="limpiarFiltros()" [disabled]="buscandoArticulos()">Limpiar filtros</button>
+        </div>
+
+        <div class="filters-grid">
+          <div class="form-group">
+            <label for="idArea">Área</label>
+            <select id="idArea" formControlName="idArea" class="form-control">
+              <option [ngValue]="null">Todas</option>
+              @for (area of areas(); track area.idAreaArticulo) {
+                <option [ngValue]="area.idAreaArticulo">{{ area.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="idUnidad">Unidad</label>
+            <select id="idUnidad" formControlName="idUnidad" class="form-control">
+              <option [ngValue]="null">Todas</option>
+              @for (unidad of unidades(); track unidad.idUnidadMedida) {
+                <option [ngValue]="unidad.idUnidadMedida">{{ unidad.nombre }} ({{ unidad.abreviatura }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="range-filter-group stock-filter-group">
+            <label>Stock</label>
+            <div class="range-values">
+              <input id="stockMin" type="number" min="0" step="0.01" formControlName="stockMin" class="form-control" placeholder="Desde" aria-label="Stock desde" />
+              <input id="stockMax" type="number" min="0" step="0.01" formControlName="stockMax" class="form-control" placeholder="Hasta" aria-label="Stock hasta" />
+            </div>
+          </div>
+
+          <div class="range-filter-group">
+            <label>Precio (Q)</label>
+            <div class="range-values">
+              <input id="precioMin" type="number" min="0" step="0.01" formControlName="precioMin" class="form-control" placeholder="Desde" aria-label="Precio desde" />
+              <input id="precioMax" type="number" min="0" step="0.01" formControlName="precioMax" class="form-control" placeholder="Hasta" aria-label="Precio hasta" />
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-checks">
+          <label><input type="checkbox" formControlName="stockBajo" /> Stock bajo</label>
+          <label><input type="checkbox" formControlName="sinStock" /> Sin stock</label>
+        </div>
+      </form>
+
+      @if (buscandoArticulos()) {
+        <p class="loading">Cargando artículos...</p>
+      } @else if (articulos().length === 0) {
+        <p class="empty">No hay artículos activos que coincidan con la búsqueda.</p>
+      } @else {
+        <div class="ajuste-article-list">
+          @for (articulo of articulos(); track articulo.idArticulo) {
+            <article class="ajuste-article-item" [class.selected]="items().some(item => item.idArticulo === articulo.idArticulo)">
+              <div class="ajuste-article-header">
+                <div>
+                  <span class="article-item-id">ID {{ articulo.idArticulo }}{{ articulo.codigo ? ' · ' + articulo.codigo : '' }}</span>
+                  <h4>{{ articulo.nombre }}</h4>
+                </div>
+              </div>
+
+              <p class="article-description">{{ articulo.descripcion || 'Sin descripción' }}</p>
+
+              <div class="article-metrics">
+                <div>
+                  <span>Stock</span>
+                  <strong>{{ articulo.stockActual ?? 0 | number:'1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span>Precio</span>
+                  <strong>Q {{ (articulo.precioCompraUltimoProveedor ?? 0) | number:'1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span>Área</span>
+                  <strong>{{ articulo.idAreaArticulo | areaArticuloNombre }}</strong>
+                </div>
+                <div>
+                  <span>Unidad</span>
+                  <strong>{{ articulo.idUnidadMedida | unidadMedidaAbreviatura }}</strong>
+                </div>
+              </div>
+
+              <div class="article-tags">
+                <span>{{ articulo.idEstadoArticulo | estadoArticuloNombre }}</span>
+              </div>
+
+              <div class="ajuste-selection-actions">
+                <button type="button" class="btn btn-primary" (click)="agregarArticulo(articulo)">
+                  {{ items().some(item => item.idArticulo === articulo.idArticulo) ? 'Agregado' : 'Seleccionar' }}
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+      <div class="pagination">
+        <span>Mostrando {{ articulos().length }} de {{ totalElementos() }}</span>
+        <label for="size">Por página</label>
+        <div [formGroup]="filtrosForm">
+          <select id="size" formControlName="size" (change)="cambiarTamano()">
+            @for (tamano of tamanosPagina; track tamano) {
+              <option [ngValue]="tamano">{{ tamano }}</option>
+            }
+          </select>
+        </div>
+        <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
+        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
+        <strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
+        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+        <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+      </div>
+    </div>
+  } @else {
+    <div class="alert alert-error">No tienes permisos para crear órdenes de compra.</div>
+  }
+</div>

@@ -514,9 +514,8 @@ INSERT INTO `estado_orden_compra`
 VALUES
 (1, 'Pendiente', NOW(), 1, NOW(), 1),
 (2, 'Completada', NOW(), 1, NOW(), 1),
-(3, 'Parcialmente recibida', NOW(), 1, NOW(), 1),
-(4, 'Cancelada', NOW(), 1, NOW(), 1),
-(5, 'Entregado', NOW(), 1, NOW(), 1);
+(3, 'Parcialmente completada', NOW(), 1, NOW(), 1),
+(4, 'Cancelado', NOW(), 1, NOW(), 1);
 
 -- 7. estado_cliente
 INSERT INTO `estado_cliente` 

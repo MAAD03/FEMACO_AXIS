@@ -1,16 +1,20 @@
 package com.femaco.main.Controller.Suministro;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.femaco.main.DTOs.OrdenCompraCreateDTO;
+import com.femaco.main.DTOs.OrdenCompraUpdateDTO;
 import com.femaco.main.Entity.Suministro.OrdenCompra;
 import com.femaco.main.Service.Suministro.OrdenCompraService;
 
@@ -27,14 +31,22 @@ public class OrdenCompraController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<OrdenCompra>> buscar() {
-        return ResponseEntity.ok(ordenCompraService.buscarTodos());
+    public ResponseEntity<Page<OrdenCompra>> buscar(
+            @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return ResponseEntity.ok(ordenCompraService.buscarTodos(pageable));
     }
 
      @PostMapping("/crear-con-detalles")
     public ResponseEntity<OrdenCompra> crearConDetalles(@Valid @RequestBody OrdenCompraCreateDTO dto) {
         OrdenCompra creada = ordenCompraService.crearConDetalles(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    }
+
+    @PutMapping("/actualizar-con-detalles")
+    public ResponseEntity<OrdenCompra> actualizarConDetalles(@Valid @RequestBody OrdenCompraUpdateDTO dto) {
+        OrdenCompra actualizada = ordenCompraService.actualizarConDetalles(dto);
+        return ResponseEntity.ok(actualizada);
     }
     /* 
     @PostMapping("/crear")

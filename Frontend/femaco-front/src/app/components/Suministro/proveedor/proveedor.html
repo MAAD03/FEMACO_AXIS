@@ -1,1 +1,105 @@
-<p>proveedor works!</p>
+<div class="crud-container">
+	<h2 class="crud-title">Proveedores</h2>
+
+	@if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
+	@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+	@if (puedeCrear || (editando && puedeEditar)) {
+		<div class="card form-card">
+			<h3 class="card-title">{{ editando ? 'Editar proveedor' : 'Nuevo proveedor' }}</h3>
+			<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form proveedor-form">
+				<div class="form-row proveedor-form-row proveedor-main-row">
+					<div class="form-group">
+						<label for="nombre">Nombre *</label>
+						<input id="nombre" type="text" formControlName="nombre" class="form-control" placeholder="Nombre del proveedor" maxlength="150" />
+						@if (f['nombre'].touched && f['nombre'].invalid) {
+							<div class="error-msg">
+								@if (f['nombre'].errors?.['required']) { El nombre es obligatorio }
+								@if (f['nombre'].errors?.['maxlength']) { Máximo 150 caracteres }
+							</div>
+						}
+					</div>
+					<div class="form-group">
+						<label for="nit">NIT</label>
+						<input id="nit" type="text" formControlName="nit" class="form-control" maxlength="45" />
+					</div>
+				</div>
+
+				<div class="form-row proveedor-form-row proveedor-contact-row">
+					<div class="form-group">
+						<label for="telefono">Teléfono</label>
+						<input id="telefono" type="text" formControlName="telefono" class="form-control" maxlength="45" />
+					</div>
+					<div class="form-group">
+						<label for="idEstadoProveedor">Estado *</label>
+						<select id="idEstadoProveedor" formControlName="idEstadoProveedor" class="form-control">
+							<option [ngValue]="null">Seleccione un estado</option>
+							@for (estado of estados(); track estado.idEstadoProveedor) {
+								<option [ngValue]="estado.idEstadoProveedor">{{ estado.nombre }}</option>
+							}
+						</select>
+						@if (f['idEstadoProveedor'].touched && f['idEstadoProveedor'].invalid) { <div class="error-msg">El estado es obligatorio</div> }
+					</div>
+				</div>
+
+				<div class="form-row proveedor-form-row proveedor-extra-row">
+					<div class="form-group">
+						<label for="nombreContacto">Nombre de contacto</label>
+						<input id="nombreContacto" type="text" formControlName="nombreContacto" class="form-control" maxlength="100" />
+					</div>
+					<div class="form-group">
+						<label for="direccion">Dirección</label>
+						<textarea id="direccion" formControlName="direccion" class="form-control" rows="3"></textarea>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">{{ editando ? 'Actualizar' : 'Guardar' }}</button>
+					@if (editando) { <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button> }
+				</div>
+			</form>
+		</div>
+	}
+
+	<div class="card table-card">
+		<h3 class="card-title">Listado de proveedores</h3>
+		@if (cargando() && lista().length === 0) {
+			<p class="loading">Cargando...</p>
+		} @else if (lista().length === 0) {
+			<p class="empty">No hay proveedores registrados.</p>
+		} @else {
+			<div class="proveedor-list">
+				@for (item of lista(); track item.idProveedor) {
+					<article class="proveedor-item">
+						<div class="proveedor-item-main">
+							<span class="proveedor-item-id">ID {{ item.idProveedor }}</span>
+							<h4>{{ item.nombre }}</h4>
+							<div class="proveedor-main-fields">
+								<div class="proveedor-data"><span>NIT</span><strong>{{ item.nit || '—' }}</strong></div>
+								<div class="proveedor-data"><span>Estado</span><strong class="proveedor-status">{{ item.idEstadoProveedor | estadoProveedorNombre }}</strong></div>
+							</div>
+						</div>
+
+						<div class="proveedor-item-contact">
+							<div class="proveedor-data"><span>Persona de contacto</span><strong>{{ item.nombreContacto || '—' }}</strong></div>
+							<div class="proveedor-data"><span>Teléfono</span><strong>{{ item.telefono || '—' }}</strong></div>
+							<div class="proveedor-data proveedor-address"><span>Dirección</span><strong>{{ item.direccion || '—' }}</strong></div>
+						</div>
+
+						<div class="proveedor-item-audit">
+							<div class="proveedor-data"><span>Creado</span><strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+							<div class="proveedor-data"><span>Creado por</span><strong>{{ item.usuarioCreacion | userEmail }}</strong></div>
+							<div class="proveedor-data"><span>Modificado</span><strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+							<div class="proveedor-data"><span>Modificado por</span><strong>{{ item.usuarioModif | userEmail }}</strong></div>
+						</div>
+
+						<div class="proveedor-item-actions">
+							@if (puedeEditar) { <button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">Editar</button> }
+							@if (puedeEliminar) { <button class="btn-icon btn-delete" (click)="eliminar(item.idProveedor!)" title="Eliminar">Eliminar</button> }
+						</div>
+					</article>
+				}
+			</div>
+		}
+	</div>
+</div>

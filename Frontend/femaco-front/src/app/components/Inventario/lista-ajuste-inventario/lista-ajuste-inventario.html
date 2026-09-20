@@ -72,6 +72,7 @@
             <tr>
               <th>ID</th>
               <th>Fecha</th>
+              <th>ID artículo</th>
               <th>Artículo</th>
               <th>Usuario</th>
               <th>Cantidad</th>
@@ -84,6 +85,7 @@
               <tr>
                 <td>{{ item.idAjusteInventario }}</td>
                 <td>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ item.idArticulo }}</td>
                 <td>{{ item.idArticulo | articuloNombre }}</td>
                 <td>{{ item.idUsuario | userEmail }}</td>
                 <td [class.positivo]="item.cantidadAjuste > 0" [class.negativo]="item.cantidadAjuste < 0">

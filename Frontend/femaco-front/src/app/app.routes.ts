@@ -115,6 +115,21 @@ export const routes: Routes = [
         path: 'lista-ajuste-inventario',
         loadComponent: () =>
           import('./components/Inventario/lista-ajuste-inventario/lista-ajuste-inventario').then(m => m.ListaAjusteInventario)
+      },
+      {
+        path: 'lista-orden-compra',
+        loadComponent: () =>
+          import('./components/Suministro/lista-orden-compra/lista-orden-compra').then(m => m.ListaOrdenCompra)
+      },
+      {
+        path: 'datos-articulos',
+        loadComponent: () =>
+          import('./components/Datos/datos-articulos/datos-articulos').then(m => m.DatosArticulos)
+      },
+      {
+        path: 'datos-venta',
+        loadComponent: () =>
+          import('./components/Datos/datos-venta/datos-venta').then(m => m.DatosVenta)
       }
     ]
   },

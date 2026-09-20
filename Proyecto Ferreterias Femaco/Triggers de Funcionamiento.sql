@@ -1,3 +1,5 @@
+-- AGREGAR UN TRIGGER que actualice precio cuando se completa una orden_compra
+
 -- =====================================================================
 -- TRIGGERS DE CONTROL DE INVENTARIO - femacodb
 -- =====================================================================

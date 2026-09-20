@@ -547,8 +547,9 @@ VALUES
 (1, 'Sucursal Femaco', 'Direccion 123', '1234-5678', NOW(), 1, NOW(), 1);
 
 -- =====================================================
--- 11. INSERTS PARA SUPER USUARIO
+-- 11. INSERTS PARA SUPER USUARIO 
 -- =====================================================
+
 -- 1. ROL
 INSERT INTO `rol` (`IdRol`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -562,7 +563,8 @@ VALUES
 (3, 'Inventario', 3, NOW(), 1, NOW(), 1),
 (4, 'Sucursales y Cotizaciones', 4, NOW(), 1, NOW(), 1),
 (5, 'Suministro', 5, NOW(), 1, NOW(), 1),
-(6, 'Ventas', 6, NOW(), 1, NOW(), 1);
+(6, 'Ventas', 6, NOW(), 1, NOW(), 1),
+(7, 'Datos', 7, NOW(), 1, NOW(), 1);
 
 -- 3. MENÚS
 INSERT INTO `menu` (`IdMenu`, `Nombre`, `OrdenMenu`, `IdModulo`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
@@ -580,7 +582,9 @@ VALUES
 -- Suministro
 (7, 'Compras y Proveedores', 1, 5, NOW(), 1, NOW(), 1),
 -- Ventas
-(8, 'Clientes y Ventas', 1, 6, NOW(), 1, NOW(), 1);
+(8, 'Clientes y Ventas', 1, 6, NOW(), 1, NOW(), 1),
+-- Datos
+(9, 'Consultas de Datos', 1, 7, NOW(), 1, NOW(), 1);
 
 -- 4. OPCIONES
 INSERT INTO `opcion` (`IdOpcion`, `Nombre`, `OrdenMenu`, `Pagina`, `IdMenu`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
@@ -597,22 +601,26 @@ VALUES
 (7, 'Usuarios', 1, 'usuario', 3, NOW(), 1, NOW(), 1),
 -- Catálogo
 (9, 'Unidades de Medida', 1, 'unidad-medida', 4, NOW(), 1, NOW(), 1),
--- Inventario
+-- Inventario 
 (10, 'Artículos', 1, 'articulo', 5, NOW(), 1, NOW(), 1),
 (11, 'Áreas de Artículo', 2, 'area-articulo', 5, NOW(), 1, NOW(), 1),
-(12, 'Generar Ajuste de Inventario', 3, 'ajuste-inventario', 5, NOW(), 1, NOW(), 1),
-(13, 'Movimientos de Inventario', 4, 'movimiento-inventario', 5, NOW(), 1, NOW(), 1),
+(13, 'Movimientos de Inventario', 3, 'movimiento-inventario', 5, NOW(), 1, NOW(), 1),
+(12, 'Generar Ajuste de Inventario', 4, 'ajuste-inventario', 5, NOW(), 1, NOW(), 1),
 (14, 'Lista Ajuste de Inventario', 5, 'lista-ajuste-inventario', 5, NOW(), 1, NOW(), 1),
--- Sucursales y Cotizaciones
+-- Sucursales y Cotizaciones 
 (15, 'Sucursales', 1, 'sucursal', 6, NOW(), 1, NOW(), 1),
-(16, 'Cotizaciones', 3, 'cotizacion', 6, NOW(), 1, NOW(), 1),
+(16, 'Cotizaciones', 2, 'cotizacion', 6, NOW(), 1, NOW(), 1),
 -- Suministro
 (17, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
 (18, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
+(22, 'Lista Órdenes de Compra', 3, 'lista-orden-compra', 7, NOW(), 1, NOW(), 1),
 -- Ventas
 (19, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
 (20, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
-(21, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1);
+(21, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1),
+-- Datos
+(23, 'Datos Artículos', 1, 'datos-articulos', 9, NOW(), 1, NOW(), 1),
+(24, 'Datos Venta', 2, 'datos-venta', 9, NOW(), 1, NOW(), 1);
 
 -- 5. ROL_OPCION (Super Usuario con TODOS los permisos)
 INSERT INTO `rol_opcion` (`IdRol`, `IdOpcion`, `Alta`, `Baja`, `Cambio`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
@@ -636,8 +644,10 @@ VALUES
 (1, 18, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Órdenes de Compra
 (1, 19, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Clientes
 (1, 20, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Pedidos
-(1, 21, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Ventas
-
+(1, 21, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Ventas
+(1, 22, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Lista Órdenes de Compra
+(1, 23, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Datos Artículos
+(1, 24, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Datos Venta
 -- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
 (`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, 

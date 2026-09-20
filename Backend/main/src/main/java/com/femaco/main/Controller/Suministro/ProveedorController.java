@@ -31,6 +31,11 @@ public class ProveedorController {
         return ResponseEntity.ok(proveedorService.buscarTodos());
     }
 
+    @GetMapping("/buscarProveedores")
+    public ResponseEntity<List<Proveedor>> buscarProveedores() {
+        return ResponseEntity.ok(proveedorService.buscarProveedores());
+    }
+
     @PostMapping("/crear")
     public ResponseEntity<Proveedor> crear(@RequestBody Proveedor proveedor) {
         Proveedor creado = proveedorService.crear(proveedor);

@@ -31,6 +31,10 @@ export class OrdenCompraService {
     return this.buscar(page, size, sort, direction);
   }
 
+  buscarPorId(idOrdenCompra: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/buscar/${idOrdenCompra}`);
+  }
+
   crearConDetalles(dto: OrdenCompraCreateRequest): Observable<OrdenCompra> {
     return this.http.post<OrdenCompra>(`${this.api}/crear-con-detalles`, dto);
   }

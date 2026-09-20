@@ -1,5 +1,3 @@
--- AGREGAR UN TRIGGER que actualice precio cuando se completa una orden_compra
-
 -- =====================================================================
 -- TRIGGERS DE CONTROL DE INVENTARIO - femacodb
 -- =====================================================================
@@ -8,10 +6,12 @@
 --   2) venta_detalle (AFTER INSERT)            -> inserta en movimiento_inventario
 --   3) orden_compra_detalle (AFTER UPDATE)     -> inserta en movimiento_inventario
 --      SOLO cuando IdEstadoOrdenCompra cambia hacia 'Entregado'
+--      Y ADEMÁS actualiza articulo.UltimoPrecioProveedor con el
+--      PrecioUnitario de esa línea de compra (NUEVO)
 --   4) movimiento_inventario (BEFORE/AFTER INSERT) -> valida stock no-negativo
---      y es quien realmente actualiza articulo.StockActual
+--      y actualiza articulo.StockActual
 --
---  Movimiento_inventario es un libro contable No se puede editar.
+--  Movimiento_inventario es un libro contable. No se puede editar.
 --   - No se puede insertar directamente desde la aplicación
 --     (el usuario de la app NO tiene privilegio INSERT sobre esta tabla)
 --   - No se puede UPDATE ni DELETE nunca
@@ -154,7 +154,9 @@ END$$
 -- =======================================================================
 -- 3) ORDEN_COMPRA_DETALLE
 -- =======================================================================
--- Solo genera movimiento cuando el estado del DETALLE cambia hacia 'Entregado'
+-- Solo genera movimiento cuando el estado del DETALLE cambia hacia 'Entregado'.
+-- NUEVO: además de registrar la entrada de inventario, actualiza
+-- articulo.UltimoPrecioProveedor con el PrecioUnitario de esta línea.
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_after_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_after_update`
 AFTER UPDATE ON `orden_compra_detalle`
@@ -181,6 +183,9 @@ BEGIN
         FROM `orden_compra`
         WHERE `IdOrdenCompra` = NEW.`IdOrdenCompra`;
 
+        -- Registra la entrada de inventario (esto dispara en cascada
+        -- trg_movimiento_inventario_after_insert, que ya actualiza
+        -- articulo.StockActual, FechaModif y UsuarioModif)
         INSERT INTO `movimiento_inventario` (
             `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
             `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
@@ -190,10 +195,21 @@ BEGIN
             NEW.`IdArticulo`, NULL, NEW.`IdOrdenCompra`, NULL, v_IdUsuario,
             NOW(), NEW.`UsuarioCreacion`, NOW(), NEW.`UsuarioModif`
         );
+
+        -- NUEVO: actualiza el último precio de proveedor del artículo
+        -- según el precio unitario pactado en esta línea de compra.
+        -- (PrecioUnitario > 0 ya fue validado en trg_orden_compra_detalle_before_update)
+        UPDATE `articulo`
+        SET `UltimoPrecioProveedor` = NEW.`PrecioUnitario`,
+            `FechaModif`            = NOW(),
+            `UsuarioModif`          = NEW.`UsuarioModif`
+        WHERE `IdArticulo` = NEW.`IdArticulo`;
     END IF;
 END$$
 
--- Una vez Entregado, no se puede cambiar Cantidad/Articulo ni revertir el estado
+-- Una vez Entregado, no se puede cambiar Cantidad/Articulo ni revertir el estado.
+-- Además: no se permite marcar como Entregado con un PrecioUnitario <= 0
+-- (evita precios negativos o en cero que dañarían UltimoPrecioProveedor).
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_before_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_before_update`
 BEFORE UPDATE ON `orden_compra_detalle`
@@ -211,6 +227,15 @@ BEGIN
         IF NEW.`IdEstadoOrdenCompra` <> OLD.`IdEstadoOrdenCompra` THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'No se puede revertir el estado de un detalle ya Entregado; use un ajuste de inventario';
+        END IF;
+    END IF;
+
+    -- NUEVO: al transicionar hacia 'Entregado', el PrecioUnitario debe ser > 0
+    IF NEW.`IdEstadoOrdenCompra` = v_IdEntregado
+       AND OLD.`IdEstadoOrdenCompra` <> v_IdEntregado THEN
+        IF NEW.`PrecioUnitario` IS NULL OR NEW.`PrecioUnitario` <= 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'PrecioUnitario debe ser mayor a 0 para marcar el detalle como Entregado';
         END IF;
     END IF;
 END$$

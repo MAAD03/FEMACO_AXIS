@@ -23,6 +23,10 @@ public class ProveedorService {
         return proveedorRepository.findAll();
     }
 
+    public List<Proveedor> buscarProveedores() {
+        return proveedorRepository.findByIdEstadoProveedor(1L);
+    }
+
     @Transactional
     public Proveedor crear(Proveedor proveedor) {
         LocalDateTime ahora = LocalDateTime.now();

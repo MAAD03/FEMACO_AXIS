@@ -117,7 +117,7 @@ export class OrdenCompra implements OnInit {
   }
 
   private cargarCatalogos(): void {
-    this.proveedorService.buscarTodos().subscribe({
+    this.proveedorService.buscarProveedores().subscribe({
       next: (data) => this.proveedores.set(data ?? []),
       error: () => this.error.set('Error al cargar los proveedores'),
     });

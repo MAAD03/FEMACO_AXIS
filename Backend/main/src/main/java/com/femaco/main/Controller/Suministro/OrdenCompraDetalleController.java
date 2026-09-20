@@ -1,13 +1,8 @@
 package com.femaco.main.Controller.Suministro;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.femaco.main.Entity.Suministro.OrdenCompraDetalle;
 import com.femaco.main.Service.Suministro.OrdenCompraDetalleService;
 
 @RestController
@@ -19,13 +14,12 @@ public class OrdenCompraDetalleController {
     public OrdenCompraDetalleController(OrdenCompraDetalleService ordenCompraService) {
         this.ordenCompraService = ordenCompraService;
     }
-
+/* 
     @GetMapping("/buscar")
     public ResponseEntity<List<OrdenCompraDetalle>> buscar() {
         return ResponseEntity.ok(ordenCompraService.buscarTodos());
     }
 
-    /* 
     @PostMapping("/crear")
     public ResponseEntity<OrdenCompraDetalle> crear(@RequestBody OrdenCompraDetalle ordenCompra) {
         OrdenCompraDetalle creado = ordenCompraService.crear(ordenCompra);

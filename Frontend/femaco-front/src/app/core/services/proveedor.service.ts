@@ -20,6 +20,10 @@ export class ProveedorService {
     return this.http.get<Proveedor[]>(`${this.api}/buscar`);
   }
 
+  buscarProveedores(): Observable<Proveedor[]> {
+    return this.http.get<Proveedor[]>(`${this.api}/buscarProveedores`);
+  }
+
   crear(proveedor: Proveedor): Observable<Proveedor> {
     return this.http.post<Proveedor>(`${this.api}/crear`, proveedor).pipe(
       tap((nuevoProveedor) => {

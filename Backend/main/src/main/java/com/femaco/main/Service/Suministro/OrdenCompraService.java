@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.OrdenCompraConDetallesDTO;
 import com.femaco.main.DTOs.OrdenCompraCreateDTO;
 import com.femaco.main.DTOs.OrdenCompraDetalleCreateDTO;
 import com.femaco.main.DTOs.OrdenCompraDetalleUpdateDTO;
@@ -66,7 +68,29 @@ public class OrdenCompraService {
         return ordenCompraRepository.findAll();
     }
 
-    
+    @Transactional(readOnly = true)
+    public Optional<OrdenCompra> buscarPorId(Long idOrdenCompra) {
+        return ordenCompraRepository.findById(idOrdenCompra);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<OrdenCompraConDetallesDTO> buscarPorIdConDetalles(Long idOrdenCompra) {
+        return ordenCompraRepository.findById(idOrdenCompra)
+                .map(ordenCompra -> {
+                    OrdenCompraConDetallesDTO dto = new OrdenCompraConDetallesDTO();
+                    dto.setOrdenCompra(ordenCompra);
+                    dto.setProveedor(
+                            ordenCompra.getIdProveedor() != null
+                                    ? proveedorRepository.findById(ordenCompra.getIdProveedor()).orElse(null)
+                                    : null);
+                    dto.setUsuarioCreacion(
+                            ordenCompra.getIdUsuario() != null
+                                    ? usuarioRepository.findById(ordenCompra.getIdUsuario()).orElse(null)
+                                    : null);
+                    dto.setDetalles(ordenCompraDetalleRepository.findByIdOrdenCompra(idOrdenCompra));
+                    return dto;
+                });
+    }
 
     @Transactional
     public OrdenCompra crearConDetalles(OrdenCompraCreateDTO dto) {

@@ -37,7 +37,12 @@
 
           <div class="form-group">
             <label>Estado de la orden</label>
-            <select class="form-control" formControlName="idEstadoOrdenCompra" [disabled]="!puedeEditar">
+            <select
+              class="form-control"
+              formControlName="idEstadoOrdenCompra"
+              [disabled]="!puedeEditar || ordenBloqueada()"
+              [title]="ordenBloqueada() ? 'La orden está en un estado final y no puede modificarse' : ''"
+            >
               <option [ngValue]="null">Seleccione un estado</option>
               @for (estado of estadosOrdenCompra(); track estado.idEstadoOrdenCompra) {
                 <option [ngValue]="estado.idEstadoOrdenCompra">{{ estado.nombre }}</option>
@@ -58,11 +63,6 @@
           <div class="form-group">
             <label>Nombre contacto</label>
             <input class="form-control" [value]="proveedorSeleccionado()?.nombreContacto || '—'" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Creado por</label>
-            <input class="form-control" [value]="(usuarioCreacionSeleccionado()?.nombre || '') + ' ' + (usuarioCreacionSeleccionado()?.apellido || '') || '—'" readonly />
           </div>
 
           <div class="form-group form-span-2">
@@ -98,10 +98,11 @@
                     [ngModel]="detalle.idEstadoOrdenCompra ?? null"
                     (ngModelChange)="actualizarEstadoDetalle(detalle.idOrdenCompraDetalle, $event)"
                     [ngModelOptions]="{ standalone: true }"
-                    [disabled]="!puedeEditar"
+                    [disabled]="!puedeEditar || ordenBloqueada() || detalleBloqueado(detalle)"
+                    [title]="detalleBloqueado(detalle) ? 'Este detalle está en un estado final y no puede modificarse' : ''"
                   >
                     <option [ngValue]="null">Seleccione un estado</option>
-                    @for (estado of estadosOrdenCompra(); track estado.idEstadoOrdenCompra) {
+                    @for (estado of estadosDetalleDisponibles; track estado.idEstadoOrdenCompra) {
                       <option [ngValue]="estado.idEstadoOrdenCompra">{{ estado.nombre }}</option>
                     }
                   </select>
@@ -118,7 +119,7 @@
           <span><strong>Modificación:</strong> {{ ordenSeleccionada()!.usuarioModif ?? ordenSeleccionada()!.idUsuario | userEmail }} · {{ ordenSeleccionada()!.fechaModif | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
 
-        <button type="button" class="btn btn-primary" (click)="guardarCambios()" [disabled]="guardando() || !puedeEditar">
+        <button type="button" class="btn btn-primary" (click)="guardarCambios()" [disabled]="guardando() || !puedeEditar || ordenBloqueada()">
           {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
         </button>
       </div>
@@ -127,7 +128,51 @@
 
   <div class="card table-card">
     <div class="table-header">
-      <h3 class="card-title">Órdenes de compra</h3>
+      <h3 class="card-title">Órdenes de compra pendientes</h3>
+      <span class="result-count">{{ ordenesPendientes().length }} pendientes</span>
+    </div>
+
+    @if (cargando() && ordenesPendientes().length === 0) {
+      <p class="loading">Cargando órdenes pendientes...</p>
+    } @else if (ordenesPendientes().length === 0) {
+      <p class="empty">No hay órdenes pendientes.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="crud-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Proveedor</th>
+              <th>Total</th>
+              <th>Usuario</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (orden of ordenesPendientes(); track orden.idOrdenCompra ?? $index) {
+              <tr>
+                <td>{{ orden.idOrdenCompra }}</td>
+                <td>{{ orden.idProveedor | proveedorNombre }}</td>
+                <td>Q {{ (orden.total ?? 0) | number:'1.2-2' }}</td>
+                <td>{{ orden.idUsuario | userEmail }}</td>
+                <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="verDetalles(orden.idOrdenCompra!)">
+                    Ver detalles
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="card table-card">
+    <div class="table-header">
+      <h3 class="card-title">Todas las órdenes de compra</h3>
       <span class="result-count">{{ totalElementos() }} resultados</span>
     </div>
 
@@ -178,18 +223,29 @@
     }
 
     <div class="pagination">
-      <span>Mostrando {{ ordenes().length }} de {{ totalElementos() }}</span>
-      <label for="size">Por página</label>
-      <select id="size" class="form-control compact-select" [ngModel]="6" (ngModelChange)="paginaActual.set(0); cargarLista()" [ngModelOptions]="{ standalone: true }">
-        @for (tamano of tamanosPagina; track tamano) {
-          <option [ngValue]="tamano">{{ tamano }}</option>
-        }
-      </select>
-      <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
-      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
-      <strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
-      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
-      <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+      <div class="pagination-meta">
+        <span class="results-summary">Mostrando {{ ordenes().length }} de {{ totalElementos() }}</span>
+        <label class="page-size-selector">
+          <span>Elementos</span>
+          <select
+            class="form-control compact-select"
+            [ngModel]="tamanoPagina()"
+            (ngModelChange)="cambiarTamanoPagina($event)"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            @for (tamano of tamanosPagina; track tamano) {
+              <option [ngValue]="tamano">{{ tamano }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="pagination-controls">
+        <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
+        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
+        <span class="page-indicator">Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} / {{ totalPaginas() }}</span>
+        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+        <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+      </div>
     </div>
   </div>
 </div>

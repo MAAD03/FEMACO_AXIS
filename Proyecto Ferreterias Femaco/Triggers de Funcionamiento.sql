@@ -5,11 +5,12 @@
 --   1) ajuste_inventario (AFTER INSERT)        -> inserta en movimiento_inventario
 --   2) venta_detalle (AFTER INSERT)            -> inserta en movimiento_inventario
 --   3) orden_compra_detalle (AFTER UPDATE)     -> inserta en movimiento_inventario
---      SOLO cuando IdEstadoOrdenCompra cambia hacia 'Entregado'
+--      SOLO cuando IdEstadoOrdenCompra cambia hacia el Id fijo 2
+--      (Completada)
 --      Y ADEMÁS actualiza articulo.UltimoPrecioProveedor con el
 --      PrecioUnitario de esa línea de compra (NUEVO)
 --   4) movimiento_inventario (BEFORE/AFTER INSERT) -> valida stock no-negativo
---      y actualiza articulo.StockActual
+--      y es quien realmente actualiza articulo.StockActual
 --
 --  Movimiento_inventario es un libro contable. No se puede editar.
 --   - No se puede insertar directamente desde la aplicación
@@ -17,30 +18,12 @@
 --   - No se puede UPDATE ni DELETE nunca
 --   - venta_detalle y ajuste_inventario tampoco se pueden UPDATE/DELETE
 --     una vez creados (usar un nuevo ajuste_inventario para corregir)
---   - orden_compra_detalle no se puede modificar/eliminar una vez Entregado
+--   - orden_compra_detalle no se puede modificar/eliminar una vez Completada
 -- =====================================================================
 
 USE `femacodb`;
 
 DELIMITER $$
-
--- ---------------------------------------------------------------------
--- Función auxiliar: obtiene el Id del estado "Entregado" por nombre
--- ---------------------------------------------------------------------
-DROP FUNCTION IF EXISTS `fn_id_estado_oc_entregado`$$
-CREATE FUNCTION `fn_id_estado_oc_entregado`()
-RETURNS INT
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    DECLARE v_id INT;
-    SELECT `IdEstadoOrdenCompra` INTO v_id
-    FROM `estado_orden_compra`
-    WHERE `Nombre` = 'Entregado'
-    LIMIT 1;
-    RETURN v_id;
-END$$
-
 -- =======================================================================
 -- 1) AJUSTE_INVENTARIO
 -- =======================================================================
@@ -154,9 +137,10 @@ END$$
 -- =======================================================================
 -- 3) ORDEN_COMPRA_DETALLE
 -- =======================================================================
--- Solo genera movimiento cuando el estado del DETALLE cambia hacia 'Entregado'.
--- NUEVO: además de registrar la entrada de inventario, actualiza
--- articulo.UltimoPrecioProveedor con el PrecioUnitario de esta línea.
+-- Solo genera movimiento cuando el estado del DETALLE cambia hacia
+-- IdEstadoOrdenCompra = 2 (Completada).
+-- Además de registrar la entrada de inventario, actualiza
+-- articulo.PrecioCompraUltimoProveedor con el PrecioUnitario de esta línea.
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_after_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_after_update`
 AFTER UPDATE ON `orden_compra_detalle`
@@ -165,9 +149,7 @@ BEGIN
     DECLARE v_StockViejo DECIMAL(12,2);
     DECLARE v_StockNuevo DECIMAL(12,2);
     DECLARE v_IdUsuario  INT;
-    DECLARE v_IdEntregado INT;
-
-    SET v_IdEntregado = fn_id_estado_oc_entregado();
+    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada" (estado_orden_compra)
 
     IF NEW.`IdEstadoOrdenCompra` = v_IdEntregado
        AND OLD.`IdEstadoOrdenCompra` <> v_IdEntregado THEN
@@ -197,45 +179,41 @@ BEGIN
         );
 
         -- NUEVO: actualiza el último precio de proveedor del artículo
-        -- según el precio unitario pactado en esta línea de compra.
-        -- (PrecioUnitario > 0 ya fue validado en trg_orden_compra_detalle_before_update)
+        -- según el precio unitario en esta línea de compra.
         UPDATE `articulo`
-        SET `UltimoPrecioProveedor` = NEW.`PrecioUnitario`,
+        SET `PrecioCompraUltimoProveedor` = NEW.`PrecioUnitario`,
             `FechaModif`            = NOW(),
             `UsuarioModif`          = NEW.`UsuarioModif`
         WHERE `IdArticulo` = NEW.`IdArticulo`;
     END IF;
 END$$
 
--- Una vez Entregado, no se puede cambiar Cantidad/Articulo ni revertir el estado.
--- Además: no se permite marcar como Entregado con un PrecioUnitario <= 0
--- (evita precios negativos o en cero que dañarían UltimoPrecioProveedor).
+-- Una vez Completada, no se puede cambiar Cantidad/Articulo ni revertir el estado.
+-- Además: no se permite marcar como Completada con un PrecioUnitario <= 0
+-- (evita precios negativos o en cero ).
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_before_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_before_update`
 BEFORE UPDATE ON `orden_compra_detalle`
 FOR EACH ROW
 BEGIN
-    DECLARE v_IdEntregado INT;
-    SET v_IdEntregado = fn_id_estado_oc_entregado();
+    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada" (estado_orden_compra)
 
     IF OLD.`IdEstadoOrdenCompra` = v_IdEntregado THEN
         IF NEW.`Cantidad` <> OLD.`Cantidad` OR NEW.`IdArticulo` <> OLD.`IdArticulo` THEN
             SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'No se puede modificar Cantidad/Artículo de un detalle ya Entregado; use un ajuste de inventario';
+            SET MESSAGE_TEXT = 'No se puede modificar Cantidad/Artículo de un detalle ya Completado; use un ajuste de inventario';
         END IF;
 
         IF NEW.`IdEstadoOrdenCompra` <> OLD.`IdEstadoOrdenCompra` THEN
             SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'No se puede revertir el estado de un detalle ya Entregado; use un ajuste de inventario';
+            SET MESSAGE_TEXT = 'No se puede revertir el estado de un detalle ya Completado; use un ajuste de inventario';
         END IF;
     END IF;
-
-    -- NUEVO: al transicionar hacia 'Entregado', el PrecioUnitario debe ser > 0
     IF NEW.`IdEstadoOrdenCompra` = v_IdEntregado
        AND OLD.`IdEstadoOrdenCompra` <> v_IdEntregado THEN
         IF NEW.`PrecioUnitario` IS NULL OR NEW.`PrecioUnitario` <= 0 THEN
             SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'PrecioUnitario debe ser mayor a 0 para marcar el detalle como Entregado';
+            SET MESSAGE_TEXT = 'PrecioUnitario debe ser mayor a 0 para marcar el detalle como Completada';
         END IF;
     END IF;
 END$$
@@ -245,12 +223,11 @@ CREATE TRIGGER `trg_orden_compra_detalle_no_delete_entregado`
 BEFORE DELETE ON `orden_compra_detalle`
 FOR EACH ROW
 BEGIN
-    DECLARE v_IdEntregado INT;
-    SET v_IdEntregado = fn_id_estado_oc_entregado();
+    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada" (estado_orden_compra)
 
     IF OLD.`IdEstadoOrdenCompra` = v_IdEntregado THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'No se puede eliminar un detalle de orden ya Entregado; use un ajuste de inventario';
+        SET MESSAGE_TEXT = 'No se puede eliminar un detalle de orden ya Completado; use un ajuste de inventario';
     END IF;
 END$$
 

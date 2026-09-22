@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, tap, map } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { Usuario } from '../models/usuario.model';
+import { PageUsuario, Usuario } from '../models/usuario.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +19,19 @@ export class UsuarioService {
     return this.http.get<Usuario[]>(`${this.api}/buscar`);
   }
 
+  buscarPagina(
+    page = 0,
+    size = 20,
+    sort = 'idUsuario,asc'
+  ): Observable<PageUsuario> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size)
+      .set('sort', sort);
+
+    return this.http.get<PageUsuario>(`${this.api}/buscar-paginado`, { params });
+  }
+
   crear(usuario: Usuario): Observable<Usuario> {
     return this.http.post<Usuario>(`${this.api}/crear`, usuario).pipe(
       tap((nuevoUsuario) => {
@@ -31,6 +44,16 @@ export class UsuarioService {
 
   actualizar(idUsuario: number, datos: Usuario): Observable<Usuario> {
     return this.http.put<Usuario>(`${this.api}/editar/${idUsuario}`, datos).pipe(
+      tap((usuarioActualizado) => {
+        if (usuarioActualizado?.idUsuario != null && usuarioActualizado.correoElectronico) {
+          this.upsertCacheEntry(usuarioActualizado.idUsuario, usuarioActualizado.correoElectronico);
+        }
+      })
+    );
+  }
+
+  reiniciarPassword(idUsuario: number): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.api}/reiniciar-password/${idUsuario}`, null).pipe(
       tap((usuarioActualizado) => {
         if (usuarioActualizado?.idUsuario != null && usuarioActualizado.correoElectronico) {
           this.upsertCacheEntry(usuarioActualizado.idUsuario, usuarioActualizado.correoElectronico);

@@ -133,8 +133,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `Password` VARCHAR(255) NOT NULL,
   `CorreoElectronico` VARCHAR(150) NOT NULL,
   `RequiereCambioPassword` TINYINT NOT NULL DEFAULT 1,
-  `Pregunta` VARCHAR(150) NULL,
-  `Respuesta` VARCHAR(150) NULL,
+  `IntentosFallidos` INT NOT NULL DEFAULT 0,
   `IdGenero` INT NOT NULL,
   `IdEstadoUsuario` INT NOT NULL,
   `IdSucursal` INT NOT NULL,
@@ -651,15 +650,12 @@ VALUES
 -- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
 (`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, 
- `Pregunta`, `Respuesta`, `IdGenero`, `IdEstadoUsuario`, `IdSucursal`, `IdRol`, 
+ `IntentosFallidos`, `IdGenero`, `IdEstadoUsuario`, `IdSucursal`, `IdRol`, 
  `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
 VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
- 'administrador@femaco.com', 0, NULL, NULL, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
--- =====================================================
--- 13. Datos de ejemplos para Articulos
--- =====================================================
-
+ 'administrador@femaco.com', 0, 0, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
+ 
 -- 13.1 Áreas de artículo (15 registros)
 INSERT INTO `area_articulo`
 (`Nombre`, `Descripcion`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)

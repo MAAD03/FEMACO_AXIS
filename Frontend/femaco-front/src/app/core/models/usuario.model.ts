@@ -23,3 +23,13 @@ export interface UsuarioResumen {
   apellido: string;
   correoElectronico: string;
 }
+
+export interface PageUsuario {
+  content: Usuario[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}

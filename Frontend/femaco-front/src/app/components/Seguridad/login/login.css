@@ -1,12 +1,12 @@
 /* src/app/pages/login/login.component.css */
 .login-container {
   background: linear-gradient(135deg, #DCE8B4 0%, #A7C957 100%);
-  padding: 1rem;
+  padding: 2rem 1rem;
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
   border-radius: 1rem;
   background-color: #ffffff;
 }
@@ -18,6 +18,35 @@
 .form-control:focus {
   border-color: #6A994E;
   box-shadow: 0 0 0 0.25rem rgba(106, 153, 78, 0.25);
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field + .invalid-feedback {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 1.5rem;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #386641;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  z-index: 1;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: #6A994E;
 }
 
 .btn-login {

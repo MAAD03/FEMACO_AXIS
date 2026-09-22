@@ -1,1 +1,249 @@
-<p>usuario works!</p>
+<div class="crud-container">
+  <h2 class="crud-title">Usuarios</h2>
+
+  @if (mensaje()) {
+    <div class="alert alert-success">{{ mensaje() }}</div>
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  @if (puedeCrear || (editando && puedeEditar)) {
+    <div class="card form-card">
+      <h3 class="card-title">
+        {{ editando ? 'Editar usuario' : 'Nuevo usuario' }}
+      </h3>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+        <div class="user-form-grid">
+          <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input id="nombre" type="text" formControlName="nombre" class="form-control" maxlength="100" placeholder="Nombre" />
+            @if (f['nombre'].touched && f['nombre'].invalid) {
+              <div class="error-msg">
+                @if (f['nombre'].errors?.['required']) { El nombre es obligatorio }
+                @if (f['nombre'].errors?.['maxlength']) { Máximo 100 caracteres }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="apellido">Apellido *</label>
+            <input id="apellido" type="text" formControlName="apellido" class="form-control" maxlength="100" placeholder="Apellido" />
+            @if (f['apellido'].touched && f['apellido'].invalid) {
+              <div class="error-msg">
+                @if (f['apellido'].errors?.['required']) { El apellido es obligatorio }
+                @if (f['apellido'].errors?.['maxlength']) { Máximo 100 caracteres }
+              </div>
+            }
+          </div>
+
+          <div class="form-group form-group-wide">
+            <label for="correoElectronico">Correo electrónico *</label>
+            <input id="correoElectronico" type="email" formControlName="correoElectronico" class="form-control" maxlength="150" placeholder="correo@ejemplo.com" />
+            @if (f['correoElectronico'].touched && f['correoElectronico'].invalid) {
+              <div class="error-msg">
+                @if (f['correoElectronico'].errors?.['required']) { El correo es obligatorio }
+                @if (f['correoElectronico'].errors?.['email']) { Ingrese un correo válido }
+                @if (f['correoElectronico'].errors?.['maxlength']) { Máximo 150 caracteres }
+              </div>
+            }
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label for="requiereCambioPassword">Requiere cambio de password</label>
+            <input id="requiereCambioPassword" type="checkbox" formControlName="requiereCambioPassword" class="form-check-input" />
+          </div>
+
+          <div class="form-group">
+            <label for="idGenero">Género *</label>
+            <select id="idGenero" formControlName="idGenero" class="form-control">
+              <option [ngValue]="null" disabled>Seleccione género</option>
+              @for (item of generos(); track item.idGenero) {
+                <option [ngValue]="item.idGenero">{{ item.nombre }}</option>
+              }
+            </select>
+            @if (f['idGenero'].touched && f['idGenero'].invalid) {
+              <div class="error-msg">
+                @if (f['idGenero'].errors?.['required']) { Debe seleccionar un género }
+                @if (f['idGenero'].errors?.['min']) { Debe seleccionar un género válido }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="idEstadoUsuario">Estado *</label>
+            <select id="idEstadoUsuario" formControlName="idEstadoUsuario" class="form-control">
+              <option [ngValue]="null" disabled>Seleccione estado</option>
+              @for (item of estados(); track item.idEstadoUsuario) {
+                <option [ngValue]="item.idEstadoUsuario">{{ item.nombre }}</option>
+              }
+            </select>
+            @if (f['idEstadoUsuario'].touched && f['idEstadoUsuario'].invalid) {
+              <div class="error-msg">
+                @if (f['idEstadoUsuario'].errors?.['required']) { Debe seleccionar un estado }
+                @if (f['idEstadoUsuario'].errors?.['min']) { Debe seleccionar un estado válido }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="idSucursal">Sucursal *</label>
+            <select id="idSucursal" formControlName="idSucursal" class="form-control">
+              <option [ngValue]="null" disabled>Seleccione sucursal</option>
+              @for (item of sucursales(); track item.idSucursal) {
+                <option [ngValue]="item.idSucursal">{{ item.nombre }}</option>
+              }
+            </select>
+            @if (f['idSucursal'].touched && f['idSucursal'].invalid) {
+              <div class="error-msg">
+                @if (f['idSucursal'].errors?.['required']) { Debe seleccionar una sucursal }
+                @if (f['idSucursal'].errors?.['min']) { Debe seleccionar una sucursal válida }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="idRol">Rol *</label>
+            <select id="idRol" formControlName="idRol" class="form-control">
+              <option [ngValue]="null" disabled>Seleccione rol</option>
+              @for (item of roles(); track item.idRol) {
+                <option [ngValue]="item.idRol">{{ item.nombre }}</option>
+              }
+            </select>
+            @if (f['idRol'].touched && f['idRol'].invalid) {
+              <div class="error-msg">
+                @if (f['idRol'].errors?.['required']) { Debe seleccionar un rol }
+                @if (f['idRol'].errors?.['min']) { Debe seleccionar un rol válido }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">
+            {{ editando ? 'Actualizar' : 'Guardar' }}
+          </button>
+          @if (editando) {
+            <button type="button" class="btn btn-secondary" (click)="cancelar()">
+              Cancelar
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  }
+
+  <div class="card table-card">
+    <h3 class="card-title">Listado de usuarios</h3>
+
+    <div class="table-toolbar">
+      <span class="table-summary">Mostrando {{ lista().length }} de {{ totalElementos() }} usuarios</span>
+      <div class="pagination-controls">
+        <label class="page-size-label">
+          Mostrar
+          <select class="form-control compact" [value]="tamanioPagina()" (change)="onTamanioPaginaChange($event)">
+            @for (size of tamanosPagina; track size) {
+              <option [value]="size">{{ size }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </div>
+
+    @if (cargando() && lista().length === 0) {
+      <p class="loading">Cargando...</p>
+    } @else if (lista().length === 0) {
+      <p class="empty">No hay usuarios registrados.</p>
+    } @else {
+      <div class="usuario-list">
+        @for (item of lista(); track item.idUsuario) {
+          <article class="usuario-item">
+            <div class="usuario-item-header">
+              <div>
+                <span class="usuario-item-id">ID {{ item.idUsuario }}</span>
+                <h4>{{ item.nombre }} {{ item.apellido }}</h4>
+              </div>
+              <div class="usuario-item-actions">
+                @if (puedeEditar) {
+                  <button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">
+                    Editar
+                  </button>
+                }
+                @if (puedeEditar) {
+                  <button class="btn-icon btn-reset" (click)="reiniciarPassword(item.idUsuario!)" title="Reiniciar contraseña">
+                    Reiniciar password
+                  </button>
+                }
+                @if (puedeEliminar) {
+                  <button class="btn-icon btn-delete" (click)="eliminar(item.idUsuario!)" title="Eliminar">
+                    Eliminar
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="usuario-item-grid">
+              <div class="usuario-detail">
+                <span>Correo</span>
+                <strong>{{ item.correoElectronico }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Género</span>
+                <strong>{{ item.idGenero | generoNombre }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Estado</span>
+                <strong>{{ item.idEstadoUsuario | estadoUsuarioNombre }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Sucursal</span>
+                <strong>{{ item.idSucursal | sucursalNombre }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Rol</span>
+                <strong>{{ item.idRol | rolNombre }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Requiere cambio</span>
+                <strong>{{ item.requiereCambioPassword ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Creación</span>
+                <strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Usuario creación</span>
+                <strong>{{ item.usuarioCreacion | userEmail }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Última modificación</span>
+                <strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Usuario modificación</span>
+                <strong>{{ item.usuarioModif | userEmail }}</strong>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="pagination">
+        <button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0" (click)="irAPagina(0)">
+          Primera
+        </button>
+        <button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0" (click)="irAPagina(paginaActual() - 1)">
+          Anterior
+        </button>
+        <span class="page-indicator">Página {{ paginaActual() + 1 }} / {{ totalPaginas() || 1 }}</span>
+        <button type="button" class="btn btn-secondary" [disabled]="paginaActual() >= (totalPaginas() - 1) || totalPaginas() === 0" (click)="irAPagina(paginaActual() + 1)">
+          Siguiente
+        </button>
+        <button type="button" class="btn btn-secondary" [disabled]="totalPaginas() === 0 || paginaActual() >= (totalPaginas() - 1)" (click)="irAPagina((totalPaginas() || 1) - 1)">
+          Última
+        </button>
+      </div>
+    }
+  </div>
+</div>

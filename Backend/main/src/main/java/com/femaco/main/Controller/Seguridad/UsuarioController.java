@@ -2,6 +2,10 @@ package com.femaco.main.Controller.Seguridad;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,6 +35,13 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.buscarTodos());
     }
 
+    @GetMapping("/buscar-paginado")
+    public ResponseEntity<Page<Usuario>> buscarPaginado(
+            @PageableDefault(size = 20, sort = "idUsuario", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+        return ResponseEntity.ok(usuarioService.buscarPaginar(pageable));
+    }
+
     @PostMapping("/crear")
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
         Usuario creado = usuarioService.crear(usuario);
@@ -39,8 +50,15 @@ public class UsuarioController {
 
     @PutMapping("/editar/{idUsuario}")
     public ResponseEntity<Usuario> editar(@PathVariable Long idUsuario,
-                                                   @RequestBody Usuario usuario) {
+                                          @RequestBody Usuario usuario) {
         return usuarioService.actualizar(idUsuario, usuario)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/reiniciar-password/{idUsuario}")
+    public ResponseEntity<Usuario> reiniciarPassword(@PathVariable Long idUsuario) {
+        return usuarioService.reiniciarPassword(idUsuario)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -60,5 +78,4 @@ public class UsuarioController {
             String apellido,
             String correoElectronico) {
     }
-    
 }

@@ -2,6 +2,8 @@ package com.femaco.main.Entity.Seguridad;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,12 +15,12 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "usuario")
-public class Usuario  {
+public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IdUsuario")
-    private Long idUsuario;  
+    private Long idUsuario;
 
     @Column(name = "Nombre", nullable = false, length = 100)
     private String nombre;
@@ -26,6 +28,7 @@ public class Usuario  {
     @Column(name = "Apellido", nullable = false, length = 100)
     private String apellido;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "Password", nullable = false, length = 255)
     private String password;
 
@@ -35,11 +38,8 @@ public class Usuario  {
     @Column(name = "RequiereCambioPassword", nullable = false)
     private Boolean requiereCambioPassword;
 
-    @Column(name = "Pregunta", nullable = false, length = 150)
-    private String pregunta;
-
-    @Column(name = "Respuesta", nullable = false, length = 150)
-    private String respuesta;
+    @Column(name = "IntentosFallidos", nullable = false)
+    private Integer intentosFallidos = 0;
 
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
@@ -54,18 +54,14 @@ public class Usuario  {
     private Integer usuarioModif;
 
     @Column(name = "IdGenero")
-    private Long idGenero;  
+    private Long idGenero;
 
     @Column(name = "IdEstadoUsuario")
     private Long idEstadoUsuario;
 
     @Column(name = "IdSucursal")
-    private Long idSucursal;  
+    private Long idSucursal;
 
     @Column(name = "IdRol")
-    private Long idRol;  
-    
-
-
-    
+    private Long idRol;
 }

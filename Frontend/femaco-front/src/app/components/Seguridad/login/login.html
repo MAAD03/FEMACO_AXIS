@@ -4,9 +4,17 @@
     <div class="card-body p-4 p-md-5">
       <div class="text-center mb-4">
         <h2 class="fw-bold title">Distribuidora Femaco</h2>
-        <h2 class="fw-bold title">Iniciar Sesión</h2>
-        <p class="text-muted">Ingresa tus credenciales para continuar</p>
+        <h2 class="fw-bold title">{{ mostrarCambioPassword ? 'Cambiar Contraseña' : 'Iniciar Sesión' }}</h2>
+        <p class="text-muted">
+          {{ mostrarCambioPassword ? 'Debes definir una nueva contraseña para continuar' : 'Ingresa tus credenciales para continuar' }}
+        </p>
       </div>
+
+      @if (successMessage) {
+        <div class="alert alert-success py-2" role="alert">
+          {{ successMessage }}
+        </div>
+      }
 
       @if (errorMessage) {
         <div class="alert alert-danger py-2" role="alert">
@@ -14,6 +22,7 @@
         </div>
       }
 
+      @if (!mostrarCambioPassword) {
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <div class="mb-3">
           <label for="correo" class="form-label fw-semibold">Correo electrónico</label>
@@ -39,14 +48,25 @@
 
         <div class="mb-4">
           <label for="password" class="form-label fw-semibold">Contraseña</label>
-          <input
-            type="password"
-            id="password"
-            class="form-control form-control-lg"
-            formControlName="password"
-            placeholder="••••••••"
-            [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-          />
+          <div class="password-field">
+            <input
+              [type]="mostrarPassword ? 'text' : 'password'"
+              id="password"
+              class="form-control form-control-lg pe-5"
+              formControlName="password"
+              placeholder="••••••••"
+              [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.title]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              (click)="mostrarPassword = !mostrarPassword"
+            >
+              {{ mostrarPassword ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
           @if (loginForm.get('password')?.errors?.['required']) {
             <div class="invalid-feedback">
               La contraseña es obligatoria
@@ -64,12 +84,95 @@
           class="btn btn-login w-100 btn-lg fw-semibold"
           [disabled]="isLoading"
         >
-          @if (isLoading) {
-            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-          }
           {{ isLoading ? 'Ingresando...' : 'Ingresar' }}
         </button>
       </form>
+      } @else {
+      <form [formGroup]="cambioPasswordForm" (ngSubmit)="onSubmitCambioPassword()">
+        <div class="mb-3">
+          <label for="nuevaPassword" class="form-label fw-semibold">Nueva contraseña</label>
+          <div class="password-field">
+            <input
+              [type]="mostrarNuevaPassword ? 'text' : 'password'"
+              id="nuevaPassword"
+              class="form-control form-control-lg pe-5"
+              formControlName="nuevaPassword"
+              placeholder="••••••••"
+              [class.is-invalid]="cambioPasswordForm.get('nuevaPassword')?.invalid && cambioPasswordForm.get('nuevaPassword')?.touched"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              [attr.aria-label]="mostrarNuevaPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.title]="mostrarNuevaPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              (click)="mostrarNuevaPassword = !mostrarNuevaPassword"
+            >
+              {{ mostrarNuevaPassword ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+          @if (cambioPasswordForm.get('nuevaPassword')?.errors?.['required']) {
+            <div class="invalid-feedback">
+              La nueva contraseña es obligatoria
+            </div>
+          }
+          @if (cambioPasswordForm.get('nuevaPassword')?.errors?.['minlength']) {
+            <div class="invalid-feedback">
+              Mínimo 6 caracteres
+            </div>
+          }
+        </div>
+
+        <div class="mb-4">
+          <label for="confirmarPassword" class="form-label fw-semibold">Confirmar contraseña</label>
+          <div class="password-field">
+            <input
+              [type]="mostrarConfirmarPassword ? 'text' : 'password'"
+              id="confirmarPassword"
+              class="form-control form-control-lg pe-5"
+              formControlName="confirmarPassword"
+              placeholder="••••••••"
+              [class.is-invalid]="cambioPasswordForm.get('confirmarPassword')?.invalid && cambioPasswordForm.get('confirmarPassword')?.touched"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              [attr.aria-label]="mostrarConfirmarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.title]="mostrarConfirmarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              (click)="mostrarConfirmarPassword = !mostrarConfirmarPassword"
+            >
+              {{ mostrarConfirmarPassword ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+          @if (cambioPasswordForm.get('confirmarPassword')?.errors?.['required']) {
+            <div class="invalid-feedback">
+              Confirma la nueva contraseña
+            </div>
+          }
+          @if (cambioPasswordForm.errors?.['passwordsMismatch'] && cambioPasswordForm.get('confirmarPassword')?.touched) {
+            <div class="invalid-feedback">
+              Las contraseñas no coinciden
+            </div>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-login w-100 btn-lg fw-semibold"
+          [disabled]="isLoading"
+        >
+          {{ isLoading ? 'Actualizando...' : 'Actualizar contraseña' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-link w-100 mt-2"
+          (click)="cancelarCambioPassword()"
+          [disabled]="isLoading"
+        >
+          Volver a iniciar sesión
+        </button>
+      </form>
+      }
     </div>
   </div>
 </div>

@@ -32,6 +32,9 @@ public class Cliente  {
     @Column(name = "Correo", nullable = true, length = 200)
     private String correo;
 
+    @Column(name = "Direccion", nullable = true, length = 255)
+    private String direccion;
+
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 

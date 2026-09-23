@@ -39,6 +39,19 @@ public class SucursalService {
             existente.setNombre(datosNuevos.getNombre());
             existente.setDireccion(datosNuevos.getDireccion());
             existente.setTelefono(datosNuevos.getTelefono());
+            existente.setFelNitEmisor(datosNuevos.getFelNitEmisor());
+            existente.setFelNombreEmisor(datosNuevos.getFelNombreEmisor());
+            existente.setFelNombreComercial(datosNuevos.getFelNombreComercial());
+            existente.setFelCorreoEmisor(datosNuevos.getFelCorreoEmisor());
+            existente.setFelCodigoEstablecimiento(datosNuevos.getFelCodigoEstablecimiento());
+            existente.setFelAfiliacionIva(datosNuevos.getFelAfiliacionIva());
+            existente.setFelDireccion(datosNuevos.getFelDireccion());
+            existente.setFelCodigoPostal(datosNuevos.getFelCodigoPostal());
+            existente.setFelMunicipio(datosNuevos.getFelMunicipio());
+            existente.setFelDepartamento(datosNuevos.getFelDepartamento());
+            existente.setFelPais(datosNuevos.getFelPais());
+            existente.setFelTipoFrase(datosNuevos.getFelTipoFrase());
+            existente.setFelCodigoEscenario(datosNuevos.getFelCodigoEscenario());
 
             existente.setUsuarioModif(datosNuevos.getUsuarioModif());
             existente.setFechaModif(LocalDateTime.now());

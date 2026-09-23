@@ -41,6 +41,7 @@ public class ClienteService {
             existente.setTelefono(datosNuevos.getTelefono());
             existente.setCorreo(datosNuevos.getCorreo());
             existente.setIdEstadoCliente(datosNuevos.getIdEstadoCliente());
+            existente.setDireccion(datosNuevos.getDireccion());
 
             existente.setUsuarioModif(datosNuevos.getUsuarioModif());
             existente.setFechaModif(LocalDateTime.now());

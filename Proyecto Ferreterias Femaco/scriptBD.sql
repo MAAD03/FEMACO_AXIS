@@ -37,6 +37,21 @@ CREATE TABLE IF NOT EXISTS `sucursal` (
   `Nombre` VARCHAR(150) NOT NULL,
   `Direccion` VARCHAR(255) NULL,
   `Telefono` VARCHAR(45) NULL,
+  -- Datos del Emisor para FEL (obligatorios en dte:Emisor / dte:DireccionEmisor)
+  `FelNitEmisor` VARCHAR(20) NULL,
+  `FelNombreEmisor` VARCHAR(200) NULL,
+  `FelNombreComercial` VARCHAR(200) NULL,
+  `FelCorreoEmisor` VARCHAR(150) NULL,
+  `FelCodigoEstablecimiento` VARCHAR(10) NULL,
+  `FelAfiliacionIva` VARCHAR(10) NULL,
+  `FelDireccion` VARCHAR(255) NULL,
+  `FelCodigoPostal` VARCHAR(10) NULL,
+  `FelMunicipio` VARCHAR(100) NULL,
+  `FelDepartamento` VARCHAR(100) NULL,
+  `FelPais` VARCHAR(5) NULL DEFAULT 'GT',
+  -- Frase asociada al NIT del emisor ante SAT (dte:Frases > dte:Frase)
+  `FelTipoFrase` VARCHAR(5) NULL,
+  `FelCodigoEscenario` VARCHAR(5) NULL,
   `FechaCreacion` DATETIME NOT NULL,
   `UsuarioCreacion` INT NOT NULL,
   `FechaModif` DATETIME NOT NULL,
@@ -309,6 +324,7 @@ CREATE TABLE IF NOT EXISTS `cliente` (
   `Nombre` VARCHAR(150) NOT NULL,
   `Telefono` VARCHAR(45) NULL,
   `Correo` VARCHAR(100) NULL,
+  `Direccion` VARCHAR(255) NULL,
   `IdEstadoCliente` INT NOT NULL,
   `FechaCreacion` DATETIME NOT NULL,
   `UsuarioCreacion` INT NOT NULL,
@@ -365,6 +381,40 @@ CREATE TABLE IF NOT EXISTS `venta_detalle` (
   PRIMARY KEY (`IdVentaDetalle`),
   CONSTRAINT `fk_vd_venta` FOREIGN KEY (`IdVenta`) REFERENCES `venta`(`IdVenta`),
   CONSTRAINT `fk_vd_art` FOREIGN KEY (`IdArticulo`) REFERENCES `articulo`(`IdArticulo`)
+) ENGINE = InnoDB;
+
+-- -----------------------------------------------------
+-- Tabla de Facturación Electrónica (FEL) - TEKRA
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `venta_fel` (
+  `IdVentaFel` INT NOT NULL AUTO_INCREMENT,
+  `IdVenta` INT NOT NULL,
+  `TipoDte` VARCHAR(10) NOT NULL DEFAULT 'FACT',
+  `NumeroAutorizacion` VARCHAR(50) NULL,
+  `SerieDocumento` VARCHAR(20) NULL,
+  `NumeroDocumento` VARCHAR(20) NULL,
+  `FechaHoraEmision` DATETIME NULL,
+  `FechaHoraCertificacion` DATETIME NULL,
+  `NitCertificador` VARCHAR(20) NULL,
+  `NombreCertificador` VARCHAR(150) NULL,
+  `MontoGravable` DECIMAL(12,2) NULL,
+  `MontoImpuestoIva` DECIMAL(12,2) NULL,
+  `GranTotal` DECIMAL(12,2) NULL,
+  `EstadoDocumento` VARCHAR(20) NULL,
+  `XmlCertificado` LONGTEXT NULL,
+  `CodigoQR` LONGTEXT NULL,
+  `CodigoErrorCertificacion` INT NULL,
+  `MensajeErrorCertificacion` TEXT NULL,
+  `FechaHoraAnulacion` DATETIME NULL,
+  `MotivoAnulacion` VARCHAR(255) NULL,
+  `XmlAnulacionCertificado` LONGTEXT NULL,
+  `FechaCreacion` DATETIME NOT NULL,
+  `UsuarioCreacion` INT NOT NULL,
+  `FechaModif` DATETIME NOT NULL,
+  `UsuarioModif` INT NOT NULL,
+  PRIMARY KEY (`IdVentaFel`),
+  UNIQUE INDEX `IdVenta_UNIQUE` (`IdVenta`),
+  CONSTRAINT `fk_ventafel_venta` FOREIGN KEY (`IdVenta`) REFERENCES `venta`(`IdVenta`)
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -540,11 +590,30 @@ VALUES
 (4, 'Entrega Parcial', NOW(), 1, NOW(), 1);
 
 -- 10. sucursal
-INSERT INTO `sucursal` 
-(`IdSucursal`, `Nombre`, `Direccion`, `Telefono`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
+INSERT INTO `sucursal`
+(`IdSucursal`, `Nombre`, `Direccion`, `Telefono`,
+ `FelNitEmisor`, `FelNombreEmisor`, `FelNombreComercial`, `FelCorreoEmisor`,
+ `FelCodigoEstablecimiento`, `FelAfiliacionIva`,
+ `FelDireccion`, `FelCodigoPostal`, `FelMunicipio`, `FelDepartamento`, `FelPais`,
+ `FelTipoFrase`, `FelCodigoEscenario`,
+ `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
-(1, 'Sucursal Femaco', 'Direccion 123', '1234-5678', NOW(), 1, NOW(), 1);
-
+(1, 'Sucursal Femaco', 'Direccion 123', '1234-5678',
+ '12345678',
+ 'FEMACO PRUEBA, SOCIEDAD ANONIMA',
+ 'FEMACO',
+ 'pruebas@femaco.com.gt',
+ '1',
+ 'GEN',
+ 'Guatemala',
+ '01010',
+ 'Guatemala',
+ 'GUATEMALA',
+ 'GT',
+ NULL,
+ NULL,
+ NOW(), 1, NOW(), 1);
+ 
 -- =====================================================
 -- 11. INSERTS PARA SUPER USUARIO 
 -- =====================================================
@@ -647,6 +716,7 @@ VALUES
 (1, 22, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Lista Órdenes de Compra
 (1, 23, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Datos Artículos
 (1, 24, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Datos Venta
+
 -- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
 (`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, 

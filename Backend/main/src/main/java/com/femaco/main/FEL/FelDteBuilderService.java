@@ -1,13 +1,22 @@
 package com.femaco.main.FEL;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import com.femaco.main.Config.FEL.FelProperties;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Entity.SucursalCotizacion.Sucursal;
@@ -26,6 +35,8 @@ import com.femaco.main.Repository.Ventas.VentaRepository;
 @Service
 public class FelDteBuilderService {
 
+    private final FelProperties felProperties;
+
     private final FelDteFacturaBuilder facturaBuilder;
     private final FelDteAnulacionBuilder anulacionBuilder;
     private final VentaRepository ventaRepository;
@@ -35,6 +46,7 @@ public class FelDteBuilderService {
     private final SucursalRepository sucursalRepository;
     private final ArticuloRepository articuloRepository;
     private final VentaFelRepository ventaFelRepository;
+    
 
     public FelDteBuilderService(FelDteFacturaBuilder facturaBuilder,
                                  FelDteAnulacionBuilder anulacionBuilder,
@@ -44,7 +56,8 @@ public class FelDteBuilderService {
                                  UsuarioRepository usuarioRepository,
                                  SucursalRepository sucursalRepository,
                                  ArticuloRepository articuloRepository,
-                                 VentaFelRepository ventaFelRepository) {
+                                 VentaFelRepository ventaFelRepository,
+                                 FelProperties felProperties) {
         this.facturaBuilder = facturaBuilder;
         this.anulacionBuilder = anulacionBuilder;
         this.ventaRepository = ventaRepository;
@@ -54,6 +67,7 @@ public class FelDteBuilderService {
         this.sucursalRepository = sucursalRepository;
         this.articuloRepository = articuloRepository;
         this.ventaFelRepository = ventaFelRepository;
+        this.felProperties = felProperties;
     }
 
     public record DteFacturaGenerado(String xml, BigDecimal montoGravable,
@@ -81,7 +95,11 @@ public class FelDteBuilderService {
         FelReceptorContexto receptor = mapearReceptor(cliente);
         List<FelItemContexto> items = detalles.stream().map(this::mapearItem).collect(Collectors.toList());
 
-        String identificadorUnico = idVenta.toString();
+        
+        String sufijo = felProperties.getDev().getSufijoIdentificador();
+        String identificadorUnico = (sufijo != null && !sufijo.isBlank())
+        ? idVenta + "-" + sufijo
+        : idVenta.toString();
 
         FelDteFacturaBuilder.ResultadoFactura resultado =
                 facturaBuilder.construirXml(emisor, receptor, items, identificadorUnico);
@@ -100,37 +118,29 @@ public class FelDteBuilderService {
     }
 
     public String armarDteAnulacion(Long idVenta, String motivoAnulacion) {
-        VentaFel ventaFel = ventaFelRepository.findByIdVenta(idVenta)
-                .orElseThrow(() -> new IllegalStateException("La venta " + idVenta + " no tiene una certificación FEL previa."));
+    VentaFel ventaFel = ventaFelRepository.findByIdVenta(idVenta)
+            .orElseThrow(() -> new IllegalStateException("La venta " + idVenta + " no tiene una certificación FEL previa."));
 
-        if (!"VIGENTE".equalsIgnoreCase(ventaFel.getEstadoDocumento())) {
-            throw new IllegalStateException("El documento de la venta " + idVenta +
-                    " no está VIGENTE (estado actual: " + ventaFel.getEstadoDocumento() + ").");
-        }
-
-        Venta venta = ventaRepository.findById(idVenta)
-                .orElseThrow(() -> new IllegalArgumentException("Venta no encontrada: " + idVenta));
-        Cliente cliente = clienteRepository.findById(venta.getIdCliente())
-                .orElseThrow(() -> new IllegalStateException("Cliente no encontrado para la venta " + idVenta));
-
-        OffsetDateTime fechaEmisionOriginal = ventaFel.getFechaHoraEmision().atOffset(ZoneOffset.of("-06:00"));
-
-        return anulacionBuilder.construirXml(
-                ventaFel.getNumeroAutorizacion(),
-                obtenerNitEmisor(venta),
-                cliente.getNit(),
-                fechaEmisionOriginal,
-                motivoAnulacion
-        );
+    if (!"VIGENTE".equalsIgnoreCase(ventaFel.getEstadoDocumento())) {
+        throw new IllegalStateException("El documento de la venta " + idVenta +
+                " no está VIGENTE (estado actual: " + ventaFel.getEstadoDocumento() + ").");
     }
 
-    private String obtenerNitEmisor(Venta venta) {
-        Usuario usuario = usuarioRepository.findById(venta.getIdUsuario())
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
-        Sucursal sucursal = sucursalRepository.findById(usuario.getIdSucursal())
-                .orElseThrow(() -> new IllegalStateException("Sucursal no encontrada"));
-        return sucursal.getFelNitEmisor();
+    if (ventaFel.getXmlCertificado() == null || ventaFel.getXmlCertificado().isBlank()) {
+        throw new IllegalStateException("La venta " + idVenta +
+                " no tiene el XML certificado almacenado; no se puede anular con seguridad.");
     }
+
+    DatosDocumentoCertificado datos = extraerDatosCertificados(ventaFel.getXmlCertificado());
+
+    return anulacionBuilder.construirXml(
+            ventaFel.getNumeroAutorizacion(),
+            datos.nitEmisor(),
+            datos.idReceptor(),
+            datos.fechaHoraEmision(),
+            motivoAnulacion
+    );
+}
 
     private FelEmisorContexto mapearEmisor(Sucursal s) {
         return new FelEmisorContexto(
@@ -155,4 +165,37 @@ public class FelDteBuilderService {
         return new FelItemContexto(articulo.getNombre(), d.getCantidad(), d.getPrecioUnitario(),
                 descuentoMonto, d.getSubtotal());
     }
+
+    private record DatosDocumentoCertificado(String nitEmisor, String idReceptor, OffsetDateTime fechaHoraEmision) {}
+
+    private DatosDocumentoCertificado extraerDatosCertificados(String xmlCertificado) {
+        try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                factory.setNamespaceAware(true);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(new ByteArrayInputStream(xmlCertificado.getBytes(StandardCharsets.UTF_8)));
+                Element raiz = doc.getDocumentElement();
+                String nitEmisor = atributoDeHijo(raiz, "Emisor", "NITEmisor");
+                String idReceptor = atributoDeHijo(raiz, "Receptor", "IDReceptor");
+                String fechaEmisionStr = atributoDeHijo(raiz, "DatosGenerales", "FechaHoraEmision");
+                if (nitEmisor == null || idReceptor == null || fechaEmisionStr == null) {
+                throw new IllegalStateException(
+                        "El XML certificado no contiene NITEmisor, IDReceptor o FechaHoraEmision esperados.");
+                }
+                return new DatosDocumentoCertificado(nitEmisor, idReceptor, OffsetDateTime.parse(fechaEmisionStr));
+        } catch (IllegalStateException e) {
+                throw e;
+        } catch (Exception e) {
+                throw new IllegalStateException("No se pudo leer el XML certificado de la venta: " + e.getMessage(), e);
+                }
+        }
+
+   private String atributoDeHijo(Element raiz, String nombreLocalElemento, String nombreAtributo) {
+        NodeList lista = raiz.getElementsByTagNameNS("*", nombreLocalElemento);
+        if (lista.getLength() == 0) return null;
+        Node atributo = lista.item(0).getAttributes().getNamedItem(nombreAtributo);
+        return atributo != null ? atributo.getNodeValue() : null;
+        }
+
 }

@@ -106,29 +106,38 @@ public class FelSoapResponseParser {
         if (lista.getLength() == 0) return null;
         Node nodo = lista.item(0);
 
-        if (!nodo.hasChildNodes()) {
-            return nodo.getTextContent();
+        boolean tieneHijosElemento = false;
+        NodeList hijos = nodo.getChildNodes();
+        for (int i = 0; i < hijos.getLength(); i++) {
+            if (hijos.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                tieneHijosElemento = true;
+                break;
+            }
         }
+
+        if (!tieneHijosElemento) {
+            return nodo.getTextContent();
+            }
+
         try {
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
             StringWriter writer = new StringWriter();
-            NodeList hijos = nodo.getChildNodes();
             for (int i = 0; i < hijos.getLength(); i++) {
                 transformer.transform(new DOMSource(hijos.item(i)), new StreamResult(writer));
             }
             return writer.toString();
         } catch (Exception e) {
             throw new IllegalStateException("No se pudo serializar el documento certificado: " + e.getMessage(), e);
+            }
         }
-    }
 
-    private JsonNode leerJson(String json) {
-        if (json == null || json.isBlank()) return null;
-        try {
-            return objectMapper.readTree(json);
-        } catch (Exception e) {
-            return null;
-        }
+        private JsonNode leerJson(String json) {
+            if (json == null || json.isBlank()) return null;
+            try {
+                return objectMapper.readTree(json);
+            } catch (Exception e) {
+                return null;
+            }
     }
 }

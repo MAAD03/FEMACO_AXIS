@@ -26,19 +26,26 @@ public class FelSoapClient {
     }
 
     private String enviar(String sobreXml, String soapAction) {
-    String respuesta = restClient.post()
+        String respuesta = restClient.post()
             .uri(props.getSoap().getUrl())
             .header("SOAPAction", soapAction)
             .contentType(MediaType.valueOf("text/xml;charset=UTF-8"))
             .body(sobreXml)
-            .exchange((request, response) -> response.bodyTo(String.class));
-
-    System.out.println("=== FEL REQUEST ===\n" + sobreXml);
-    System.out.println("=== FEL RESPONSE ===\n" + respuesta);
-
-    return respuesta;
+            .exchange((request, response) -> {
+                try (java.io.InputStream is = response.getBody()) {
+                    byte[] bytes = is.readAllBytes();
+                    return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            });
+        /* --SOUTs de depuracion
+        System.out.println("=== FEL REQUEST ===");
+        System.out.println(sobreXml);
+        System.out.println("=== FEL RESPONSE ===");
+        System.out.println(respuesta);
+        */
+        return respuesta;
 }
-
+ 
     private String construirSobreCertificacion(String dteXml) {
         return "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
                 + "<Body>"

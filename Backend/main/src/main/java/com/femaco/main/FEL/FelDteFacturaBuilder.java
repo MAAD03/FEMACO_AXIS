@@ -120,10 +120,13 @@ public class FelDteFacturaBuilder {
     }
 
     private String construirFrases(FelEmisorContexto emisor) {
-        if (emisor.tipoFrase() == null || emisor.codigoEscenario() == null) {
-            return "<dte:Frases/>";
-        }
+        if (emisor.tipoFrase() == null || emisor.tipoFrase().isBlank()
+                || emisor.codigoEscenario() == null || emisor.codigoEscenario().isBlank()) {
+        throw new IllegalStateException(
+                "La sucursal no tiene configurada FelTipoFrase/FelCodigoEscenario. " +
+                "Estos datos son obligatorios para certificar documentos tipo FACT.");
+    }
         return "<dte:Frases><dte:Frase TipoFrase=\"" + emisor.tipoFrase() + "\" "
                 + "CodigoEscenario=\"" + emisor.codigoEscenario() + "\" /></dte:Frases>";
-    }
+        }
 }

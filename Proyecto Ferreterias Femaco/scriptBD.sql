@@ -599,9 +599,9 @@ INSERT INTO `sucursal`
  `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
 (1, 'Sucursal Femaco', 'Direccion 123', '1234-5678',
- '12345678',
- 'FEMACO PRUEBA, SOCIEDAD ANONIMA',
- 'FEMACO',
+ '107346834',
+ 'TEKRA SOCIEDAD ANONIMA',
+ 'TEKRA SOCIEDAD ANONIMA',
  'pruebas@femaco.com.gt',
  '1',
  'GEN',
@@ -610,8 +610,8 @@ VALUES
  'Guatemala',
  'GUATEMALA',
  'GT',
- NULL,
- NULL,
+ '1',
+ '1',
  NOW(), 1, NOW(), 1);
  
 -- =====================================================

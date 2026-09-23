@@ -16,6 +16,7 @@ public class FelProperties {
     private Auth auth = new Auth();
     private Origen origen = new Origen();
     private Timeout timeout = new Timeout();
+    private Dev dev = new Dev(); 
 
     @Getter
     @Setter
@@ -56,5 +57,21 @@ public class FelProperties {
     public static class Timeout {
         private int connectMs;
         private int readMs;
+    }
+   /*
+        Propiedades para desarrollo/pruebas. 
+        sufijoIdentificador: cuando tiene valor, se concatena al IdVenta para
+        formar el DECertificador enviado a TEKRA (en FelDteBuilderService).
+        sirve para evitar colisiones cuando el esquema de base de datos se
+        recrea repetidamente en desarrollo y los IdVenta autoincrementales se
+        reinician, ya que TEKRA identifica documentos certificados de forma
+        GLOBAL y PERMANENTE por ese valor.
+        Vacío o null (default) = comportamiento normal de producción:
+        DECertificador = IdVenta tal cual, sin sufijo.
+    */
+    @Getter
+    @Setter
+    public static class Dev {
+        private String sufijoIdentificador;
     }
 }

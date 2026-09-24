@@ -108,6 +108,7 @@ public class UsuarioService {
             existente.setIntentosFallidos(datosNuevos.getIntentosFallidos() != null
                     ? datosNuevos.getIntentosFallidos()
                     : existente.getIntentosFallidos());
+            existente.setPuedeAplicarDescuento(datosNuevos.getPuedeAplicarDescuento());
             existente.setIdGenero(datosNuevos.getIdGenero());
             existente.setIdEstadoUsuario(datosNuevos.getIdEstadoUsuario());
             existente.setIdSucursal(datosNuevos.getIdSucursal());
@@ -150,7 +151,7 @@ public class UsuarioService {
 
         Usuario usuario = usuarioOpt.get();
         Long idEstadoUsuario = usuario.getIdEstadoUsuario();
-        Integer intentosFallidosActuales = usuario.getIntentosFallidos() == null ? 0 : usuario.getIntentosFallidos();
+        Integer intentosFallidosActuales = Optional.ofNullable(usuario.getIntentosFallidos()).orElse(6);
 
         if (idEstadoUsuario != null && idEstadoUsuario == 2L) {
             return new LoginResultado(Optional.empty(), false, "Usuario inactivo", intentosFallidosActuales, false);

@@ -38,6 +38,9 @@ public class Usuario {
     @Column(name = "RequiereCambioPassword", nullable = false)
     private Boolean requiereCambioPassword;
 
+    @Column(name = "PuedeAplicarDescuento", nullable = false)
+    private Boolean puedeAplicarDescuento;
+
     @Column(name = "IntentosFallidos", nullable = false)
     private Integer intentosFallidos = 0;
 

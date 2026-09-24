@@ -7,5 +7,5 @@ public record FelItemContexto(
         BigDecimal cantidad,
         BigDecimal precioUnitario,
         BigDecimal descuentoMonto,
-        BigDecimal totalLinea // ya con IVA incluido, es lo realmente cobrado en venta_detalle.Subtotal
+        BigDecimal totalLinea
 ) {}

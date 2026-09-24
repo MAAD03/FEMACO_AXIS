@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth/fel/test")
+@RequestMapping("/fel/test")
 public class FelTestController {
 
     private final FelConectividadService conectividadService;

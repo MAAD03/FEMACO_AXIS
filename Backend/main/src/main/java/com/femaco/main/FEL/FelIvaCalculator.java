@@ -12,10 +12,6 @@ public final class FelIvaCalculator {
 
     public record DesgloseIva(BigDecimal montoGravable, BigDecimal montoImpuesto, BigDecimal total) {}
 
-    /**
-     * A partir de un monto que YA INCLUYE el 12% de IVA (como se maneja en
-     * Guatemala), separa la base gravable y el monto de impuesto.
-     */
     public static DesgloseIva desglosar(BigDecimal totalConIva) {
         BigDecimal gravable = totalConIva.divide(FACTOR_IVA, ESCALA_DECIMAL, RoundingMode.HALF_UP);
         BigDecimal impuesto = totalConIva.subtract(gravable).setScale(ESCALA_DECIMAL, RoundingMode.HALF_UP);

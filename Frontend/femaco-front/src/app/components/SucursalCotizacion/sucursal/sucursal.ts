@@ -55,8 +55,21 @@ export class Sucursal implements OnInit {
   private initForm(): void {
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.maxLength(150)]],
-      direccion: ['', Validators.maxLength(255)],
+      direccion: ['', [Validators.required, Validators.maxLength(250)]],
       telefono: ['', Validators.maxLength(45)],
+      felNitEmisor: ['', Validators.maxLength(20)],
+      felNombreEmisor: ['', Validators.maxLength(200)],
+      felNombreComercial: ['', Validators.maxLength(200)],
+      felCorreoEmisor: ['', Validators.maxLength(150)],
+      felCodigoEstablecimiento: ['', Validators.maxLength(10)],
+      felAfiliacionIva: ['', Validators.maxLength(10)],
+      felDireccion: ['', Validators.maxLength(255)],
+      felCodigoPostal: ['', Validators.maxLength(10)],
+      felMunicipio: ['', Validators.maxLength(100)],
+      felDepartamento: ['', Validators.maxLength(100)],
+      felPais: ['', Validators.maxLength(5)],
+      felTipoFrase: ['', Validators.maxLength(5)],
+      felCodigoEscenario: ['', Validators.maxLength(5)],
     });
   }
 
@@ -107,8 +120,21 @@ export class Sucursal implements OnInit {
 
     const datos: SucursalModel = {
       nombre: this.form.value.nombre,
-      direccion: this.form.value.direccion || undefined,
+      direccion: this.form.value.direccion,
       telefono: this.form.value.telefono || undefined,
+      felNitEmisor: this.form.value.felNitEmisor || undefined,
+      felNombreEmisor: this.form.value.felNombreEmisor || undefined,
+      felNombreComercial: this.form.value.felNombreComercial || undefined,
+      felCorreoEmisor: this.form.value.felCorreoEmisor || undefined,
+      felCodigoEstablecimiento: this.form.value.felCodigoEstablecimiento || undefined,
+      felAfiliacionIva: this.form.value.felAfiliacionIva || undefined,
+      felDireccion: this.form.value.felDireccion || undefined,
+      felCodigoPostal: this.form.value.felCodigoPostal || undefined,
+      felMunicipio: this.form.value.felMunicipio || undefined,
+      felDepartamento: this.form.value.felDepartamento || undefined,
+      felPais: this.form.value.felPais || undefined,
+      felTipoFrase: this.form.value.felTipoFrase || undefined,
+      felCodigoEscenario: this.form.value.felCodigoEscenario || undefined,
       usuarioCreacion: usuarioId,
     };
 
@@ -143,8 +169,21 @@ export class Sucursal implements OnInit {
     this.idEditando = item.idSucursal!;
     this.form.patchValue({
       nombre: item.nombre,
-      direccion: item.direccion ?? '',
+      direccion: item.direccion,
       telefono: item.telefono ?? '',
+      felNitEmisor: item.felNitEmisor ?? '',
+      felNombreEmisor: item.felNombreEmisor ?? '',
+      felNombreComercial: item.felNombreComercial ?? '',
+      felCorreoEmisor: item.felCorreoEmisor ?? '',
+      felCodigoEstablecimiento: item.felCodigoEstablecimiento ?? '',
+      felAfiliacionIva: item.felAfiliacionIva ?? '',
+      felDireccion: item.felDireccion ?? '',
+      felCodigoPostal: item.felCodigoPostal ?? '',
+      felMunicipio: item.felMunicipio ?? '',
+      felDepartamento: item.felDepartamento ?? '',
+      felPais: item.felPais ?? '',
+      felTipoFrase: item.felTipoFrase ?? '',
+      felCodigoEscenario: item.felCodigoEscenario ?? '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -172,6 +211,19 @@ export class Sucursal implements OnInit {
       nombre: '',
       direccion: '',
       telefono: '',
+      felNitEmisor: '',
+      felNombreEmisor: '',
+      felNombreComercial: '',
+      felCorreoEmisor: '',
+      felCodigoEstablecimiento: '',
+      felAfiliacionIva: '',
+      felDireccion: '',
+      felCodigoPostal: '',
+      felMunicipio: '',
+      felDepartamento: '',
+      felPais: '',
+      felTipoFrase: '',
+      felCodigoEscenario: '',
     });
     this.editando = false;
     this.idEditando = null;

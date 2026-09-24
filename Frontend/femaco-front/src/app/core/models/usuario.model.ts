@@ -5,6 +5,7 @@ export interface Usuario {
   correoElectronico: string;
   password?: string;
   requiereCambioPassword?: boolean;
+  puedeAplicarDescuento?: boolean;
   pregunta?: string;
   respuesta?: string;
   idGenero?: number;

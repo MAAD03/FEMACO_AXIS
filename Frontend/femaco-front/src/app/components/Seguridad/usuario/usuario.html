@@ -55,6 +55,11 @@
             <input id="requiereCambioPassword" type="checkbox" formControlName="requiereCambioPassword" class="form-check-input" />
           </div>
 
+          <div class="form-group checkbox-group">
+            <label for="puedeAplicarDescuento">Puede aplicar descuento</label>
+            <input id="puedeAplicarDescuento" type="checkbox" formControlName="puedeAplicarDescuento" class="form-check-input" />
+          </div>
+
           <div class="form-group">
             <label for="idGenero">Género *</label>
             <select id="idGenero" formControlName="idGenero" class="form-control">
@@ -207,6 +212,10 @@
               <div class="usuario-detail">
                 <span>Requiere cambio</span>
                 <strong>{{ item.requiereCambioPassword ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="usuario-detail">
+                <span>Puede aplicar descuento</span>
+                <strong>{{ item.puedeAplicarDescuento ? 'Sí' : 'No' }}</strong>
               </div>
               <div class="usuario-detail">
                 <span>Creación</span>

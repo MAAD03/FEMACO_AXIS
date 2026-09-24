@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `Password` VARCHAR(255) NOT NULL,
   `CorreoElectronico` VARCHAR(150) NOT NULL,
   `RequiereCambioPassword` TINYINT NOT NULL DEFAULT 1,
+  `PuedeAplicarDescuento` TINYINT NOT NULL DEFAULT 0,
   `IntentosFallidos` INT NOT NULL DEFAULT 0,
   `IdGenero` INT NOT NULL,
   `IdEstadoUsuario` INT NOT NULL,
@@ -719,12 +720,12 @@ VALUES
 
 -- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
-(`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, 
+(`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, `PuedeAplicarDescuento`, 
  `IntentosFallidos`, `IdGenero`, `IdEstadoUsuario`, `IdSucursal`, `IdRol`, 
  `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`) 
 VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
- 'administrador@femaco.com', 0, 0, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
+ 'administrador@femaco.com', 0, 1, 0, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
  
 -- 13.1 Áreas de artículo (15 registros)
 INSERT INTO `area_articulo`
@@ -832,3 +833,5 @@ VALUES
 ('FER-0058', 'Filtro de aceite universal', 'Filtro de aceite universal para automóvil', 0.00, 20.00, 28.00, 32.00, 10.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1),
 ('FER-0059', 'Batería para automóvil 12V', 'Batería de 12V para automóvil, libre de mantenimiento', 0.00, 5.00, 450.00, 18.00, 2.00, 8.00, 15, 1, 1, NOW(), 1, NOW(), 1),
 ('FER-0060', 'Foco H4 para automóvil', 'Foco H4 halógeno para faro de automóvil', 0.00, 20.00, 22.00, 35.00, 12.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1);
+
+

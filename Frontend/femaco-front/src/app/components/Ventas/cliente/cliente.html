@@ -8,37 +8,100 @@
 		<form [formGroup]="busquedaForm" (ngSubmit)="buscarPorNit()" class="search-form">
 			<div class="form-group">
 				<label for="buscarNit">NIT</label>
-				<input id="buscarNit" type="search" formControlName="nit" class="form-control" maxlength="45" placeholder="Ingrese el NIT del cliente" />
+				<input id="buscarNit" type="search" formControlName="nit" class="form-control" maxlength="45"
+					placeholder="Ingrese el NIT del cliente" />
 				@if (bf['nit'].touched && bf['nit'].invalid) { <div class="error-msg">El NIT es obligatorio</div> }
 			</div>
-			<button type="submit" class="btn btn-primary" [disabled]="buscando()">{{ buscando() ? 'Buscando...' : 'Buscar' }}</button>
+			<button type="submit" class="btn btn-primary" [disabled]="buscando()">{{ buscando() ? 'Buscando...' :
+				'Buscar' }}</button>
 		</form>
 	</div>
 
 	@if (puedeCrear || (editando && puedeEditar)) {
-		<div class="card form-card">
-			<h3 class="card-title">{{ editando ? 'Editar cliente' : 'Nuevo cliente' }}</h3>
-			<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
-				<div class="client-form-grid">
-					<div class="form-group"><label for="nit">NIT *</label><input id="nit" type="text" formControlName="nit" class="form-control" maxlength="45" />@if (f['nit'].touched && f['nit'].invalid) { <div class="error-msg">El NIT es obligatorio y admite máximo 45 caracteres</div> }</div>
-					<div class="form-group"><label for="nombre">Nombre *</label><input id="nombre" type="text" formControlName="nombre" class="form-control" maxlength="150" />@if (f['nombre'].touched && f['nombre'].invalid) { <div class="error-msg">El nombre es obligatorio y admite máximo 150 caracteres</div> }</div>
-					<div class="form-group"><label for="telefono">Teléfono</label><input id="telefono" type="text" formControlName="telefono" class="form-control" maxlength="45" /></div>
-					<div class="form-group"><label for="correo">Correo</label><input id="correo" type="email" formControlName="correo" class="form-control" maxlength="100" />@if (f['correo'].touched && f['correo'].invalid) { <div class="error-msg">Ingrese un correo válido</div> }</div>
-					<div class="form-group form-group-wide"><label for="direccion">Dirección</label><input id="direccion" type="text" formControlName="direccion" class="form-control" maxlength="255" /></div>
-					<div class="form-group"><label for="idEstadoCliente">Estado *</label><select id="idEstadoCliente" formControlName="idEstadoCliente" class="form-control"><option [ngValue]="null" disabled>Seleccione estado</option>@for (estado of estados(); track estado.idEstadoCliente) { <option [ngValue]="estado.idEstadoCliente">{{ estado.nombre }}</option> }</select>@if (f['idEstadoCliente'].touched && f['idEstadoCliente'].invalid) { <div class="error-msg">Debe seleccionar un estado</div> }</div>
-				</div>
-				@if (clienteEditando(); as cliente) { <div class="client-metadata"><span>Estado actual: <strong>{{ cliente.idEstadoCliente | estadoClienteNombre }}</strong></span><span>Usuario creación: <strong>{{ cliente.usuarioCreacion | userEmail }}</strong></span><span>Usuario modificación: <strong>{{ cliente.usuarioModif | userEmail }}</strong></span></div> }
-				<div class="form-actions"><button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">{{ editando ? 'Actualizar' : 'Guardar' }}</button>@if (editando) { <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button> }</div>
-			</form>
-		</div>
+	<div class="card form-card">
+		<h3 class="card-title">{{ editando ? 'Editar cliente' : 'Nuevo cliente' }}</h3>
+		<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+			<div class="client-form-grid">
+				<div class="form-group"><label for="nit">NIT *</label><input id="nit" type="text" formControlName="nit"
+						class="form-control" maxlength="45" />@if (f['nit'].touched && f['nit'].invalid) { <div
+						class="error-msg">El NIT es obligatorio y admite máximo 45 caracteres</div> }</div>
+				<div class="form-group"><label for="nombre">Nombre *</label><input id="nombre" type="text"
+						formControlName="nombre" class="form-control" maxlength="150" />@if (f['nombre'].touched &&
+					f['nombre'].invalid) { <div class="error-msg">El nombre es obligatorio y admite máximo 150
+						caracteres</div> }</div>
+				<div class="form-group"><label for="telefono">Teléfono</label><input id="telefono" type="text"
+						formControlName="telefono" class="form-control" maxlength="45" /></div>
+				<div class="form-group"><label for="correo">Correo</label><input id="correo" type="email"
+						formControlName="correo" class="form-control" maxlength="100" />@if (f['correo'].touched &&
+					f['correo'].invalid) { <div class="error-msg">Ingrese un correo válido</div> }</div>
+				<div class="form-group form-group-wide"><label for="direccion">Dirección</label><input id="direccion"
+						type="text" formControlName="direccion" class="form-control" maxlength="255" /></div>
+				<div class="form-group"><label for="idEstadoCliente">Estado *</label><select id="idEstadoCliente"
+						formControlName="idEstadoCliente" class="form-control">
+						<option [ngValue]="null" disabled>Seleccione estado</option>@for (estado of estados(); track
+						estado.idEstadoCliente) { <option [ngValue]="estado.idEstadoCliente">{{ estado.nombre }}
+						</option> }
+					</select>@if (f['idEstadoCliente'].touched && f['idEstadoCliente'].invalid) { <div
+						class="error-msg">Debe seleccionar un estado</div> }</div>
+			</div>
+			@if (clienteEditando(); as cliente) { <div class="client-metadata"><span>Estado actual: <strong>{{
+						cliente.idEstadoCliente | estadoClienteNombre }}</strong></span><span>Usuario creación:
+					<strong>{{ cliente.usuarioCreacion | userEmail }}</strong></span><span>Usuario modificación:
+					<strong>{{ cliente.usuarioModif | userEmail }}</strong></span></div> }
+			<div class="form-actions"><button type="submit" class="btn btn-primary"
+					[disabled]="cargando() || form.invalid">{{ editando ? 'Actualizar' : 'Guardar' }}</button>@if
+				(editando) { <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button> }
+			</div>
+		</form>
+	</div>
 	}
 
 	<div class="card table-card">
 		<h3 class="card-title">Listado de clientes</h3>
-		<div class="table-toolbar"><span class="table-summary">Mostrando {{ lista().length }} de {{ totalElementos() }} clientes</span><label class="page-size-label">Mostrar <select class="form-control compact" [value]="tamanioPagina()" (change)="onTamanioPaginaChange($event)">@for (size of tamanosPagina; track size) { <option [value]="size">{{ size }}</option> }</select></label></div>
-		@if (cargando() && lista().length === 0) { <p class="loading">Cargando...</p> } @else if (lista().length === 0) { <p class="empty">No hay clientes registrados.</p> } @else {
-			<div class="client-list">@for (item of lista(); track item.idCliente) { <article class="client-item"><div class="client-item-header"><div><span class="client-item-id">ID {{ item.idCliente }} · NIT {{ item.nit }}</span><h4>{{ item.nombre }}</h4></div><div class="client-item-actions">@if (puedeEditar) { <button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">Editar</button> } @if (puedeEliminar) { <button class="btn-icon btn-delete" (click)="eliminar(item.idCliente!)" title="Eliminar">Eliminar</button> }</div></div><div class="client-item-grid"><div class="client-detail"><span>Teléfono</span><strong>{{ item.telefono || 'Sin teléfono' }}</strong></div><div class="client-detail"><span>Correo</span><strong>{{ item.correo || 'Sin correo' }}</strong></div><div class="client-detail"><span>Dirección</span><strong>{{ item.direccion || 'Sin dirección' }}</strong></div><div class="client-detail"><span>Estado</span><strong>{{ item.idEstadoCliente | estadoClienteNombre }}</strong></div><div class="client-detail"><span>Creación</span><strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong></div><div class="client-detail"><span>Usuario creación</span><strong>{{ item.usuarioCreacion | userEmail }}</strong></div><div class="client-detail"><span>Última modificación</span><strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong></div><div class="client-detail"><span>Usuario modificación</span><strong>{{ item.usuarioModif | userEmail }}</strong></div></div></article> }</div>
-			<div class="pagination"><button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0" (click)="irAPagina(0)">Primera</button><button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0" (click)="irAPagina(paginaActual() - 1)">Anterior</button><span class="page-indicator">Página {{ paginaActual() + 1 }} / {{ totalPaginas() || 1 }}</span><button type="button" class="btn btn-secondary" [disabled]="paginaActual() >= totalPaginas() - 1 || totalPaginas() === 0" (click)="irAPagina(paginaActual() + 1)">Siguiente</button><button type="button" class="btn btn-secondary" [disabled]="totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1" (click)="irAPagina((totalPaginas() || 1) - 1)">Última</button></div>
+		<div class="table-toolbar"><span class="table-summary">Mostrando {{ lista().length }} de {{ totalElementos() }}
+				clientes</span><label class="page-size-label">Mostrar <select class="form-control compact"
+					[value]="tamanioPagina()" (change)="onTamanioPaginaChange($event)">@for (size of tamanosPagina;
+					track size) { <option [value]="size">{{ size }}</option> }</select></label></div>
+		@if (cargando() && lista().length === 0) { <p class="loading">Cargando...</p> } @else if (lista().length === 0)
+		{ <p class="empty">No hay clientes registrados.</p> } @else {
+		<div class="client-list">@for (item of lista(); track item.idCliente) { <article class="client-item">
+				<div class="client-item-header">
+					<div><span class="client-item-id">ID {{ item.idCliente }} · NIT {{ item.nit }}</span>
+						<h4>{{ item.nombre }}</h4>
+					</div>
+					<div class="client-item-actions">@if (puedeEditar) { <button class="btn-icon btn-edit"
+							(click)="editar(item)" title="Editar">Editar</button> } @if (puedeEliminar) { <button
+							class="btn-icon btn-delete" (click)="eliminar(item.idCliente!)"
+							title="Eliminar">Eliminar</button> }</div>
+				</div>
+				<div class="client-item-grid">
+					<div class="client-detail"><span>Teléfono</span><strong>{{ item.telefono || 'Sin teléfono'
+							}}</strong></div>
+					<div class="client-detail"><span>Correo</span><strong>{{ item.correo || 'Sin correo' }}</strong>
+					</div>
+					<div class="client-detail"><span>Dirección</span><strong>{{ item.direccion || 'Sin dirección'
+							}}</strong></div>
+					<div class="client-detail"><span>Estado</span><strong>{{ item.idEstadoCliente | estadoClienteNombre
+							}}</strong></div>
+					<div class="client-detail"><span>Creación</span><strong>{{ item.fechaCreacion | date:'dd/MM/yyyy
+							HH:mm' }}</strong></div>
+					<div class="client-detail"><span>Usuario creación</span><strong>{{ item.usuarioCreacion | userEmail
+							}}</strong></div>
+					<div class="client-detail"><span>Última modificación</span><strong>{{ item.fechaModif |
+							date:'dd/MM/yyyy HH:mm' }}</strong></div>
+					<div class="client-detail"><span>Usuario modificación</span><strong>{{ item.usuarioModif | userEmail
+							}}</strong></div>
+				</div>
+			</article> }</div>
+		<div class="pagination"><button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0"
+				(click)="irAPagina(0)">Primera</button><button type="button" class="btn btn-secondary"
+				[disabled]="paginaActual() === 0" (click)="irAPagina(paginaActual() - 1)">Anterior</button><span
+				class="page-indicator">Página {{ paginaActual() + 1 }} / {{ totalPaginas() || 1 }}</span><button
+				type="button" class="btn btn-secondary"
+				[disabled]="paginaActual() >= totalPaginas() - 1 || totalPaginas() === 0"
+				(click)="irAPagina(paginaActual() + 1)">Siguiente</button><button type="button"
+				class="btn btn-secondary" [disabled]="totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1"
+				(click)="irAPagina((totalPaginas() || 1) - 1)">Última</button></div>
 		}
 	</div>
 </div>

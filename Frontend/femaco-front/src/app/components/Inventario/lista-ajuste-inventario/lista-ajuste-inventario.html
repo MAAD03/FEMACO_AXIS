@@ -17,12 +17,14 @@
 
         <div class="form-group compact-field">
           <label for="idArticulo">Artículo</label>
-          <input id="idArticulo" type="number" min="1" formControlName="idArticulo" class="form-control" placeholder="ID artículo" />
+          <input id="idArticulo" type="number" min="1" formControlName="idArticulo" class="form-control"
+            placeholder="ID artículo" />
         </div>
 
         <div class="form-group compact-field">
           <label for="correoUsuario">Usuario</label>
-          <input id="correoUsuario" type="email" formControlName="correoUsuario" class="form-control" placeholder="Correo electrónico" />
+          <input id="correoUsuario" type="email" formControlName="correoUsuario" class="form-control"
+            placeholder="Correo electrónico" />
         </div>
 
         <div class="form-group date-field">
@@ -46,7 +48,8 @@
 
         <div class="action-buttons">
           <button type="submit" class="btn btn-primary search-button" [disabled]="cargando()">Buscar</button>
-          <button type="button" class="btn btn-secondary clear-button" (click)="limpiarFiltros()" [disabled]="cargando()">Limpiar filtros</button>
+          <button type="button" class="btn btn-secondary clear-button" (click)="limpiarFiltros()"
+            [disabled]="cargando()">Limpiar filtros</button>
         </div>
       </div>
     </form>
@@ -58,54 +61,53 @@
     </div>
 
     @if (error()) {
-      <div class="alert alert-error">{{ error() }}</div>
+    <div class="alert alert-error">{{ error() }}</div>
     }
 
     @if (cargando() && lista().length === 0) {
-      <p class="loading">Cargando...</p>
+    <p class="loading">Cargando...</p>
     } @else if (lista().length === 0) {
-      <p class="empty">No hay ajustes que coincidan con la búsqueda.</p>
+    <p class="empty">No hay ajustes que coincidan con la búsqueda.</p>
     } @else {
-      <div class="table-wrapper">
-        <table class="ledger-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>ID artículo</th>
-              <th>Artículo</th>
-              <th>Usuario</th>
-              <th>Cantidad</th>
-              <th>Tipo</th>
-              <th>Motivo</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of lista(); track item.idAjusteInventario ?? $index) {
-              <tr>
-                <td>{{ item.idAjusteInventario }}</td>
-                <td>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>{{ item.idArticulo }}</td>
-                <td>{{ item.idArticulo | articuloNombre }}</td>
-                <td>{{ item.idUsuario | userEmail }}</td>
-                <td [class.positivo]="item.cantidadAjuste > 0" [class.negativo]="item.cantidadAjuste < 0">
-                  {{ item.cantidadAjuste | number:'1.2-2' }}
-                </td>
-                <td>
-                  @if (item.cantidadAjuste > 0) {
-                    <span class="badge badge-entrada">Entrada</span>
-                  } @else if (item.cantidadAjuste < 0) {
-                    <span class="badge badge-salida">Salida</span>
-                  } @else {
-                    <span class="badge badge-neutral">Ninguna</span>
-                  }
-                </td>
-                <td>{{ item.motivo || '—' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="table-wrapper">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>ID artículo</th>
+            <th>Artículo</th>
+            <th>Usuario</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of lista(); track item.idAjusteInventario ?? $index) {
+          <tr>
+            <td>{{ item.idAjusteInventario }}</td>
+            <td>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ item.idArticulo }}</td>
+            <td>{{ item.idArticulo | articuloNombre }}</td>
+            <td>{{ item.idUsuario | userEmail }}</td>
+            <td [class.positivo]="item.cantidadAjuste > 0" [class.negativo]="item.cantidadAjuste < 0">
+              {{ item.cantidadAjuste | number:'1.2-2' }}
+            </td>
+            <td>
+              @if (item.cantidadAjuste > 0) {
+              <span class="badge badge-entrada">Entrada</span>
+              } @else if (item.cantidadAjuste < 0) { <span class="badge badge-salida">Salida</span>
+                } @else {
+                <span class="badge badge-neutral">Ninguna</span>
+                }
+            </td>
+            <td>{{ item.motivo || '—' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
 
     <div class="pagination">
@@ -115,16 +117,19 @@
       <div [formGroup]="filtrosForm">
         <select id="size" formControlName="size" (change)="cambiarTamano()">
           @for (tamano of tamanosPagina; track tamano) {
-            <option [ngValue]="tamano">{{ tamano }}</option>
+          <option [ngValue]="tamano">{{ tamano }}</option>
           }
         </select>
       </div>
 
       <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
-      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
+      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
+        [disabled]="paginaActual() === 0">Anterior</button>
       <strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
-      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
-      <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
+        [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+      <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)"
+        [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
     </div>
   </div>
 </div>

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
 import com.femaco.main.DTOs.VentaFiltroDTO;
+import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Entity.Ventas.Cliente;
 import com.femaco.main.Entity.Ventas.Venta;
 
@@ -53,8 +54,15 @@ public class VentaSpecification {
                 predicates.add(cb.equal(root.get("idEstadoVenta"), filtro.getIdEstadoVenta()));
             }
 
-            if (filtro.getIdUsuario() != null) {
-                predicates.add(cb.equal(root.get("idUsuario"), filtro.getIdUsuario()));
+            if (StringUtils.hasText(filtro.getCorreoUsuario())) {
+                String correo = filtro.getCorreoUsuario().trim().toLowerCase();
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<Usuario> usuarioRoot = subquery.from(Usuario.class);
+
+                subquery.select(usuarioRoot.get("idUsuario"))
+                        .where(cb.equal(cb.lower(usuarioRoot.get("correoElectronico")), correo));
+
+                predicates.add(root.get("idUsuario").in(subquery));
             }
 
             return cb.and(predicates.toArray(Predicate[]::new));

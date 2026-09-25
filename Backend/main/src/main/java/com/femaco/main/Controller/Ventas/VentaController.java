@@ -54,10 +54,9 @@ public class VentaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
-    @PutMapping("/editar/{idVenta}")
-    public ResponseEntity<Venta> editar(@PathVariable Long idVenta,
-                                         @RequestBody Venta venta) {
-        return ventaService.actualizar(idVenta, venta)
+    @PutMapping("/anular/{idVenta}")
+    public ResponseEntity<Venta> anular(@PathVariable Long idVenta) {
+        return ventaService.anular(idVenta)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -12,4 +12,5 @@ public class VentaConDetallesDTO {
 
     private Venta venta;
     private List<VentaDetalle> detalles;
+    private String estadoDocumento;
 }

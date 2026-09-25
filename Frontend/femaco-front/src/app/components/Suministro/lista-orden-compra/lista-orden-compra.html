@@ -2,128 +2,130 @@
   <h2 class="crud-title">Listado de órdenes de compra</h2>
 
   @if (error()) {
-    <div class="alert alert-error">{{ error() }}</div>
+  <div class="alert alert-error">{{ error() }}</div>
   }
 
   @if (cargandoDetalle()) {
-    <div class="alert alert-info">Cargando detalle de la orden...</div>
+  <div class="alert alert-info">Cargando detalle de la orden...</div>
   }
 
   @if (ordenSeleccionada()) {
-    <div class="card detail-card">
-      <div class="detail-header">
-        <div>
-          <h3 class="card-title">Detalle de orden de compra #{{ ordenSeleccionada()!.idOrdenCompra }}</h3>
-        </div>
-        <button type="button" class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+  <div class="card detail-card">
+    <div class="detail-header">
+      <div>
+        <h3 class="card-title">Detalle de orden de compra #{{ ordenSeleccionada()!.idOrdenCompra }}</h3>
       </div>
-
-      <form class="crud-form" [formGroup]="detalleForm">
-        <div class="detail-grid">
-          <div class="form-group">
-            <label>Proveedor</label>
-            <input class="form-control" [value]="proveedorSeleccionado()?.nombre || (ordenSeleccionada()!.idProveedor | proveedorNombre)" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Usuario creador</label>
-            <input class="form-control" [value]="usuarioCreacionSeleccionado()?.correoElectronico || (ordenSeleccionada()!.idUsuario | userEmail)" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Total</label>
-            <input class="form-control" [value]="'Q ' + (ordenSeleccionada()!.total ?? 0 | number:'1.2-2')" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Estado de la orden</label>
-            <select
-              class="form-control"
-              formControlName="idEstadoOrdenCompra"
-              [disabled]="!puedeEditar || ordenBloqueada()"
-              [title]="ordenBloqueada() ? 'La orden está en un estado final y no puede modificarse' : ''"
-            >
-              <option [ngValue]="null">Seleccione un estado</option>
-              @for (estado of estadosOrdenCompra(); track estado.idEstadoOrdenCompra) {
-                <option [ngValue]="estado.idEstadoOrdenCompra">{{ estado.nombre }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>NIT</label>
-            <input class="form-control" [value]="proveedorSeleccionado()?.nit || '—'" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Teléfono</label>
-            <input class="form-control" [value]="proveedorSeleccionado()?.telefono || '—'" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Nombre contacto</label>
-            <input class="form-control" [value]="proveedorSeleccionado()?.nombreContacto || '—'" readonly />
-          </div>
-
-          <div class="form-group form-span-2">
-            <label>Notas</label>
-            <textarea class="form-control" rows="3" [value]="ordenSeleccionada()!.notas || 'Sin notas'" readonly></textarea>
-          </div>
-        </div>
-      </form>
-
-      <div class="table-responsive">
-        <table class="crud-table detail-table">
-          <thead>
-            <tr>
-              <th>ID Artículo</th>
-              <th>Artículo</th>
-              <th>Cantidad</th>
-              <th>Precio</th>
-              <th>Total</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (detalle of detallesOrden(); track detalle.idOrdenCompraDetalle ?? $index) {
-              <tr>
-                <td>{{ detalle.idArticulo ?? '—' }}</td>
-                <td>{{ detalle.idArticulo | articuloNombre }}</td>
-                <td>{{ detalle.cantidad | number:'1.2-2' }}</td>
-                <td>Q {{ detalle.precioUnitario | number:'1.2-2' }}</td>
-                <td>Q {{ detalle.total | number:'1.2-2' }}</td>
-                <td>
-                  <select
-                    class="form-control compact-select"
-                    [ngModel]="detalle.idEstadoOrdenCompra ?? null"
-                    (ngModelChange)="actualizarEstadoDetalle(detalle.idOrdenCompraDetalle, $event)"
-                    [ngModelOptions]="{ standalone: true }"
-                    [disabled]="!puedeEditar || ordenBloqueada() || detalleBloqueado(detalle)"
-                    [title]="detalleBloqueado(detalle) ? 'Este detalle está en un estado final y no puede modificarse' : ''"
-                  >
-                    <option [ngValue]="null">Seleccione un estado</option>
-                    @for (estado of estadosDetalleDisponibles; track estado.idEstadoOrdenCompra) {
-                      <option [ngValue]="estado.idEstadoOrdenCompra">{{ estado.nombre }}</option>
-                    }
-                  </select>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="detail-footer">
-        <div class="audit-inline">
-          <span><strong>Creación:</strong> {{ ordenSeleccionada()!.usuarioCreacion ?? ordenSeleccionada()!.idUsuario | userEmail }} · {{ ordenSeleccionada()!.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
-          <span><strong>Modificación:</strong> {{ ordenSeleccionada()!.usuarioModif ?? ordenSeleccionada()!.idUsuario | userEmail }} · {{ ordenSeleccionada()!.fechaModif | date:'dd/MM/yyyy HH:mm' }}</span>
-        </div>
-
-        <button type="button" class="btn btn-primary" (click)="guardarCambios()" [disabled]="guardando() || !puedeEditar || ordenBloqueada()">
-          {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
-        </button>
-      </div>
+      <button type="button" class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
     </div>
+
+    <form class="crud-form" [formGroup]="detalleForm">
+      <div class="detail-grid">
+        <div class="form-group">
+          <label>Proveedor</label>
+          <input class="form-control"
+            [value]="proveedorSeleccionado()?.nombre || (ordenSeleccionada()!.idProveedor | proveedorNombre)"
+            readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Usuario creador</label>
+          <input class="form-control"
+            [value]="usuarioCreacionSeleccionado()?.correoElectronico || (ordenSeleccionada()!.idUsuario | userEmail)"
+            readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Total</label>
+          <input class="form-control" [value]="'Q ' + (ordenSeleccionada()!.total ?? 0 | number:'1.2-2')" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Estado de la orden</label>
+          <select class="form-control" formControlName="idEstadoOrdenCompra"
+            [disabled]="!puedeEditar || ordenBloqueada()"
+            [title]="ordenBloqueada() ? 'La orden está en un estado final y no puede modificarse' : ''">
+            <option [ngValue]="null">Seleccione un estado</option>
+            @for (estado of estadosOrdenCompra(); track estado.idEstadoOrdenCompra) {
+            <option [ngValue]="estado.idEstadoOrdenCompra">{{ estado.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>NIT</label>
+          <input class="form-control" [value]="proveedorSeleccionado()?.nit || '—'" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input class="form-control" [value]="proveedorSeleccionado()?.telefono || '—'" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Nombre contacto</label>
+          <input class="form-control" [value]="proveedorSeleccionado()?.nombreContacto || '—'" readonly />
+        </div>
+
+        <div class="form-group form-span-2">
+          <label>Notas</label>
+          <textarea class="form-control" rows="3" [value]="ordenSeleccionada()!.notas || 'Sin notas'"
+            readonly></textarea>
+        </div>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="crud-table detail-table">
+        <thead>
+          <tr>
+            <th>ID Artículo</th>
+            <th>Artículo</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (detalle of detallesOrden(); track detalle.idOrdenCompraDetalle ?? $index) {
+          <tr>
+            <td>{{ detalle.idArticulo ?? '—' }}</td>
+            <td>{{ detalle.idArticulo | articuloNombre }}</td>
+            <td>{{ detalle.cantidad | number:'1.2-2' }}</td>
+            <td>Q {{ detalle.precioUnitario | number:'1.2-2' }}</td>
+            <td>Q {{ detalle.total | number:'1.2-2' }}</td>
+            <td>
+              <select class="form-control compact-select" [ngModel]="detalle.idEstadoOrdenCompra ?? null"
+                (ngModelChange)="actualizarEstadoDetalle(detalle.idOrdenCompraDetalle, $event)"
+                [ngModelOptions]="{ standalone: true }"
+                [disabled]="!puedeEditar || ordenBloqueada() || detalleBloqueado(detalle)"
+                [title]="detalleBloqueado(detalle) ? 'Este detalle está en un estado final y no puede modificarse' : ''">
+                <option [ngValue]="null">Seleccione un estado</option>
+                @for (estado of estadosDetalleDisponibles; track estado.idEstadoOrdenCompra) {
+                <option [ngValue]="estado.idEstadoOrdenCompra">{{ estado.nombre }}</option>
+                }
+              </select>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="detail-footer">
+      <div class="audit-inline">
+        <span><strong>Creación:</strong> {{ ordenSeleccionada()!.usuarioCreacion ?? ordenSeleccionada()!.idUsuario |
+          userEmail }} · {{ ordenSeleccionada()!.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        <span><strong>Modificación:</strong> {{ ordenSeleccionada()!.usuarioModif ?? ordenSeleccionada()!.idUsuario |
+          userEmail }} · {{ ordenSeleccionada()!.fechaModif | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+
+      <button type="button" class="btn btn-primary" (click)="guardarCambios()"
+        [disabled]="guardando() || !puedeEditar || ordenBloqueada()">
+        {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
   }
 
   <div class="card table-card">
@@ -133,40 +135,40 @@
     </div>
 
     @if (cargando() && ordenesPendientes().length === 0) {
-      <p class="loading">Cargando órdenes pendientes...</p>
+    <p class="loading">Cargando órdenes pendientes...</p>
     } @else if (ordenesPendientes().length === 0) {
-      <p class="empty">No hay órdenes pendientes.</p>
+    <p class="empty">No hay órdenes pendientes.</p>
     } @else {
-      <div class="table-responsive">
-        <table class="crud-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Proveedor</th>
-              <th>Total</th>
-              <th>Usuario</th>
-              <th>Fecha</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (orden of ordenesPendientes(); track orden.idOrdenCompra ?? $index) {
-              <tr>
-                <td>{{ orden.idOrdenCompra }}</td>
-                <td>{{ orden.idProveedor | proveedorNombre }}</td>
-                <td>Q {{ (orden.total ?? 0) | number:'1.2-2' }}</td>
-                <td>{{ orden.idUsuario | userEmail }}</td>
-                <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td class="acciones">
-                  <button type="button" class="btn btn-secondary btn-sm" (click)="verDetalles(orden.idOrdenCompra!)">
-                    Ver detalles
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="table-responsive">
+      <table class="crud-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Proveedor</th>
+            <th>Total</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (orden of ordenesPendientes(); track orden.idOrdenCompra ?? $index) {
+          <tr>
+            <td>{{ orden.idOrdenCompra }}</td>
+            <td>{{ orden.idProveedor | proveedorNombre }}</td>
+            <td>Q {{ (orden.total ?? 0) | number:'1.2-2' }}</td>
+            <td>{{ orden.idUsuario | userEmail }}</td>
+            <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="acciones">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="verDetalles(orden.idOrdenCompra!)">
+                Ver detalles
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
   </div>
 
@@ -177,49 +179,49 @@
     </div>
 
     @if (cargando() && ordenes().length === 0) {
-      <p class="loading">Cargando órdenes...</p>
+    <p class="loading">Cargando órdenes...</p>
     } @else if (ordenes().length === 0) {
-      <p class="empty">No hay órdenes de compra registradas.</p>
+    <p class="empty">No hay órdenes de compra registradas.</p>
     } @else {
-      <div class="table-responsive">
-        <table class="crud-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Proveedor</th>
-              <th>Total</th>
-              <th>Estado</th>
-              <th>Usuario</th>
-              <th>Fecha</th>
-              <th>Auditoría</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (orden of ordenes(); track orden.idOrdenCompra ?? $index) {
-              <tr>
-                <td>{{ orden.idOrdenCompra }}</td>
-                <td>{{ orden.idProveedor | proveedorNombre }}</td>
-                <td>Q {{ (orden.total ?? 0) | number:'1.2-2' }}</td>
-                <td>{{ orden.idEstadoOrdenCompra | estadoOrdenCompraNombre }}</td>
-                <td>{{ orden.idUsuario | userEmail }}</td>
-                <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>
-                  <div class="audit-stack">
-                    <span>Creación: {{ orden.usuarioCreacion ?? orden.idUsuario | userEmail }}</span>
-                    <span>Modif: {{ orden.usuarioModif ?? orden.idUsuario | userEmail }}</span>
-                  </div>
-                </td>
-                <td class="acciones">
-                  <button type="button" class="btn btn-secondary btn-sm" (click)="verDetalles(orden.idOrdenCompra!)">
-                    Ver detalles
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="table-responsive">
+      <table class="crud-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Proveedor</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Auditoría</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (orden of ordenes(); track orden.idOrdenCompra ?? $index) {
+          <tr>
+            <td>{{ orden.idOrdenCompra }}</td>
+            <td>{{ orden.idProveedor | proveedorNombre }}</td>
+            <td>Q {{ (orden.total ?? 0) | number:'1.2-2' }}</td>
+            <td>{{ orden.idEstadoOrdenCompra | estadoOrdenCompraNombre }}</td>
+            <td>{{ orden.idUsuario | userEmail }}</td>
+            <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <div class="audit-stack">
+                <span>Creación: {{ orden.usuarioCreacion ?? orden.idUsuario | userEmail }}</span>
+                <span>Modif: {{ orden.usuarioModif ?? orden.idUsuario | userEmail }}</span>
+              </div>
+            </td>
+            <td class="acciones">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="verDetalles(orden.idOrdenCompra!)">
+                Ver detalles
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
 
     <div class="pagination">
@@ -227,24 +229,24 @@
         <span class="results-summary">Mostrando {{ ordenes().length }} de {{ totalElementos() }}</span>
         <label class="page-size-selector">
           <span>Elementos</span>
-          <select
-            class="form-control compact-select"
-            [ngModel]="tamanoPagina()"
-            (ngModelChange)="cambiarTamanoPagina($event)"
-            [ngModelOptions]="{ standalone: true }"
-          >
+          <select class="form-control compact-select" [ngModel]="tamanoPagina()"
+            (ngModelChange)="cambiarTamanoPagina($event)" [ngModelOptions]="{ standalone: true }">
             @for (tamano of tamanosPagina; track tamano) {
-              <option [ngValue]="tamano">{{ tamano }}</option>
+            <option [ngValue]="tamano">{{ tamano }}</option>
             }
           </select>
         </label>
       </div>
       <div class="pagination-controls">
         <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
-        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
-        <span class="page-indicator">Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} / {{ totalPaginas() }}</span>
-        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
-        <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
+          [disabled]="paginaActual() === 0">Anterior</button>
+        <span class="page-indicator">Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} / {{ totalPaginas()
+          }}</span>
+        <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
+          [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+        <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)"
+          [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
       </div>
     </div>
   </div>

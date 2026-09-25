@@ -30,6 +30,14 @@
 	resize: vertical;
 }
 
+.derived-field .form-control {
+	display: flex;
+	align-items: center;
+	background: var(--crud-gray-200);
+	color: var(--crud-primary-dark);
+	font-weight: 700;
+}
+
 .filters-card {
 	max-width: 1100px;
 	margin-left: auto;
@@ -236,6 +244,19 @@
 .article-metrics div:first-child strong {
 	color: var(--crud-primary-dark);
 	font-size: 1rem;
+	font-weight: 800;
+}
+
+.article-metrics .derived-metric {
+	padding: 0.55rem 0.65rem;
+	border-radius: 6px;
+	background: var(--crud-gray-100);
+	box-shadow: inset 3px 0 0 var(--crud-primary);
+}
+
+.article-metrics .derived-metric strong {
+	color: var(--crud-primary-dark);
+	font-size: 0.95rem;
 	font-weight: 800;
 }
 

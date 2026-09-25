@@ -31,12 +31,14 @@ import com.femaco.main.Repository.Inventario.ArticuloRepository;
 import com.femaco.main.Repository.Seguridad.UsuarioRepository;
 import com.femaco.main.Repository.Ventas.ClienteRepository;
 import com.femaco.main.Repository.Ventas.VentaDetalleRepository;
+import com.femaco.main.Repository.Ventas.VentaFelRepository;
 import com.femaco.main.Repository.Ventas.VentaRepository;
 
 @Service
 public class VentaService {
 
     private static final Long ESTADO_ACTIVO = 1L;
+    private static final Long ESTADO_ANULADA = 2L;
     private static final Long CONSUMIDOR_FINAL_ID_CLIENTE = 1L;
     private static final DateTimeFormatter FORMATO_FACTURA = DateTimeFormatter.ofPattern("ddMMyyyy");
 
@@ -45,17 +47,20 @@ public class VentaService {
     private final ClienteRepository clienteRepository;
     private final ArticuloRepository articuloRepository;
     private final UsuarioRepository usuarioRepository;
+    private final VentaFelRepository ventaFelRepository;
 
     public VentaService(VentaRepository ventaRepository,
                          VentaDetalleRepository ventaDetalleRepository,
                          ClienteRepository clienteRepository,
                          ArticuloRepository articuloRepository,
-                         UsuarioRepository usuarioRepository) {
+                         UsuarioRepository usuarioRepository,
+                         VentaFelRepository ventaFelRepository) {
         this.ventaRepository = ventaRepository;
         this.ventaDetalleRepository = ventaDetalleRepository;
         this.clienteRepository = clienteRepository;
         this.articuloRepository = articuloRepository;
         this.usuarioRepository = usuarioRepository;
+        this.ventaFelRepository = ventaFelRepository;
     }
 
     public List<Venta> buscarTodos() {
@@ -69,6 +74,10 @@ public class VentaService {
                     VentaConDetallesDTO dto = new VentaConDetallesDTO();
                     dto.setVenta(venta);
                     dto.setDetalles(ventaDetalleRepository.findByIdVenta(idVenta));
+                    ventaFelRepository.findByIdVenta(idVenta)
+                            .ifPresentOrElse(
+                                    ventaFel -> dto.setEstadoDocumento(ventaFel.getEstadoDocumento()),
+                                    () -> dto.setEstadoDocumento("No Creado"));
                     return dto;
                 });
     }
@@ -78,24 +87,31 @@ public class VentaService {
         return ventaRepository.findAll(VentaSpecification.conFiltros(filtro), pageable);
     }
 
+    
     @Transactional
-    public Venta crear(Venta venta) {
-        LocalDateTime ahora = LocalDateTime.now();
-        venta.setIdVenta(null);
-        venta.setFechaCreacion(ahora);
-        venta.setFechaModif(ahora);
-        venta.setUsuarioModif(venta.getUsuarioCreacion());
-        return ventaRepository.save(venta);
-    }
-
-    @Transactional
-    public Optional<Venta> actualizar(Long idVenta, Venta datosNuevos) {
+    public Optional<Venta> anular(Long idVenta) {
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
         return ventaRepository.findById(idVenta).map(existente -> {
-            existente.setIdEstadoVenta(datosNuevos.getIdEstadoVenta());
+            if (ESTADO_ANULADA.equals(existente.getIdEstadoVenta())) {
+                throw new BusinessException("La venta ya está anulada");
+            }
+            existente.setFechaModif(LocalDateTime.now());
+            existente.setUsuarioModif(usuarioAutenticado.getIdUsuario().intValue());
+            existente.setIdEstadoVenta(ESTADO_ANULADA);
             return ventaRepository.save(existente);
         });
     }
 /*
+    @Transactional
+    public Venta crear(Venta venta) {
+            LocalDateTime ahora = LocalDateTime.now();
+            venta.setIdVenta(null);
+            venta.setFechaCreacion(ahora);
+            venta.setFechaModif(ahora);
+            venta.setUsuarioModif(venta.getUsuarioCreacion());
+            return ventaRepository.save(venta);
+    }
+
     @Transactional
     public boolean eliminar(Long idVenta) {
         if (!ventaRepository.existsById(idVenta)) {

@@ -12,5 +12,5 @@ public class VentaFiltroDTO {
     private String nitCliente;
     private String numeroFactura;
     private Long idEstadoVenta;
-    private Long idUsuario;
+    private String correoUsuario;
 }

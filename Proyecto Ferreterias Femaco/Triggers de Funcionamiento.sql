@@ -7,10 +7,16 @@
 --   3) orden_compra_detalle (AFTER UPDATE)     -> inserta en movimiento_inventario
 --      SOLO cuando IdEstadoOrdenCompra cambia hacia el Id fijo 2
 --      (Completada)
---      Y ADEMÁS actualiza articulo.UltimoPrecioProveedor con el
---      PrecioUnitario de esa línea de compra (NUEVO)
+--      Y ADEMÁS actualiza articulo.PrecioCompraUltimoProveedor con el
+--      PrecioUnitario de esa línea de compra
 --   4) movimiento_inventario (BEFORE/AFTER INSERT) -> valida stock no-negativo
 --      y es quien realmente actualiza articulo.StockActual
+--   5) venta (BEFORE/AFTER UPDATE)             -> anulación de ventas (NUEVO)
+--      - Solo se anula desde Completada (1) hacia Anulada (2)
+--      - Una venta Anulada no puede volver a otro estado ni cambiar montos
+--      - Al anular: inserta una 'entrada' con motivo 'devolucion' en
+--        movimiento_inventario por cada línea de venta_detalle
+--      - Al anular: pasa los pedidos Pendiente (1) a Cancelado (3)
 --
 --  Movimiento_inventario es un libro contable. No se puede editar.
 --   - No se puede insertar directamente desde la aplicación
@@ -178,8 +184,8 @@ BEGIN
             NOW(), NEW.`UsuarioCreacion`, NOW(), NEW.`UsuarioModif`
         );
 
-        -- NUEVO: actualiza el último precio de proveedor del artículo
-        -- según el precio unitario en esta línea de compra.
+        -- Actualiza el último precio de proveedor del artículo
+        -- según el precio unitario en la línea de compra.
         UPDATE `articulo`
         SET `PrecioCompraUltimoProveedor` = NEW.`PrecioUnitario`,
             `FechaModif`            = NOW(),
@@ -189,8 +195,8 @@ BEGIN
 END$$
 
 -- Una vez Completada, no se puede cambiar Cantidad/Articulo ni revertir el estado.
--- Además: no se permite marcar como Completada con un PrecioUnitario <= 0
--- (evita precios negativos o en cero ).
+-- Nse permite marcar como Completada con un PrecioUnitario <= 0
+-- (evita precios negativos o en cero).
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_before_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_before_update`
 BEFORE UPDATE ON `orden_compra_detalle`
@@ -274,6 +280,115 @@ FOR EACH ROW
 BEGIN
     SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'movimiento_inventario es un registro histórico inmutable; no se permiten DELETE';
+END$$
+
+-- =======================================================================
+-- 5) VENTA - Anulación 
+-- =======================================================================
+-- Una venta Anulada no puede volver a otro estado.
+-- Solo se puede anular una venta Completada (1).
+-- Una venta Anulada no puede cambiar montos ni cliente.
+DROP TRIGGER IF EXISTS `trg_venta_before_update`$$
+CREATE TRIGGER `trg_venta_before_update`
+BEFORE UPDATE ON `venta`
+FOR EACH ROW
+BEGIN
+    DECLARE v_Completada INT DEFAULT 1; -- Id fijo "Completada" (estado_venta)
+    DECLARE v_Anulada    INT DEFAULT 2; -- Id fijo "Anulada" (estado_venta)
+
+    IF OLD.`IdEstadoVenta` = v_Anulada
+       AND NEW.`IdEstadoVenta` <> v_Anulada THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Una venta anulada no puede cambiar de estado';
+    END IF;
+
+    IF NEW.`IdEstadoVenta` = v_Anulada
+       AND OLD.`IdEstadoVenta` <> v_Anulada
+       AND OLD.`IdEstadoVenta` <> v_Completada THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Solo se puede anular una venta en estado Completada';
+    END IF;
+
+    IF OLD.`IdEstadoVenta` = v_Anulada AND (
+           NOT (NEW.`Subtotal`                <=> OLD.`Subtotal`)
+        OR NOT (NEW.`DescuentoMayoristaTotal` <=> OLD.`DescuentoMayoristaTotal`)
+        OR NOT (NEW.`DescuentoManualTotal`    <=> OLD.`DescuentoManualTotal`)
+        OR NOT (NEW.`DescuentoTotal`          <=> OLD.`DescuentoTotal`)
+        OR NOT (NEW.`Total`                   <=> OLD.`Total`)
+        OR NOT (NEW.`IdCliente`               <=> OLD.`IdCliente`)
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se permite modificar montos ni cliente de una venta anulada';
+    END IF;
+END$$
+
+-- Al pasar de Completada (1) a Anulada (2):
+--   a) Devuelve el stock: una 'entrada' con motivo 'devolucion' en
+--      movimiento_inventario por cada línea de venta_detalle.
+--      Se usa cursor (no INSERT...SELECT) porque el trigger de
+--      movimiento_inventario actualiza articulo y MySQL no permite
+--      modificar una tabla que la sentencia disparadora está leyendo (error 1442).
+--   b) Pasa los pedidos Pendiente (1) de esa venta a Cancelado (3).
+DROP TRIGGER IF EXISTS `trg_venta_after_update`$$
+CREATE TRIGGER `trg_venta_after_update`
+AFTER UPDATE ON `venta`
+FOR EACH ROW
+BEGIN
+    DECLARE v_Fin        INT DEFAULT 0;
+    DECLARE v_IdArticulo INT;
+    DECLARE v_Cantidad   DECIMAL(12,2);
+    DECLARE v_StockViejo DECIMAL(12,2);
+    DECLARE v_StockNuevo DECIMAL(12,2);
+    DECLARE v_Completada       INT DEFAULT 1; -- estado_venta
+    DECLARE v_Anulada          INT DEFAULT 2; -- estado_venta
+    DECLARE v_PedidoPendiente  INT DEFAULT 1; -- estado_pedido
+    DECLARE v_PedidoCancelado  INT DEFAULT 3; -- estado_pedido
+
+    DECLARE cur_detalle CURSOR FOR
+        SELECT `IdArticulo`, `Cantidad`
+        FROM `venta_detalle`
+        WHERE `IdVenta` = NEW.`IdVenta`
+        ORDER BY `IdVentaDetalle`;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_Fin = 1;
+
+    IF OLD.`IdEstadoVenta` = v_Completada
+       AND NEW.`IdEstadoVenta` = v_Anulada THEN
+
+        OPEN cur_detalle;
+
+        lectura: LOOP
+            FETCH cur_detalle INTO v_IdArticulo, v_Cantidad;
+            IF v_Fin = 1 THEN
+                LEAVE lectura;
+            END IF;
+
+            SELECT COALESCE(`StockActual`, 0) INTO v_StockViejo
+            FROM `articulo`
+            WHERE `IdArticulo` = v_IdArticulo
+            FOR UPDATE;
+
+            SET v_StockNuevo = v_StockViejo + v_Cantidad;
+            INSERT INTO `movimiento_inventario` (
+                `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
+                `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
+                `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`
+            ) VALUES (
+                'entrada', v_Cantidad, v_StockViejo, v_StockNuevo, 'devolucion',
+                v_IdArticulo, NEW.`IdVenta`, NULL, NULL, NEW.`UsuarioModif`,
+                NOW(), NEW.`UsuarioModif`, NOW(), NEW.`UsuarioModif`
+            );
+        END LOOP;
+        CLOSE cur_detalle;
+
+        -- b) Cancelar pedidos pendientes de esta venta
+        UPDATE `pedido`
+        SET `IdEstadoPedido` = v_PedidoCancelado,
+            `FechaModif`     = NOW(),
+            `UsuarioModif`   = NEW.`UsuarioModif`
+        WHERE `IdVenta` = NEW.`IdVenta`
+          AND `IdEstadoPedido` = v_PedidoPendiente;
+    END IF;
 END$$
 
 DELIMITER ;

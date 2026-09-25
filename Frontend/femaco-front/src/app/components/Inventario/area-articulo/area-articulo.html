@@ -2,121 +2,109 @@
 	<h2 class="crud-title">Áreas de artículo</h2>
 
 	@if (mensaje()) {
-		<div class="alert alert-success">{{ mensaje() }}</div>
+	<div class="alert alert-success">{{ mensaje() }}</div>
 	}
 	@if (error()) {
-		<div class="alert alert-error">{{ error() }}</div>
+	<div class="alert alert-error">{{ error() }}</div>
 	}
 
 	@if (puedeCrear || (editando && puedeEditar)) {
-		<div class="card form-card">
-			<h3 class="card-title">
-				{{ editando ? 'Editar área de artículo' : 'Nueva área de artículo' }}
-			</h3>
+	<div class="card form-card">
+		<h3 class="card-title">
+			{{ editando ? 'Editar área de artículo' : 'Nueva área de artículo' }}
+		</h3>
 
-			<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
-				<div class="form-row area-form-row">
-					<div class="form-group">
-						<label for="nombre">Nombre *</label>
-						<input
-							id="nombre"
-							type="text"
-							formControlName="nombre"
-							class="form-control"
-							placeholder="Nombre del área"
-							maxlength="100"
-						/>
-						@if (f['nombre'].touched && f['nombre'].invalid) {
-							<div class="error-msg">
-								@if (f['nombre'].errors?.['required']) { El nombre es obligatorio }
-								@if (f['nombre'].errors?.['maxlength']) { Máximo 100 caracteres }
-							</div>
-						}
+		<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+			<div class="form-row area-form-row">
+				<div class="form-group">
+					<label for="nombre">Nombre *</label>
+					<input id="nombre" type="text" formControlName="nombre" class="form-control"
+						placeholder="Nombre del área" maxlength="100" />
+					@if (f['nombre'].touched && f['nombre'].invalid) {
+					<div class="error-msg">
+						@if (f['nombre'].errors?.['required']) { El nombre es obligatorio }
+						@if (f['nombre'].errors?.['maxlength']) { Máximo 100 caracteres }
 					</div>
-
-					<div class="form-group">
-						<label for="descripcion">Descripción</label>
-						<textarea
-							id="descripcion"
-							formControlName="descripcion"
-							class="form-control"
-							placeholder="Descripción del área"
-							maxlength="1000"
-							rows="3"
-						></textarea>
-						@if (f['descripcion'].touched && f['descripcion'].invalid) {
-							<div class="error-msg">Máximo 1000 caracteres</div>
-						}
-					</div>
-				</div>
-
-				<div class="form-actions">
-					<button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">
-						{{ editando ? 'Actualizar' : 'Guardar' }}
-					</button>
-					@if (editando) {
-						<button type="button" class="btn btn-secondary" (click)="cancelar()">
-							Cancelar
-						</button>
 					}
 				</div>
-			</form>
-		</div>
+
+				<div class="form-group">
+					<label for="descripcion">Descripción</label>
+					<textarea id="descripcion" formControlName="descripcion" class="form-control"
+						placeholder="Descripción del área" maxlength="1000" rows="3"></textarea>
+					@if (f['descripcion'].touched && f['descripcion'].invalid) {
+					<div class="error-msg">Máximo 1000 caracteres</div>
+					}
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">
+					{{ editando ? 'Actualizar' : 'Guardar' }}
+				</button>
+				@if (editando) {
+				<button type="button" class="btn btn-secondary" (click)="cancelar()">
+					Cancelar
+				</button>
+				}
+			</div>
+		</form>
+	</div>
 	}
 
 	<div class="card table-card">
 		<h3 class="card-title">Listado de áreas de artículo</h3>
 
 		@if (cargando() && lista().length === 0) {
-			<p class="loading">Cargando...</p>
+		<p class="loading">Cargando...</p>
 		} @else if (lista().length === 0) {
-			<p class="empty">No hay áreas de artículo registradas.</p>
+		<p class="empty">No hay áreas de artículo registradas.</p>
 		} @else {
-			<div class="area-list">
-				@for (item of lista(); track item.idAreaArticulo) {
-					<article class="area-item">
-						<div class="area-item-header">
-							<div>
-								<span class="area-item-id">ID {{ item.idAreaArticulo }}</span>
-								<h4>{{ item.nombre }}</h4>
-							</div>
-							<div class="area-item-actions">
-								@if (puedeEditar) {
-									<button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">
-										Editar
-									</button>
-								}
-								@if (puedeEliminar) {
-									<button class="btn-icon btn-delete" (click)="eliminar(item.idAreaArticulo!)" title="Eliminar">
-										Eliminar
-									</button>
-								}
-							</div>
-						</div>
+		<div class="area-list">
+			@for (item of lista(); track item.idAreaArticulo) {
+			<article class="area-item">
+				<div class="area-item-header">
+					<div>
+						<span class="area-item-id">ID {{ item.idAreaArticulo }}</span>
+						<h4>{{ item.nombre }}</h4>
+					</div>
+					<div class="area-item-actions">
+						@if (puedeEditar) {
+						<button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">
+							Editar
+						</button>
+						}
+						@if (puedeEliminar) {
+						<button class="btn-icon btn-delete" (click)="eliminar(item.idAreaArticulo!)" title="Eliminar">
+							Eliminar
+						</button>
+						}
+					</div>
+				</div>
 
-						<p class="area-item-description">{{ item.descripcion || 'Sin descripción' }}</p>
+				<p class="area-item-description">{{ item.descripcion || 'Sin descripción' }}</p>
 
-						<div class="area-item-details">
-							<div class="area-detail">
-								<span>Creación</span>
-								<strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong>
-							</div>
-							<div class="area-detail">
-								<span>Usuario creación</span>
-								<strong>{{ item.usuarioCreacion | userEmail }}</strong>
-							</div>
-							<div class="area-detail">
-								<span>Última modificación</span>
-								<strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong>
-							</div>
-							<div class="area-detail">
-								<span>Usuario modificación</span>
-								<strong>{{ item.usuarioModif | userEmail }}</strong>
-							</div>
-						</div>
-					</article>
-				}
-			</div>
+				<div class="area-item-details">
+					<div class="area-detail">
+						<span>Creación</span>
+						<strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong>
+					</div>
+					<div class="area-detail">
+						<span>Usuario creación</span>
+						<strong>{{ item.usuarioCreacion | userEmail }}</strong>
+					</div>
+					<div class="area-detail">
+						<span>Última modificación</span>
+						<strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong>
+					</div>
+					<div class="area-detail">
+						<span>Usuario modificación</span>
+						<strong>{{ item.usuarioModif | userEmail }}</strong>
+					</div>
+				</div>
+			</article>
+			}
+		</div>
 		}
 	</div>
 </div>

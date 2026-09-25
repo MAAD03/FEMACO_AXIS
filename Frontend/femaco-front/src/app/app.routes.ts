@@ -112,6 +112,11 @@ export const routes: Routes = [
           import('./components/Ventas/ventas/ventas').then(m => m.Ventas)
       },
       {
+        path: 'lista-ventas',
+        loadComponent: () =>
+          import('./components/Ventas/lista-ventas/lista-ventas').then(m => m.ListaVentas)
+      },
+      {
         path: 'lista-ajuste-inventario',
         loadComponent: () =>
           import('./components/Inventario/lista-ajuste-inventario/lista-ajuste-inventario').then(m => m.ListaAjusteInventario)

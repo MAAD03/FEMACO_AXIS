@@ -2,186 +2,221 @@
 	<h2 class="crud-title">Sucursales</h2>
 
 	@if (mensaje()) {
-		<div class="alert alert-success">{{ mensaje() }}</div>
+	<div class="alert alert-success">{{ mensaje() }}</div>
 	}
 	@if (error()) {
-		<div class="alert alert-error">{{ error() }}</div>
+	<div class="alert alert-error">{{ error() }}</div>
 	}
 
 	@if (puedeCrear || (editando && puedeEditar)) {
-		<div class="card form-card">
-			<h3 class="card-title">{{ editando ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
+	<div class="card form-card">
+		<h3 class="card-title">{{ editando ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
 
-			<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
-				<div class="form-row sucursal-form-row">
-					<div class="form-group">
-						<label for="nombre">Nombre *</label>
-						<input id="nombre" type="text" formControlName="nombre" class="form-control" placeholder="Nombre de la sucursal" maxlength="150" />
-						@if (f['nombre'].touched && f['nombre'].invalid) {
-							<div class="error-msg">
-								@if (f['nombre'].errors?.['required']) { El nombre es obligatorio }
-								@if (f['nombre'].errors?.['maxlength']) { Máximo 150 caracteres }
-							</div>
-						}
+		<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+			<div class="form-row sucursal-form-row">
+				<div class="form-group">
+					<label for="nombre">Nombre *</label>
+					<input id="nombre" type="text" formControlName="nombre" class="form-control"
+						placeholder="Nombre de la sucursal" maxlength="150" />
+					@if (f['nombre'].touched && f['nombre'].invalid) {
+					<div class="error-msg">
+						@if (f['nombre'].errors?.['required']) { El nombre es obligatorio }
+						@if (f['nombre'].errors?.['maxlength']) { Máximo 150 caracteres }
 					</div>
-
-					<div class="form-group">
-						<label for="direccion">Dirección *</label>
-						<input id="direccion" type="text" formControlName="direccion" class="form-control" placeholder="Dirección de la sucursal" maxlength="250" />
-						@if (f['direccion'].touched && f['direccion'].invalid) {
-							<div class="error-msg">
-								@if (f['direccion'].errors?.['required']) { La dirección es obligatoria }
-								@if (f['direccion'].errors?.['maxlength']) { Máximo 250 caracteres }
-							</div>
-						}
-					</div>
-
-					<div class="form-group">
-						<label for="telefono">Teléfono</label>
-						<input id="telefono" type="text" formControlName="telefono" class="form-control" placeholder="Teléfono de la sucursal" maxlength="45" />
-						@if (f['telefono'].touched && f['telefono'].invalid) {
-							<div class="error-msg">Máximo 45 caracteres</div>
-						}
-					</div>
-				</div>
-
-				<div class="form-section">
-					<h4 class="form-section-title">Datos fiscales FEL</h4>
-					<div class="form-row sucursal-form-row">
-						<div class="form-group">
-							<label for="felNitEmisor">NIT emisor</label>
-							<input id="felNitEmisor" type="text" formControlName="felNitEmisor" class="form-control" maxlength="20" />
-							@if (f['felNitEmisor'].touched && f['felNitEmisor'].invalid) { <div class="error-msg">Máximo 20 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felNombreEmisor">Nombre emisor</label>
-							<input id="felNombreEmisor" type="text" formControlName="felNombreEmisor" class="form-control" maxlength="200" />
-							@if (f['felNombreEmisor'].touched && f['felNombreEmisor'].invalid) { <div class="error-msg">Máximo 200 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felNombreComercial">Nombre comercial</label>
-							<input id="felNombreComercial" type="text" formControlName="felNombreComercial" class="form-control" maxlength="200" />
-							@if (f['felNombreComercial'].touched && f['felNombreComercial'].invalid) { <div class="error-msg">Máximo 200 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felCorreoEmisor">Correo emisor</label>
-							<input id="felCorreoEmisor" type="email" formControlName="felCorreoEmisor" class="form-control" maxlength="150" />
-							@if (f['felCorreoEmisor'].touched && f['felCorreoEmisor'].invalid) { <div class="error-msg">Máximo 150 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felCodigoEstablecimiento">Código establecimiento</label>
-							<input id="felCodigoEstablecimiento" type="text" formControlName="felCodigoEstablecimiento" class="form-control" maxlength="10" />
-							@if (f['felCodigoEstablecimiento'].touched && f['felCodigoEstablecimiento'].invalid) { <div class="error-msg">Máximo 10 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felAfiliacionIva">Afiliación IVA</label>
-							<input id="felAfiliacionIva" type="text" formControlName="felAfiliacionIva" class="form-control" maxlength="10" />
-							@if (f['felAfiliacionIva'].touched && f['felAfiliacionIva'].invalid) { <div class="error-msg">Máximo 10 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felDireccion">Dirección FEL</label>
-							<input id="felDireccion" type="text" formControlName="felDireccion" class="form-control" maxlength="255" />
-							@if (f['felDireccion'].touched && f['felDireccion'].invalid) { <div class="error-msg">Máximo 255 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felCodigoPostal">Código postal</label>
-							<input id="felCodigoPostal" type="text" formControlName="felCodigoPostal" class="form-control" maxlength="10" />
-							@if (f['felCodigoPostal'].touched && f['felCodigoPostal'].invalid) { <div class="error-msg">Máximo 10 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felMunicipio">Municipio</label>
-							<input id="felMunicipio" type="text" formControlName="felMunicipio" class="form-control" maxlength="100" />
-							@if (f['felMunicipio'].touched && f['felMunicipio'].invalid) { <div class="error-msg">Máximo 100 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felDepartamento">Departamento</label>
-							<input id="felDepartamento" type="text" formControlName="felDepartamento" class="form-control" maxlength="100" />
-							@if (f['felDepartamento'].touched && f['felDepartamento'].invalid) { <div class="error-msg">Máximo 100 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felPais">País</label>
-							<input id="felPais" type="text" formControlName="felPais" class="form-control" maxlength="5" />
-							@if (f['felPais'].touched && f['felPais'].invalid) { <div class="error-msg">Máximo 5 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felTipoFrase">Tipo de frase</label>
-							<input id="felTipoFrase" type="text" formControlName="felTipoFrase" class="form-control" maxlength="5" />
-							@if (f['felTipoFrase'].touched && f['felTipoFrase'].invalid) { <div class="error-msg">Máximo 5 caracteres</div> }
-						</div>
-						<div class="form-group">
-							<label for="felCodigoEscenario">Código escenario</label>
-							<input id="felCodigoEscenario" type="text" formControlName="felCodigoEscenario" class="form-control" maxlength="5" />
-							@if (f['felCodigoEscenario'].touched && f['felCodigoEscenario'].invalid) { <div class="error-msg">Máximo 5 caracteres</div> }
-						</div>
-					</div>
-				</div>
-
-				<div class="form-actions">
-					<button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">{{ editando ? 'Actualizar' : 'Guardar' }}</button>
-					@if (editando) {
-						<button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
 					}
 				</div>
-			</form>
-		</div>
+
+				<div class="form-group">
+					<label for="direccion">Dirección *</label>
+					<input id="direccion" type="text" formControlName="direccion" class="form-control"
+						placeholder="Dirección de la sucursal" maxlength="250" />
+					@if (f['direccion'].touched && f['direccion'].invalid) {
+					<div class="error-msg">
+						@if (f['direccion'].errors?.['required']) { La dirección es obligatoria }
+						@if (f['direccion'].errors?.['maxlength']) { Máximo 250 caracteres }
+					</div>
+					}
+				</div>
+
+				<div class="form-group">
+					<label for="telefono">Teléfono</label>
+					<input id="telefono" type="text" formControlName="telefono" class="form-control"
+						placeholder="Teléfono de la sucursal" maxlength="45" />
+					@if (f['telefono'].touched && f['telefono'].invalid) {
+					<div class="error-msg">Máximo 45 caracteres</div>
+					}
+				</div>
+			</div>
+
+			<div class="form-section">
+				<h4 class="form-section-title">Datos fiscales FEL</h4>
+				<div class="form-row sucursal-form-row">
+					<div class="form-group">
+						<label for="felNitEmisor">NIT emisor</label>
+						<input id="felNitEmisor" type="text" formControlName="felNitEmisor" class="form-control"
+							maxlength="20" />
+						@if (f['felNitEmisor'].touched && f['felNitEmisor'].invalid) { <div class="error-msg">Máximo 20
+							caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felNombreEmisor">Nombre emisor</label>
+						<input id="felNombreEmisor" type="text" formControlName="felNombreEmisor" class="form-control"
+							maxlength="200" />
+						@if (f['felNombreEmisor'].touched && f['felNombreEmisor'].invalid) { <div class="error-msg">
+							Máximo 200 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felNombreComercial">Nombre comercial</label>
+						<input id="felNombreComercial" type="text" formControlName="felNombreComercial"
+							class="form-control" maxlength="200" />
+						@if (f['felNombreComercial'].touched && f['felNombreComercial'].invalid) { <div
+							class="error-msg">Máximo 200 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felCorreoEmisor">Correo emisor</label>
+						<input id="felCorreoEmisor" type="email" formControlName="felCorreoEmisor" class="form-control"
+							maxlength="150" />
+						@if (f['felCorreoEmisor'].touched && f['felCorreoEmisor'].invalid) { <div class="error-msg">
+							Máximo 150 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felCodigoEstablecimiento">Código establecimiento</label>
+						<input id="felCodigoEstablecimiento" type="text" formControlName="felCodigoEstablecimiento"
+							class="form-control" maxlength="10" />
+						@if (f['felCodigoEstablecimiento'].touched && f['felCodigoEstablecimiento'].invalid) { <div
+							class="error-msg">Máximo 10 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felAfiliacionIva">Afiliación IVA</label>
+						<input id="felAfiliacionIva" type="text" formControlName="felAfiliacionIva" class="form-control"
+							maxlength="10" />
+						@if (f['felAfiliacionIva'].touched && f['felAfiliacionIva'].invalid) { <div class="error-msg">
+							Máximo 10 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felDireccion">Dirección FEL</label>
+						<input id="felDireccion" type="text" formControlName="felDireccion" class="form-control"
+							maxlength="255" />
+						@if (f['felDireccion'].touched && f['felDireccion'].invalid) { <div class="error-msg">Máximo 255
+							caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felCodigoPostal">Código postal</label>
+						<input id="felCodigoPostal" type="text" formControlName="felCodigoPostal" class="form-control"
+							maxlength="10" />
+						@if (f['felCodigoPostal'].touched && f['felCodigoPostal'].invalid) { <div class="error-msg">
+							Máximo 10 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felMunicipio">Municipio</label>
+						<input id="felMunicipio" type="text" formControlName="felMunicipio" class="form-control"
+							maxlength="100" />
+						@if (f['felMunicipio'].touched && f['felMunicipio'].invalid) { <div class="error-msg">Máximo 100
+							caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felDepartamento">Departamento</label>
+						<input id="felDepartamento" type="text" formControlName="felDepartamento" class="form-control"
+							maxlength="100" />
+						@if (f['felDepartamento'].touched && f['felDepartamento'].invalid) { <div class="error-msg">
+							Máximo 100 caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felPais">País</label>
+						<input id="felPais" type="text" formControlName="felPais" class="form-control" maxlength="5" />
+						@if (f['felPais'].touched && f['felPais'].invalid) { <div class="error-msg">Máximo 5 caracteres
+						</div> }
+					</div>
+					<div class="form-group">
+						<label for="felTipoFrase">Tipo de frase</label>
+						<input id="felTipoFrase" type="text" formControlName="felTipoFrase" class="form-control"
+							maxlength="5" />
+						@if (f['felTipoFrase'].touched && f['felTipoFrase'].invalid) { <div class="error-msg">Máximo 5
+							caracteres</div> }
+					</div>
+					<div class="form-group">
+						<label for="felCodigoEscenario">Código escenario</label>
+						<input id="felCodigoEscenario" type="text" formControlName="felCodigoEscenario"
+							class="form-control" maxlength="5" />
+						@if (f['felCodigoEscenario'].touched && f['felCodigoEscenario'].invalid) { <div
+							class="error-msg">Máximo 5 caracteres</div> }
+					</div>
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="submit" class="btn btn-primary" [disabled]="cargando() || form.invalid">{{ editando ?
+					'Actualizar' : 'Guardar' }}</button>
+				@if (editando) {
+				<button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+				}
+			</div>
+		</form>
+	</div>
 	}
 
 	<div class="card table-card">
 		<h3 class="card-title">Listado de sucursales</h3>
 
 		@if (cargando() && lista().length === 0) {
-			<p class="loading">Cargando...</p>
+		<p class="loading">Cargando...</p>
 		} @else if (lista().length === 0) {
-			<p class="empty">No hay sucursales registradas.</p>
+		<p class="empty">No hay sucursales registradas.</p>
 		} @else {
-			<div class="sucursal-list">
-				@for (item of lista(); track item.idSucursal) {
-					<article class="sucursal-item">
-						<div class="sucursal-item-header">
-							<div>
-								<span class="sucursal-item-id">ID {{ item.idSucursal }}</span>
-								<h4>{{ item.nombre }}</h4>
-							</div>
-							<div class="sucursal-item-actions">
-								@if (puedeEditar) {
-									<button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">Editar</button>
-								}
-								@if (puedeEliminar) {
-									<button class="btn-icon btn-delete" (click)="eliminar(item.idSucursal!)" title="Eliminar">Eliminar</button>
-								}
-							</div>
-						</div>
+		<div class="sucursal-list">
+			@for (item of lista(); track item.idSucursal) {
+			<article class="sucursal-item">
+				<div class="sucursal-item-header">
+					<div>
+						<span class="sucursal-item-id">ID {{ item.idSucursal }}</span>
+						<h4>{{ item.nombre }}</h4>
+					</div>
+					<div class="sucursal-item-actions">
+						@if (puedeEditar) {
+						<button class="btn-icon btn-edit" (click)="editar(item)" title="Editar">Editar</button>
+						}
+						@if (puedeEliminar) {
+						<button class="btn-icon btn-delete" (click)="eliminar(item.idSucursal!)"
+							title="Eliminar">Eliminar</button>
+						}
+					</div>
+				</div>
 
-						<div class="sucursal-contact">
-							<div><span>Dirección</span><strong>{{ item.direccion || 'Sin dirección' }}</strong></div>
-							<div><span>Teléfono</span><strong>{{ item.telefono || 'Sin teléfono' }}</strong></div>
-							</div>
+				<div class="sucursal-contact">
+					<div><span>Dirección</span><strong>{{ item.direccion || 'Sin dirección' }}</strong></div>
+					<div><span>Teléfono</span><strong>{{ item.telefono || 'Sin teléfono' }}</strong></div>
+				</div>
 
-						<div class="sucursal-fel">
-							<div><span>NIT emisor</span><strong>{{ item.felNitEmisor || 'Sin dato' }}</strong></div>
-							<div><span>Nombre emisor</span><strong>{{ item.felNombreEmisor || 'Sin dato' }}</strong></div>
-							<div><span>Nombre comercial</span><strong>{{ item.felNombreComercial || 'Sin dato' }}</strong></div>
-							<div><span>Correo emisor</span><strong>{{ item.felCorreoEmisor || 'Sin dato' }}</strong></div>
-							<div><span>Código establecimiento</span><strong>{{ item.felCodigoEstablecimiento || 'Sin dato' }}</strong></div>
-							<div><span>Afiliación IVA</span><strong>{{ item.felAfiliacionIva || 'Sin dato' }}</strong></div>
-							<div><span>Dirección FEL</span><strong>{{ item.felDireccion || 'Sin dato' }}</strong></div>
-							<div><span>Código postal</span><strong>{{ item.felCodigoPostal || 'Sin dato' }}</strong></div>
-							<div><span>Municipio</span><strong>{{ item.felMunicipio || 'Sin dato' }}</strong></div>
-							<div><span>Departamento</span><strong>{{ item.felDepartamento || 'Sin dato' }}</strong></div>
-							<div><span>País</span><strong>{{ item.felPais || 'Sin dato' }}</strong></div>
-							<div><span>Tipo de frase</span><strong>{{ item.felTipoFrase || 'Sin dato' }}</strong></div>
-							<div><span>Código escenario</span><strong>{{ item.felCodigoEscenario || 'Sin dato' }}</strong></div>
-						</div>
+				<div class="sucursal-fel">
+					<div><span>NIT emisor</span><strong>{{ item.felNitEmisor || 'Sin dato' }}</strong></div>
+					<div><span>Nombre emisor</span><strong>{{ item.felNombreEmisor || 'Sin dato' }}</strong></div>
+					<div><span>Nombre comercial</span><strong>{{ item.felNombreComercial || 'Sin dato' }}</strong></div>
+					<div><span>Correo emisor</span><strong>{{ item.felCorreoEmisor || 'Sin dato' }}</strong></div>
+					<div><span>Código establecimiento</span><strong>{{ item.felCodigoEstablecimiento || 'Sin dato'
+							}}</strong></div>
+					<div><span>Afiliación IVA</span><strong>{{ item.felAfiliacionIva || 'Sin dato' }}</strong></div>
+					<div><span>Dirección FEL</span><strong>{{ item.felDireccion || 'Sin dato' }}</strong></div>
+					<div><span>Código postal</span><strong>{{ item.felCodigoPostal || 'Sin dato' }}</strong></div>
+					<div><span>Municipio</span><strong>{{ item.felMunicipio || 'Sin dato' }}</strong></div>
+					<div><span>Departamento</span><strong>{{ item.felDepartamento || 'Sin dato' }}</strong></div>
+					<div><span>País</span><strong>{{ item.felPais || 'Sin dato' }}</strong></div>
+					<div><span>Tipo de frase</span><strong>{{ item.felTipoFrase || 'Sin dato' }}</strong></div>
+					<div><span>Código escenario</span><strong>{{ item.felCodigoEscenario || 'Sin dato' }}</strong></div>
+				</div>
 
-						<div class="sucursal-item-details">
-							<div class="sucursal-detail"><span>Creación</span><strong>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong></div>
-							<div class="sucursal-detail"><span>Usuario creación</span><strong>{{ item.usuarioCreacion | userEmail }}</strong></div>
-							<div class="sucursal-detail"><span>Última modificación</span><strong>{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong></div>
-							<div class="sucursal-detail"><span>Usuario modificación</span><strong>{{ item.usuarioModif | userEmail }}</strong></div>
-						</div>
-					</article>
-				}
-			</div>
+				<div class="sucursal-item-details">
+					<div class="sucursal-detail"><span>Creación</span><strong>{{ item.fechaCreacion | date:'dd/MM/yyyy
+							HH:mm' }}</strong></div>
+					<div class="sucursal-detail"><span>Usuario creación</span><strong>{{ item.usuarioCreacion |
+							userEmail }}</strong></div>
+					<div class="sucursal-detail"><span>Última modificación</span><strong>{{ item.fechaModif |
+							date:'dd/MM/yyyy HH:mm' }}</strong></div>
+					<div class="sucursal-detail"><span>Usuario modificación</span><strong>{{ item.usuarioModif |
+							userEmail }}</strong></div>
+				</div>
+			</article>
+			}
+		</div>
 		}
 	</div>
 </div>

@@ -241,6 +241,21 @@ export class Articulo implements OnInit {
     return value === null || value === '' ? undefined : Number(value);
   }
 
+  precioFinalFormulario(): number | null {
+    const precioCompra = this.numeroOpcional(this.form?.value.precioCompraUltimoProveedor);
+    const margen = this.numeroOpcional(this.form?.value.margenGanancia);
+    return this.calcularPrecioFinal(precioCompra, margen);
+  }
+
+  precioFinal(item: ArticuloModel): number | null {
+    return this.calcularPrecioFinal(item.precioCompraUltimoProveedor, item.margenGanancia);
+  }
+
+  private calcularPrecioFinal(precioCompra: number | undefined, margen: number | undefined): number | null {
+    if (precioCompra === undefined || margen === undefined) return null;
+    return precioCompra * (1 + margen / 100);
+  }
+
   editar(item: ArticuloModel): void {
     if (!this.puedeEditar) return;
     this.editando = true;

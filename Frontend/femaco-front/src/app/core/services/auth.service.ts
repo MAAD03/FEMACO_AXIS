@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
 import {
@@ -36,6 +37,7 @@ import { CacheLoaderService } from './cache-loader.service';
   providedIn: 'root'
 })
 export class AuthService {
+  private document = inject(DOCUMENT);
   private http = inject(HttpClient);
   private httpBackend = inject(HttpBackend);
   private rawHttp = new HttpClient(this.httpBackend);
@@ -62,8 +64,30 @@ export class AuthService {
   private cacheLoaderService = inject(CacheLoaderService);
 
   private readonly STORAGE_KEY = 'auth_user';
+  private readonly LAST_ACTIVITY_KEY = 'auth_last_activity';
+  private readonly IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+  private readonly ACTIVITY_STORAGE_INTERVAL_MS = 5000;
+  private readonly activityEvents = ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'] as const;
   private currentUserSubject = new BehaviorSubject<UserData | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
+  private idleTimer: ReturnType<typeof setTimeout> | undefined;
+  private lastActivityAt = 0;
+  private lastPersistedActivityAt = 0;
+  private readonly activityHandler = (): void => {
+    if (this.currentUserSubject.value) {
+      this.restoreIdleTimer();
+    }
+  };
+
+  constructor() {
+    for (const eventName of this.activityEvents) {
+      this.document.addEventListener(eventName, this.activityHandler, { capture: true, passive: true });
+    }
+
+    if (this.currentUserSubject.value) {
+      this.resetIdleTimer();
+    }
+  }
 
   login(credential: LoginRequest): Observable<LoginResponse> {
     return this.rawHttp.post<LoginResponse>(`${this.apiBaseUrl}/auth/login`, credential).pipe(
@@ -76,6 +100,7 @@ export class AuthService {
         };
         this.saveUser(userData);
         this.currentUserSubject.next(userData);
+        this.resetIdleTimer();
       }),
       catchError((error: unknown) => throwError(() => this.normalizeLoginError(error)))
     );
@@ -86,7 +111,10 @@ export class AuthService {
   }
 
   logout(): void {
+    clearTimeout(this.idleTimer);
+    this.idleTimer = undefined;
     localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.LAST_ACTIVITY_KEY);
     this.currentUserSubject.next(null);
     this.conjuntoMenuService.limpiarMenu();
     this.menuService.clearCache();
@@ -149,5 +177,61 @@ export class AuthService {
   private getUserFromStorage(): UserData | null {
     const data = localStorage.getItem(this.STORAGE_KEY);
     return data ? JSON.parse(data) : null;
+  }
+
+  private resetIdleTimer(): void {
+    if (!this.currentUserSubject.value) {
+      return;
+    }
+
+    this.lastActivityAt = Date.now();
+    if (this.lastActivityAt - this.lastPersistedActivityAt >= this.ACTIVITY_STORAGE_INTERVAL_MS) {
+      this.persistLastActivity();
+    }
+    this.scheduleIdleTimeout();
+  }
+
+  private restoreIdleTimer(): void {
+    const storedActivity = Number(localStorage.getItem(this.LAST_ACTIVITY_KEY));
+    this.lastActivityAt = Number.isFinite(storedActivity) && storedActivity > 0
+      ? storedActivity
+      : Date.now();
+    this.lastPersistedActivityAt = this.lastActivityAt;
+
+    if (Date.now() - this.lastActivityAt >= this.IDLE_TIMEOUT_MS) {
+      this.logout();
+      return;
+    }
+
+    if (!Number.isFinite(storedActivity) || storedActivity <= 0) {
+      this.persistLastActivity();
+    }
+    this.scheduleIdleTimeout();
+  }
+
+  private scheduleIdleTimeout(): void {
+    clearTimeout(this.idleTimer);
+    const remainingTime = this.IDLE_TIMEOUT_MS - (Date.now() - this.lastActivityAt);
+    this.idleTimer = setTimeout(() => this.checkIdleTimeout(), Math.max(remainingTime, 0));
+  }
+
+  private checkIdleTimeout(): void {
+    const storedActivity = Number(localStorage.getItem(this.LAST_ACTIVITY_KEY));
+    if (Number.isFinite(storedActivity) && storedActivity > this.lastActivityAt) {
+      this.lastActivityAt = storedActivity;
+      this.lastPersistedActivityAt = storedActivity;
+    }
+
+    if (Date.now() - this.lastActivityAt >= this.IDLE_TIMEOUT_MS) {
+      this.logout();
+      return;
+    }
+
+    this.scheduleIdleTimeout();
+  }
+
+  private persistLastActivity(): void {
+    localStorage.setItem(this.LAST_ACTIVITY_KEY, String(this.lastActivityAt));
+    this.lastPersistedActivityAt = this.lastActivityAt;
   }
 }

@@ -16,3 +16,12 @@ export interface Venta {
   fechaCreacion?: string | Date;
   fechaModif?: string | Date;
 }
+
+export interface VentaFiltro {
+  fechaCreacionDesde?: string | Date;
+  fechaCreacionHasta?: string | Date;
+  nitCliente?: string;
+  numeroFactura?: string;
+  idEstadoVenta?: number;
+  correoUsuario?: string;
+}

@@ -1,1 +1,227 @@
-<p>lista-ventas works!</p>
+<div class="crud-container">
+  <h2 class="crud-title">Ventas</h2>
+
+  @if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
+  @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+  <!-- Detalle de venta -->
+  <div class="card detail-card">
+    <div class="detail-header">
+      <h3 class="card-title">Detalle de venta</h3>
+      @if (ventaSeleccionada()) {
+      <button type="button" class="btn-icon btn-close" (click)="cerrarDetalle()" title="Cerrar detalle">✕</button>
+      }
+    </div>
+
+    @if (errorDetalle()) { <div class="alert alert-error">{{ errorDetalle() }}</div> }
+
+    @if (cargandoDetalle()) {
+    <p class="loading">Cargando detalle...</p>
+    } @else if (!ventaSeleccionada()) {
+    <p class="empty">Selecciona "Ver detalle" en una venta del listado para visualizarla aquí.</p>
+    } @else {
+    <div class="detail-body">
+      <div class="detail-summary">
+        <div><span>ID venta</span><strong>{{ ventaSeleccionada()!.venta.idVenta }}</strong></div>
+        <div><span>Fecha</span><strong>{{ ventaSeleccionada()!.venta.fecha | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+        <div><span>Cliente</span><strong>{{ ventaSeleccionada()!.venta.idCliente | clienteNombre }}</strong></div>
+        <div><span>NIT cliente</span><strong>{{ ventaSeleccionada()!.venta.idCliente | clieneNit }}</strong></div>
+        <div><span>Usuario</span><strong>{{ ventaSeleccionada()!.venta.idUsuario | userEmail }}</strong></div>
+        <div><span>Creación</span><strong>{{ ventaSeleccionada()!.venta.fechaCreacion | date:'dd/MM/yyyy HH:mm'
+            }}</strong></div>
+        <div><span>Usuario creación</span><strong>{{ ventaSeleccionada()!.venta.usuarioCreacion | userEmail }}</strong>
+        </div>
+        <div><span>Última modificación</span><strong>{{ ventaSeleccionada()!.venta.fechaModif | date:'dd/MM/yyyy HH:mm'
+            }}</strong></div>
+        <div><span>Usuario modificación</span><strong>{{ ventaSeleccionada()!.venta.usuarioModif | userEmail }}</strong>
+        </div>
+        <div><span>Estado</span><strong>{{ ventaSeleccionada()!.venta.idEstadoVenta | estadoVentaNombre }}</strong>
+        </div>
+        <div><span>Estado documento</span><strong>{{ ventaSeleccionada()!.estadoDocumento }}</strong></div>
+        <div><span>N.º factura</span><strong>{{ ventaSeleccionada()!.venta.numeroFactura || '—' }}</strong></div>
+        <div><span>Subtotal</span><strong>{{ ventaSeleccionada()!.venta.subtotal | number:'1.2-2' }}</strong></div>
+        <div><span>Descuento mayorista</span><strong>{{ ventaSeleccionada()!.venta.descuentoMayoristaTotal |
+            number:'1.2-2' }}</strong></div>
+        <div><span>Descuento manual</span><strong>{{ ventaSeleccionada()!.venta.descuentoManualTotal | number:'1.2-2'
+            }}</strong></div>
+        <div><span>Descuento total</span><strong>{{ ventaSeleccionada()!.venta.descuentoTotal | number:'1.2-2'
+            }}</strong></div>
+        <div><span>Total</span><strong>{{ ventaSeleccionada()!.venta.total | number:'1.2-2' }}</strong></div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>Artículo</th>
+              <th>Cantidad</th>
+              <th>Precio unitario</th>
+              <th>Subtotal bruto</th>
+              <th>Desc. mayorista</th>
+              <th>Desc. manual</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (ventaSeleccionada()!.detalles.length === 0) {
+            <tr>
+              <td colspan="7" class="empty">Esta venta no tiene detalles.</td>
+            </tr>
+            }
+            @for (detalle of ventaSeleccionada()!.detalles; track detalle.idVentaDetalle) {
+            <tr>
+              <td>{{ detalle.idArticulo | articuloNombre }}</td>
+              <td>{{ detalle.cantidad | number:'1.2-2' }}</td>
+              <td>{{ detalle.precioUnitario | number:'1.2-2' }}</td>
+              <td>{{ detalle.subtotalBruto | number:'1.2-2' }}</td>
+              <td>{{ detalle.montoDescuentoMayorista | number:'1.2-2' }}</td>
+              <td>{{ detalle.montoDescuentoManual | number:'1.2-2' }}</td>
+              <td>{{ detalle.subtotal | number:'1.2-2' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="detail-actions">
+        @if (puedeAnular) {
+        <button type="button" class="btn btn-danger" (click)="anularVenta()" [disabled]="anulando()">
+          {{ anulando() ? 'Anulando...' : 'Anular venta' }}
+        </button>
+        }
+        <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar comprobante</button>
+        <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar factura</button>
+        <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar pedido</button>
+        <button type="button" class="btn btn-danger" disabled title="Próximamente">Anular factura</button>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Filtros -->
+  <div class="card filters-card">
+    <div class="filters-heading">
+      <div>
+        <h3 class="card-title">Buscar ventas</h3>
+        <p>Combina NIT, número de factura, estado, usuario y rango de fechas.</p>
+      </div>
+      <span class="result-count">{{ totalElementos() }} resultados</span>
+    </div>
+
+    <form [formGroup]="filtrosForm" (ngSubmit)="buscar()" class="filters-form">
+      <div class="search-row">
+        <div class="form-group compact-field">
+          <label for="nitCliente">NIT cliente</label>
+          <input id="nitCliente" type="text" formControlName="nitCliente" class="form-control"
+            placeholder="NIT del cliente" />
+        </div>
+
+        <div class="form-group compact-field">
+          <label for="numeroFactura">N.º factura</label>
+          <input id="numeroFactura" type="text" formControlName="numeroFactura" class="form-control"
+            placeholder="Número de factura" />
+        </div>
+
+        <div class="form-group compact-field">
+          <label for="idEstadoVenta">Estado</label>
+          <select id="idEstadoVenta" formControlName="idEstadoVenta" class="form-control">
+            <option [ngValue]="null">Todos</option>
+            @for (estado of estados(); track estado.idEstadoVenta) { <option [ngValue]="estado.idEstadoVenta">{{
+              estado.nombre }}</option> }
+          </select>
+        </div>
+
+        <div class="form-group compact-field">
+          <label for="correoUsuario">Correo usuario</label>
+          <input id="correoUsuario" type="email" formControlName="correoUsuario" class="form-control"
+            placeholder="usuario@correo.com" />
+        </div>
+
+        <div class="form-group date-field">
+          <label for="fechaCreacionDesde">Desde</label>
+          <input id="fechaCreacionDesde" type="date" formControlName="fechaCreacionDesde" class="form-control" />
+        </div>
+
+        <div class="form-group date-field">
+          <label for="fechaCreacionHasta">Hasta</label>
+          <input id="fechaCreacionHasta" type="date" formControlName="fechaCreacionHasta" class="form-control" />
+        </div>
+
+        <div class="action-buttons">
+          <button type="submit" class="btn btn-primary search-button" [disabled]="cargando()">Buscar</button>
+          <button type="button" class="btn btn-secondary clear-button" (click)="limpiarFiltros()"
+            [disabled]="cargando()">Limpiar filtros</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Listado -->
+  <div class="card table-card">
+    <div class="table-header">
+      <h3 class="card-title">Listado de ventas</h3>
+    </div>
+
+    @if (cargando() && lista().length === 0) {
+    <p class="loading">Cargando...</p>
+    } @else if (lista().length === 0) {
+    <p class="empty">No hay ventas que coincidan con la búsqueda.</p>
+    } @else {
+    <div class="table-wrapper">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>NIT cliente</th>
+            <th>Usuario</th>
+            <th>N.º factura</th>
+            <th>Estado</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of lista(); track item.idVenta) {
+          <tr>
+            <td>{{ item.idVenta }}</td>
+            <td>{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ item.idCliente | clienteNombre }}</td>
+            <td>{{ item.idCliente | clieneNit }}</td>
+            <td>{{ item.idUsuario | userEmail }}</td>
+            <td>{{ item.numeroFactura || '—' }}</td>
+            <td>{{ item.idEstadoVenta | estadoVentaNombre }}</td>
+            <td>{{ item.total | number:'1.2-2' }}</td>
+            <td class="acciones">
+              <button type="button" class="btn-icon btn-edit" (click)="verDetalle(item.idVenta)"
+                title="Ver detalles">Ver detalles</button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <div class="pagination">
+      <span>Mostrando {{ lista().length }} de {{ totalElementos() }}</span>
+
+      <label for="size">Por página</label>
+      <div [formGroup]="filtrosForm">
+        <select id="size" formControlName="size" (change)="cambiarTamano()">
+          @for (tamano of tamanosPagina; track tamano) { <option [ngValue]="tamano">{{ tamano }}</option> }
+        </select>
+      </div>
+
+      <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
+      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
+        [disabled]="paginaActual() === 0">Anterior</button>
+      <strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
+      <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
+        [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+      <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)"
+        [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+    </div>
+  </div>
+</div>

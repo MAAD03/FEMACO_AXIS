@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { CambioPasswordRequest, LoginApiError, LoginRequest } from '../../../core/models/auth.model';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
+import { CacheLoaderService } from '../../../core/services/cache-loader.service';
 
 function passwordsMatchValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -26,6 +27,7 @@ export class Login {
   private authService = inject(AuthService);
   private router = inject(Router);
   private conjuntoMenuService = inject(ConjuntoMenuService);
+  private cacheLoaderService = inject(CacheLoaderService);
   private cdr = inject(ChangeDetectorRef);
 
   loginForm: FormGroup = this.fb.group({
@@ -73,9 +75,18 @@ export class Login {
   private cargarMenuYRedirigir(): void {
     this.conjuntoMenuService.cargarMenu().subscribe({
       next: () => {
-        this.isLoading = false;
-        this.router.navigate(['/dashboard']);
-        this.cdr.markForCheck();
+        this.cacheLoaderService.loadAll().subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.router.navigate(['/dashboard']);
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.isLoading = false;
+            this.router.navigate(['/dashboard']);
+            this.cdr.markForCheck();
+          }
+        });
       },
       error: () => {
         this.isLoading = false;

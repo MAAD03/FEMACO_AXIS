@@ -345,13 +345,15 @@ CREATE TABLE IF NOT EXISTS `estado_venta` (
   PRIMARY KEY (`IdEstadoVenta`)
 ) ENGINE = InnoDB;
 
+ 
 CREATE TABLE IF NOT EXISTS `venta` (
   `IdVenta` INT NOT NULL AUTO_INCREMENT,
   `Fecha` DATETIME NULL,
-  `Subtotal` DECIMAL(12,2) NULL,
-  `DescuentoTotal` DECIMAL(5,2) NULL,
-  `Total` DECIMAL(12,2) NULL,
-  `EsPedido` TINYINT NULL DEFAULT 0,
+  `Subtotal` DECIMAL(12,2) NULL,                                  -- SUM(venta_detalle.SubtotalBruto)
+  `DescuentoMayoristaTotal` DECIMAL(12,2) NOT NULL DEFAULT 0.00,  -- SUM(venta_detalle.MontoDescuentoMayorista)
+  `DescuentoManualTotal` DECIMAL(12,2) NOT NULL DEFAULT 0.00,     -- SUM(venta_detalle.MontoDescuentoManual)
+  `DescuentoTotal` DECIMAL(12,2) NULL DEFAULT 0.00,               -- DescuentoMayoristaTotal + DescuentoManualTotal
+  `Total` DECIMAL(12,2) NULL,                                     -- Subtotal - DescuentoTotal
   `NumeroFactura` VARCHAR(45) NULL,
   `IdEstadoVenta` INT NOT NULL,
   `IdCliente` INT NOT NULL,
@@ -366,13 +368,17 @@ CREATE TABLE IF NOT EXISTS `venta` (
   CONSTRAINT `fk_venta_cliente` FOREIGN KEY (`IdCliente`) REFERENCES `cliente`(`IdCliente`),
   CONSTRAINT `fk_venta_usuario` FOREIGN KEY (`IdUsuario`) REFERENCES `usuario`(`IdUsuario`)
 ) ENGINE = InnoDB;
-
+ 
 CREATE TABLE IF NOT EXISTS `venta_detalle` (
   `IdVentaDetalle` INT NOT NULL AUTO_INCREMENT,
   `Cantidad` DECIMAL(12,2) NOT NULL,
   `PrecioUnitario` DECIMAL(12,2) NOT NULL,
-  `DescuentoAplicado` DECIMAL(5,2) NULL DEFAULT 0.00,
-  `Subtotal` DECIMAL(12,2) NOT NULL,
+  `SubtotalBruto` DECIMAL(12,2) NOT NULL,                         -- Cantidad * PrecioUnitario
+  `PorcDescuentoMayorista` DECIMAL(5,2) NOT NULL DEFAULT 0.00,    -- copia de articulo.DescuentoMayorista al vender
+  `MontoDescuentoMayorista` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `PorcDescuentoManual` DECIMAL(5,2) NOT NULL DEFAULT 0.00,       
+  `MontoDescuentoManual` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `Subtotal` DECIMAL(12,2) NOT NULL,                              -- SubtotalBruto - MontoDescuentoMayorista - MontoDescuentoManual
   `IdVenta` INT NOT NULL,
   `IdArticulo` INT NOT NULL,
   `FechaCreacion` DATETIME NOT NULL,
@@ -381,8 +387,11 @@ CREATE TABLE IF NOT EXISTS `venta_detalle` (
   `UsuarioModif` INT NOT NULL,
   PRIMARY KEY (`IdVentaDetalle`),
   CONSTRAINT `fk_vd_venta` FOREIGN KEY (`IdVenta`) REFERENCES `venta`(`IdVenta`),
-  CONSTRAINT `fk_vd_art` FOREIGN KEY (`IdArticulo`) REFERENCES `articulo`(`IdArticulo`)
+  CONSTRAINT `fk_vd_art` FOREIGN KEY (`IdArticulo`) REFERENCES `articulo`(`IdArticulo`),
+  CONSTRAINT `chk_vd_porc_mayorista` CHECK (`PorcDescuentoMayorista` BETWEEN 0 AND 100),
+  CONSTRAINT `chk_vd_porc_manual` CHECK (`PorcDescuentoManual` BETWEEN 0 AND 100)
 ) ENGINE = InnoDB;
+ 
 
 -- -----------------------------------------------------
 -- Tabla de Facturación Electrónica (FEL) - TEKRA
@@ -488,15 +497,18 @@ CREATE TABLE IF NOT EXISTS `movimiento_inventario` (
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Tablas de relación y cotizaciones
+-- Tablas cotizaciones
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `cotizacion` (
   `IdCotizacion` INT NOT NULL AUTO_INCREMENT,
-  `Nombre` VARCHAR(100) NULL,
+  `Fecha` DATETIME NULL,
+  `Nombre` VARCHAR(100) NULL,                                     
   `Nit` VARCHAR(25) NULL,
-  `Subtotal` DECIMAL(12,2) NULL,
-  `DescuentoTotal` DECIMAL(5,2) NULL,
-  `Total` DECIMAL(12,2) NULL,
+  `Subtotal` DECIMAL(12,2) NULL,                                  -- SUM(detalle_cotizacion.SubtotalBruto)
+  `DescuentoMayoristaTotal` DECIMAL(12,2) NOT NULL DEFAULT 0.00,  -- SUM(detalle_cotizacion.MontoDescuentoMayorista)
+  `DescuentoManualTotal` DECIMAL(12,2) NOT NULL DEFAULT 0.00,     -- SUM(detalle_cotizacion.MontoDescuentoManual)
+  `DescuentoTotal` DECIMAL(12,2) NULL DEFAULT 0.00,               -- DescuentoMayoristaTotal + DescuentoManualTotal
+  `Total` DECIMAL(12,2) NULL,                                     -- Subtotal - DescuentoTotal
   `IdUsuario` INT NOT NULL,
   `FechaCreacion` DATETIME NOT NULL,
   `UsuarioCreacion` INT NOT NULL,
@@ -508,10 +520,14 @@ CREATE TABLE IF NOT EXISTS `cotizacion` (
 
 CREATE TABLE IF NOT EXISTS `detalle_cotizacion` (
   `IdDetalleCotizacion` INT NOT NULL AUTO_INCREMENT,
-  `Cantidad` DECIMAL(12,2) NULL,
-  `PrecioUnitario` DECIMAL(12,2) NULL,
-  `DescuentoAplicado` DECIMAL(5,2) NULL,
-  `Subtotal` DECIMAL(12,2) NULL,
+  `Cantidad` DECIMAL(12,2) NOT NULL,
+  `PrecioUnitario` DECIMAL(12,2) NOT NULL,
+  `SubtotalBruto` DECIMAL(12,2) NOT NULL,                         -- Cantidad * PrecioUnitario
+  `PorcDescuentoMayorista` DECIMAL(5,2) NOT NULL DEFAULT 0.00,    -- copia de articulo.DescuentoMayorista al cotizar
+  `MontoDescuentoMayorista` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `PorcDescuentoManual` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  `MontoDescuentoManual` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `Subtotal` DECIMAL(12,2) NOT NULL,                              -- SubtotalBruto - MontoDescuentoMayorista - MontoDescuentoManual
   `IdCotizacion` INT NOT NULL,
   `IdArticulo` INT NOT NULL,
   `FechaCreacion` DATETIME NOT NULL,
@@ -520,9 +536,10 @@ CREATE TABLE IF NOT EXISTS `detalle_cotizacion` (
   `UsuarioModif` INT NOT NULL,
   PRIMARY KEY (`IdDetalleCotizacion`),
   CONSTRAINT `fk_detalle_cot` FOREIGN KEY (`IdCotizacion`) REFERENCES `cotizacion`(`IdCotizacion`),
-  CONSTRAINT `fk_detalle_art` FOREIGN KEY (`IdArticulo`) REFERENCES `articulo`(`IdArticulo`)
+  CONSTRAINT `fk_detalle_art` FOREIGN KEY (`IdArticulo`) REFERENCES `articulo`(`IdArticulo`),
+  CONSTRAINT `chk_dc_porc_mayorista` CHECK (`PorcDescuentoMayorista` BETWEEN 0 AND 100),
+  CONSTRAINT `chk_dc_porc_manual` CHECK (`PorcDescuentoManual` BETWEEN 0 AND 100)
 ) ENGINE = InnoDB;
-
 -- -----------------------------------------------------
 -- DATOS INICIALES - CATÁLOGOS Y ADMIN
 -- -----------------------------------------------------
@@ -834,4 +851,11 @@ VALUES
 ('FER-0059', 'Batería para automóvil 12V', 'Batería de 12V para automóvil, libre de mantenimiento', 0.00, 5.00, 450.00, 18.00, 2.00, 8.00, 15, 1, 1, NOW(), 1, NOW(), 1),
 ('FER-0060', 'Foco H4 para automóvil', 'Foco H4 halógeno para faro de automóvil', 0.00, 20.00, 22.00, 35.00, 12.00, 10.00, 15, 1, 1, NOW(), 1, NOW(), 1);
 
+-- Cliente CF para funcionamiento de facturas consumidor final
+INSERT INTO cliente (idCliente, Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)
+VALUES (1, 'CF', 'Consumidor Final', '--', '--', 'Guatemala', 1, NOW(), 1, NOW(), 1);
+
+-- Cliente de prueba (usa NIT ficticio válido para ambiente de pruebas en TEKRA)
+INSERT INTO cliente (Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)
+VALUES ('107310384', 'BYRON MENDOZA', '1234-5678', 'prueba@correo.com', 'Zona 1, Guatemala', 1, NOW(), 1, NOW(), 1);
 

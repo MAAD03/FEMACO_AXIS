@@ -2,6 +2,8 @@ package com.femaco.main.Controller.Ventas;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +31,18 @@ public class ClienteController {
     @GetMapping("/buscar")
     public ResponseEntity<List<Cliente>> buscar() {
         return ResponseEntity.ok(clienteService.buscarTodos());
+    }
+
+    @GetMapping("/buscar-paginado")
+    public ResponseEntity<Page<Cliente>> buscarPaginado(Pageable pageable) {
+        return ResponseEntity.ok(clienteService.buscarTodosPaginado(pageable));
+    }
+
+    @GetMapping("/buscar-por-nit/{nit}")
+    public ResponseEntity<Cliente> buscarPorNit(@PathVariable String nit) {
+        return clienteService.buscarPorNit(nit)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/crear")

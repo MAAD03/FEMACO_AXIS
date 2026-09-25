@@ -2,6 +2,8 @@ export interface Venta {
   idVenta?: number;
   fecha?: string | Date;
   subtotal?: number;
+  descuentoMayoristaTotal?: number;
+  descuentoManualTotal?: number;
   descuentoTotal?: number;
   total?: number;
   esPedido?: boolean;

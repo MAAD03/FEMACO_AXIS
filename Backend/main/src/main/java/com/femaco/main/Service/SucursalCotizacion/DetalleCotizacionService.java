@@ -38,7 +38,11 @@ public class DetalleCotizacionService {
         return detalleCotizacionRepository.findById(idDetalleCotizacion).map(existente -> {
             existente.setCantidad(datosNuevos.getCantidad());
             existente.setPrecioUnitario(datosNuevos.getPrecioUnitario());
-            existente.setDescuentoAplicado(datosNuevos.getDescuentoAplicado());
+            existente.setSubtotalBruto(datosNuevos.getSubtotalBruto());
+            existente.setPorcDescuentoMayorista(datosNuevos.getPorcDescuentoMayorista());
+            existente.setMontoDescuentoMayorista(datosNuevos.getMontoDescuentoMayorista());
+            existente.setPorcDescuentoManual(datosNuevos.getPorcDescuentoManual());
+            existente.setMontoDescuentoManual(datosNuevos.getMontoDescuentoManual());
             existente.setSubtotal(datosNuevos.getSubtotal());
             existente.setIdCotizacion(datosNuevos.getIdCotizacion());
             existente.setIdArticulo(datosNuevos.getIdArticulo());

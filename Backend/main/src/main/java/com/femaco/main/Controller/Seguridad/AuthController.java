@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.femaco.main.Config.JwtUtil;
 import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Service.Seguridad.UsuarioService;
@@ -48,7 +49,8 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(
                 token,
                 usuario.getIdUsuario(),
-                usuario.getNombre()
+                usuario.getNombre(),
+                usuario.getPuedeAplicarDescuento()
         ));
     }
 
@@ -61,6 +63,11 @@ public class AuthController {
     }
 
     public record LoginRequest(String correoElectronico, String password) {}
-    public record LoginResponse(String token, Long idUsuario, String nombre) {}
+        public record LoginResponse(
+            String token,
+            Long idUsuario,
+            String nombre,
+            @JsonProperty("PuedeAplicarDescuento") boolean puedeAplicarDescuento
+        ) {}
     public record CambioPasswordRequest(String correoElectronico, String nuevaPassword) {}
 }

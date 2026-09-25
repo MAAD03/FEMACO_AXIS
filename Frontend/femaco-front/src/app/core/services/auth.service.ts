@@ -30,6 +30,7 @@ import { EstadoProveedorService } from './catalogo-services/estado-proveedor.ser
 import { EstadoUsuarioService } from './catalogo-services/estado-usuario.service';
 import { EstadoVentaService } from './catalogo-services/estado-venta.service';
 import { GeneroService } from './catalogo-services/genero.service';
+import { CacheLoaderService } from './cache-loader.service';
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +59,7 @@ export class AuthService {
   private estadoUsuarioService = inject(EstadoUsuarioService);
   private estadoVentaService = inject(EstadoVentaService);
   private generoService = inject(GeneroService);
+  private cacheLoaderService = inject(CacheLoaderService);
 
   private readonly STORAGE_KEY = 'auth_user';
   private currentUserSubject = new BehaviorSubject<UserData | null>(this.getUserFromStorage());
@@ -69,7 +71,8 @@ export class AuthService {
         const userData: UserData = {
           token: response.token,
           idUsuario: response.idUsuario,
-          nombre: response.nombre
+          nombre: response.nombre,
+          PuedeAplicarDescuento: response.PuedeAplicarDescuento
         };
         this.saveUser(userData);
         this.currentUserSubject.next(userData);
@@ -103,6 +106,7 @@ export class AuthService {
     this.estadoUsuarioService.clearCache();
     this.estadoVentaService.clearCache();
     this.generoService.clearCache();
+    this.cacheLoaderService.reset();
     this.router.navigate(['/login']);
   }
 

@@ -21,16 +21,25 @@ public class Cotizacion  {
     @Column(name = "IdCotizacion")
     private Long idCotizacion;
 
-    @Column(name = "Nombre", nullable = true, length = 100)
+    @Column(name = "Fecha")
+    private LocalDateTime fecha;
+
+    @Column(name = "Nombre", length = 100)
     private String nombre;
 
-    @Column(name = "Nit", nullable = true, length = 50)
+    @Column(name = "Nit", length = 25)
     private String nit;
 
     @Column(name = "Subtotal", precision = 12, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(name = "DescuentoTotal", precision = 5, scale = 2)
+    @Column(name = "DescuentoMayoristaTotal", precision = 12, scale = 2, nullable = false)
+    private BigDecimal descuentoMayoristaTotal;
+
+    @Column(name = "DescuentoManualTotal", precision = 12, scale = 2, nullable = false)
+    private BigDecimal descuentoManualTotal;
+
+    @Column(name = "DescuentoTotal", precision = 12, scale = 2)
     private BigDecimal descuentoTotal;
 
     @Column(name = "Total", precision = 12, scale = 2)
@@ -48,7 +57,7 @@ public class Cotizacion  {
     @Column(name = "UsuarioModif", nullable = false)
     private Integer usuarioModif;
 
-    @Column(name = "IdUsuario")
-    private Long idUsuario;  
+    @Column(name = "IdUsuario", nullable = false)
+    private Long idUsuario;
     
 }

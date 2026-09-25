@@ -7,6 +7,7 @@ export interface LoginResponse {
   token: string;
   idUsuario: number;
   nombre: string;
+  PuedeAplicarDescuento: boolean;
 }
 
 export interface LoginErrorResponse {
@@ -41,4 +42,5 @@ export interface UserData {
   token: string;
   idUsuario: number;
   nombre: string;
+  PuedeAplicarDescuento: boolean;
 }

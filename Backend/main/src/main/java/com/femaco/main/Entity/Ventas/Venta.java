@@ -27,16 +27,19 @@ public class Venta  {
     @Column(name = "Subtotal", precision = 12, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(name = "DescuentoTotal", precision = 5, scale = 2)
+    @Column(name = "DescuentoMayoristaTotal", precision = 12, scale = 2, nullable = false)
+    private BigDecimal descuentoMayoristaTotal;
+
+    @Column(name = "DescuentoManualTotal", precision = 12, scale = 2, nullable = false)
+    private BigDecimal descuentoManualTotal;
+
+    @Column(name = "DescuentoTotal", precision = 12, scale = 2)
     private BigDecimal descuentoTotal;
 
     @Column(name = "Total", precision = 12, scale = 2)
     private BigDecimal total;
 
-    @Column(name = "EsPedido", nullable = false)
-    private Boolean esPedido;
-
-    @Column(name = "NumeroFactura", nullable = false, length = 45)
+    @Column(name = "NumeroFactura", length = 45, unique = true)
     private String numeroFactura;
 
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
@@ -51,13 +54,13 @@ public class Venta  {
     @Column(name = "UsuarioModif", nullable = false)
     private Integer usuarioModif;
 
-    @Column(name = "IdEstadoVenta")
+    @Column(name = "IdEstadoVenta", nullable = false)
     private Long idEstadoVenta;
 
-    @Column(name = "IdCliente")
+    @Column(name = "IdCliente", nullable = false)
     private Long idCliente;
 
-    @Column(name = "IdUsuario")
+    @Column(name = "IdUsuario", nullable = false)
     private Long idUsuario;  
 
 

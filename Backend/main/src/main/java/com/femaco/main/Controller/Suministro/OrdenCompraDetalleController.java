@@ -3,17 +3,9 @@ package com.femaco.main.Controller.Suministro;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.femaco.main.Service.Suministro.OrdenCompraDetalleService;
-
 @RestController
 @RequestMapping("/ordenCompraDetalle")
 public class OrdenCompraDetalleController {
-
-    private final OrdenCompraDetalleService ordenCompraService;
-
-    public OrdenCompraDetalleController(OrdenCompraDetalleService ordenCompraService) {
-        this.ordenCompraService = ordenCompraService;
-    }
 /* 
     @GetMapping("/buscar")
     public ResponseEntity<List<OrdenCompraDetalle>> buscar() {

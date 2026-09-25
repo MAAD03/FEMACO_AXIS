@@ -36,9 +36,12 @@ public class CotizacionService {
     @Transactional
     public Optional<Cotizacion> actualizar(Long idCotizacion, Cotizacion datosNuevos) {
         return cotizacionRepository.findById(idCotizacion).map(existente -> {
+            existente.setFecha(datosNuevos.getFecha());
             existente.setNombre(datosNuevos.getNombre());
             existente.setNit(datosNuevos.getNit());
             existente.setSubtotal(datosNuevos.getSubtotal());
+            existente.setDescuentoMayoristaTotal(datosNuevos.getDescuentoMayoristaTotal());
+            existente.setDescuentoManualTotal(datosNuevos.getDescuentoManualTotal());
             existente.setDescuentoTotal(datosNuevos.getDescuentoTotal());
             existente.setTotal(datosNuevos.getTotal());
             existente.setIdUsuario(datosNuevos.getIdUsuario());

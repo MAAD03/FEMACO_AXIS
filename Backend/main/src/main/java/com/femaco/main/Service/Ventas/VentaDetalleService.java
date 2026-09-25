@@ -38,7 +38,11 @@ public class VentaDetalleService {
         return ventaDetalleRepository.findById(idVentaDetalle).map(existente -> {
             existente.setCantidad(datosNuevos.getCantidad());
             existente.setPrecioUnitario(datosNuevos.getPrecioUnitario());
-            existente.setDescuentoAplicado(datosNuevos.getDescuentoAplicado());
+            existente.setSubtotalBruto(datosNuevos.getSubtotalBruto());
+            existente.setPorcDescuentoMayorista(datosNuevos.getPorcDescuentoMayorista());
+            existente.setMontoDescuentoMayorista(datosNuevos.getMontoDescuentoMayorista());
+            existente.setPorcDescuentoManual(datosNuevos.getPorcDescuentoManual());
+            existente.setMontoDescuentoManual(datosNuevos.getMontoDescuentoManual());
             existente.setSubtotal(datosNuevos.getSubtotal());
             existente.setIdVenta(datosNuevos.getIdVenta());
             existente.setIdArticulo(datosNuevos.getIdArticulo());

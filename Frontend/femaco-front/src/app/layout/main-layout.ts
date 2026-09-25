@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { Sidebar } from '../shared/sidebar/sidebar';
 import { ConjuntoMenuService } from '../core/services/conjunto-menu.service';
 import { AuthService } from '../core/services/auth.service';
+import { CacheLoaderService } from '../core/services/cache-loader.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -36,6 +37,7 @@ import { AuthService } from '../core/services/auth.service';
 export class MainLayout implements OnInit {
   private conjuntoMenuService = inject(ConjuntoMenuService);
   private authService = inject(AuthService);
+  private cacheLoaderService = inject(CacheLoaderService);
 
   ngOnInit(): void {
     if (this.authService.isAuthenticated() && this.conjuntoMenuService.getMenuActual().length === 0) {
@@ -44,6 +46,10 @@ export class MainLayout implements OnInit {
           this.authService.logout();
         }
       });
+    }
+
+    if (this.authService.isAuthenticated()) {
+      this.cacheLoaderService.loadAll().subscribe();
     }
   }
 }

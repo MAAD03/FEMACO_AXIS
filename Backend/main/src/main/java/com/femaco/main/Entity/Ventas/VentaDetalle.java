@@ -21,16 +21,28 @@ public class VentaDetalle  {
     @Column(name = "IdVentaDetalle")
     private Long idVentaDetalle;
 
-    @Column(name = "Cantidad", precision = 12, scale = 2)
+    @Column(name = "Cantidad", precision = 12, scale = 2, nullable = false)
     private BigDecimal cantidad;
 
-    @Column(name = "PrecioUnitario", precision = 12, scale = 2)
+    @Column(name = "PrecioUnitario", precision = 12, scale = 2, nullable = false)
     private BigDecimal precioUnitario;
 
-    @Column(name = "DescuentoAplicado", precision = 5, scale = 2)
-    private BigDecimal descuentoAplicado;
+    @Column(name = "SubtotalBruto", precision = 12, scale = 2, nullable = false)
+    private BigDecimal subtotalBruto;
 
-    @Column(name = "Subtotal", precision = 12, scale = 2)
+    @Column(name = "PorcDescuentoMayorista", precision = 5, scale = 2, nullable = false)
+    private BigDecimal porcDescuentoMayorista;
+
+    @Column(name = "MontoDescuentoMayorista", precision = 12, scale = 2, nullable = false)
+    private BigDecimal montoDescuentoMayorista;
+
+    @Column(name = "PorcDescuentoManual", precision = 5, scale = 2, nullable = false)
+    private BigDecimal porcDescuentoManual;
+
+    @Column(name = "MontoDescuentoManual", precision = 12, scale = 2, nullable = false)
+    private BigDecimal montoDescuentoManual;
+
+    @Column(name = "Subtotal", precision = 12, scale = 2, nullable = false)
     private BigDecimal subtotal;
 
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
@@ -45,10 +57,10 @@ public class VentaDetalle  {
     @Column(name = "UsuarioModif", nullable = false)
     private Integer usuarioModif;
 
-    @Column(name = "IdArticulo")
+    @Column(name = "IdArticulo", nullable = false)
     private Long idArticulo;
 
-    @Column(name = "IdVenta")
+    @Column(name = "IdVenta", nullable = false)
     private Long idVenta;
 
 }

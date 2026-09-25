@@ -43,7 +43,7 @@ public class OrdenCompraController {
     public ResponseEntity<OrdenCompraConDetallesDTO> buscarPorId(@PathVariable Long idOrdenCompra) {
         return ordenCompraService.buscarPorIdConDetalles(idOrdenCompra)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.<OrdenCompraConDetallesDTO>notFound().build());
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
      @PostMapping("/crear-con-detalles")

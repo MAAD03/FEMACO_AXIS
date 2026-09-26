@@ -1,0 +1,185 @@
+:host {
+	display: block;
+}
+
+.list-container {
+	max-width: 1400px;
+	margin: 0 auto;
+}
+
+.card {
+	background: var(--crud-white);
+	border: 1px solid var(--crud-gray-200);
+	border-top: 4px solid var(--crud-primary);
+	border-radius: var(--crud-radius);
+	box-shadow: var(--crud-shadow);
+	padding: 1.5rem;
+}
+
+.ledger-heading,
+.pagination {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.ledger-heading {
+	justify-content: space-between;
+	margin-bottom: 1.25rem;
+}
+
+.eyebrow {
+	margin: 0 0 0.25rem;
+	color: var(--crud-primary);
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.card-title {
+	margin: 0;
+	color: var(--crud-primary-dark);
+	font-size: 1.5rem;
+}
+
+.subtitle {
+	margin: 0.4rem 0 0;
+	color: var(--crud-text);
+}
+
+.result-count {
+	padding: 0.5rem 0.75rem;
+	border-radius: 999px;
+	background: var(--crud-gray-200);
+	color: var(--crud-primary-dark);
+	font-size: 0.85rem;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.table-wrapper {
+	overflow-x: auto;
+	border: 1px solid var(--crud-gray-300);
+	border-radius: 8px;
+}
+
+.ledger-table {
+	width: 100%;
+	min-width: 1180px;
+	border-collapse: collapse;
+	font-size: 0.88rem;
+}
+
+.ledger-table th,
+.ledger-table td {
+	padding: 0.75rem 0.7rem;
+	border-bottom: 1px solid var(--crud-gray-200);
+	text-align: left;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.ledger-table th {
+	background: var(--crud-primary-dark);
+	color: var(--crud-white);
+	font-size: 0.76rem;
+	text-transform: uppercase;
+}
+
+.ledger-table tbody tr:nth-child(even) {
+	background: var(--crud-gray-100);
+}
+
+.ledger-table tbody tr:hover {
+	background: var(--crud-bg-light);
+}
+
+.date-cell {
+	color: var(--crud-primary-dark);
+	font-variant-numeric: tabular-nums;
+}
+
+.positivo {
+	color: var(--crud-success);
+	font-weight: 700;
+}
+
+.negativo {
+	color: var(--crud-danger);
+	font-weight: 700;
+}
+
+.badge {
+	display: inline-block;
+	padding: 0.3rem 0.55rem;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: capitalize;
+}
+
+.badge-entrada {
+	background: rgba(39, 174, 96, 0.13);
+	color: #187a43;
+}
+
+.badge-salida {
+	background: rgba(192, 57, 43, 0.13);
+	color: var(--crud-danger);
+}
+
+.badge-ajuste {
+	background: rgba(106, 153, 78, 0.16);
+	color: var(--crud-primary-dark);
+}
+
+.pagination {
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--crud-gray-200);
+	color: var(--crud-text);
+	font-size: 0.85rem;
+}
+
+.pagination select {
+	width: auto;
+	padding: 0.45rem;
+	border: 1px solid var(--crud-gray-300);
+	border-radius: 6px;
+}
+
+.pagination .btn {
+	padding: 0.45rem 0.75rem;
+	font-size: 0.8rem;
+}
+
+.loading,
+.empty {
+	padding: 2rem;
+	color: var(--crud-primary);
+	text-align: center;
+}
+
+.alert {
+	margin-bottom: 1rem;
+}
+
+@media (max-width: 700px) {
+	.ledger-heading {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.pagination {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.pagination select,
+	.pagination .btn {
+		width: 100%;
+	}
+}

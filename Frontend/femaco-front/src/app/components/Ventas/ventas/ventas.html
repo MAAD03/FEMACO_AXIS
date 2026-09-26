@@ -1,9 +1,88 @@
 <div class="crud-container">
-  @if (ventaCompletada()) {
+  @if (mostrandoFormularioCotizacion()) {
+  <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="quoteFormTitle">
+    <div class="sale-complete-panel quote-form-panel">
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar" [disabled]="cargando()"
+        (click)="cerrarFormularioCotizacion()">×</button>
+      <h2 id="quoteFormTitle">Datos de la cotización</h2>
+      <p>Ingresa los datos que aparecerán en la cotización.</p>
+      <form [formGroup]="cotizacionForm" (ngSubmit)="generarCotizacion()" class="quote-form">
+        <div class="form-group">
+          <label for="cotizacionNit">NIT</label>
+          <input id="cotizacionNit" type="text" formControlName="nit" class="form-control" maxlength="45"
+            placeholder="Ingrese el NIT" />
+          @if (cotizacionForm.get('nit')?.touched && cotizacionForm.get('nit')?.invalid) {
+          <div class="error-msg">El NIT es obligatorio</div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="cotizacionNombre">Nombre</label>
+          <input id="cotizacionNombre" type="text" formControlName="nombre" class="form-control" maxlength="150"
+            placeholder="Ingrese el nombre" />
+          @if (cotizacionForm.get('nombre')?.touched && cotizacionForm.get('nombre')?.invalid) {
+          <div class="error-msg">El nombre es obligatorio</div>
+          }
+        </div>
+        <div class="quote-form-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="cargando()"
+            (click)="cerrarFormularioCotizacion()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="cargando()">
+            {{ cargando() ? 'Guardando...' : 'Generar cotización' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  }
+  @if (mostrandoFormularioPedido()) {
+  <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="pedidoFormTitle">
+    <div class="sale-complete-panel quote-form-panel">
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar" [disabled]="creandoPedido()"
+        (click)="cerrarFormularioPedido()">×</button>
+      <h2 id="pedidoFormTitle">Datos del pedido</h2>
+      <p>Confirma los datos del pedido para la venta realizada.</p>
+      @if (mensajePedido()) { <div class="alert alert-success" role="status">{{ mensajePedido() }}</div> }
+      @if (errorPedido()) { <div class="alert alert-error" role="alert">{{ errorPedido() }}</div> }
+      <form [formGroup]="pedidoForm" (ngSubmit)="generarPedido()" class="quote-form">
+        <div class="form-group">
+          <label for="pedidoIdVenta">ID de venta</label>
+          <input id="pedidoIdVenta" type="number" formControlName="idVenta" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+          <label for="pedidoFechaEntrega">Fecha de entrega</label>
+          <input id="pedidoFechaEntrega" type="date" formControlName="fechaEntrega" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="pedidoDireccionEntrega">Dirección de entrega</label>
+          <textarea id="pedidoDireccionEntrega" formControlName="direccionEntrega" class="form-control" rows="2"
+            maxlength="1000" placeholder="Ingrese la dirección de entrega"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="pedidoNumeroEntrega">Número de entrega</label>
+          <input id="pedidoNumeroEntrega" type="text" formControlName="numeroEntrega" class="form-control"
+            maxlength="50" placeholder="Ingrese el número de entrega" />
+        </div>
+        <div class="form-group">
+          <label for="pedidoNotasEntrega">Notas de entrega</label>
+          <textarea id="pedidoNotasEntrega" formControlName="notasEntrega" class="form-control" rows="3"
+            maxlength="1000" placeholder="Indicaciones adicionales"></textarea>
+        </div>
+        <div class="quote-form-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="creandoPedido()"
+            (click)="cerrarFormularioPedido()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="creandoPedido() || pedidoCreado()">
+            {{ creandoPedido() ? 'Guardando...' : pedidoCreado() ? 'Pedido creado' : 'Crear pedido' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  }
+  @if (ventaCompletada() && !mostrandoFormularioPedido()) {
   <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="saleCompleteTitle">
     <div class="sale-complete-panel">
-      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
-        [disabled]="certificando()" (click)="cerrarVentaCompletada()">×</button>
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar" [disabled]="certificando()"
+        (click)="cerrarVentaCompletada()">×</button>
       <div class="sale-complete-icon" aria-hidden="true">✓</div>
       <h2 id="saleCompleteTitle">Venta completada exitosamente</h2>
       <p>La venta fue registrada correctamente.</p>
@@ -12,12 +91,15 @@
         <button type="button" class="btn btn-primary" [disabled]="certificando()" (click)="generarFactura()">
           {{ certificando() ? 'Generando factura...' : 'Generar factura' }}
         </button>
-        <button type="button" class="btn btn-secondary">Generar pedido</button>
+        @if (puedeCrearPedido) { <button type="button" class="btn btn-secondary"
+          (click)="abrirFormularioPedido()">Generar pedido</button> }
       </div>
-      @if (certificando()) { <p class="fel-loading" aria-live="polite">Certificando la venta y generando el PDF. Esto puede tardar hasta un minuto...</p> }
+      @if (certificando()) { <p class="fel-loading" aria-live="polite">Certificando la venta y generando el PDF. Esto
+        puede tardar hasta un minuto...</p> }
       @if (errorFactura()) {
       <div class="alert alert-error" role="alert">{{ errorFactura() }}</div>
-      <button type="button" class="btn btn-secondary" [disabled]="certificando()" (click)="generarFactura()">Reintentar factura</button>
+      <button type="button" class="btn btn-secondary" [disabled]="certificando()" (click)="generarFactura()">Reintentar
+        factura</button>
       }
     </div>
   </div>
@@ -89,9 +171,11 @@
         <div class="summary-total"><span>Total</span><strong>Q {{ total | number:'1.2-2' }}</strong></div>
       </div>
       <div class="form-actions"><button type="button" class="btn btn-clear-purchase" (click)="limpiarCompra()">Limpiar
-          compra</button><button type="button" class="btn btn-secondary">Generar cotización</button><button
-          type="button" class="btn btn-primary" [disabled]="cargando() || !clienteSeleccionado() || !items().length"
-          (click)="onSubmit()">{{ cargando() ? 'Guardando...' : 'Crear venta' }}</button></div>
+          compra</button>@if (puedeCrearCotizacion) { <button type="button" class="btn btn-secondary"
+          [disabled]="cargando() || !items().length" (click)="abrirFormularioCotizacion()">Generar cotización</button>
+        }<button type="button" class="btn btn-primary"
+          [disabled]="cargando() || !clienteSeleccionado() || !items().length" (click)="onSubmit()">{{ cargando() ?
+          'Guardando...' : 'Crear venta' }}</button></div>
     </div>
   </div>
 

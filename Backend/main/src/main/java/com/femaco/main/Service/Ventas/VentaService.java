@@ -40,6 +40,7 @@ public class VentaService {
     private static final Long ESTADO_ACTIVO = 1L;
     private static final Long ESTADO_ANULADA = 2L;
     private static final Long CONSUMIDOR_FINAL_ID_CLIENTE = 1L;
+    private static final BigDecimal LIMITE_CONSUMIDOR_FINAL = BigDecimal.valueOf(2500);
     private static final DateTimeFormatter FORMATO_FACTURA = DateTimeFormatter.ofPattern("ddMMyyyy");
 
     private final VentaRepository ventaRepository;
@@ -270,6 +271,12 @@ public class VentaService {
 
         BigDecimal descuentoTotal = descuentoMayoristaTotal.add(descuentoManualTotal).setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalVenta = subtotalVenta.subtract(descuentoTotal).setScale(2, RoundingMode.HALF_UP);
+
+        if (CONSUMIDOR_FINAL_ID_CLIENTE.equals(idCliente)
+            && totalVenta.compareTo(LIMITE_CONSUMIDOR_FINAL) >= 0) {
+            throw new BusinessException(
+                "Esta venta supera Q2,500.00; debe facturarse con el NIT del cliente, no como Consumidor Final");
+        }
 
         venta.setSubtotal(subtotalVenta.setScale(2, RoundingMode.HALF_UP));
         venta.setDescuentoMayoristaTotal(descuentoMayoristaTotal.setScale(2, RoundingMode.HALF_UP));

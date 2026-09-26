@@ -1,1 +1,139 @@
-<p>cotizacion works!</p>
+<div class="crud-container">
+	<h2 class="crud-title">Cotizaciones</h2>
+
+	@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+	<div class="card detail-card">
+		<div class="detail-header">
+			<h3 class="card-title">Detalle de cotización</h3>
+			@if (cotizacionSeleccionada()) {
+			<button type="button" class="btn-icon btn-close" (click)="cerrarDetalle()" title="Cerrar detalle">✕</button>
+			}
+		</div>
+
+		@if (errorDetalle()) { <div class="alert alert-error">{{ errorDetalle() }}</div> }
+		@if (cargandoDetalle()) {
+		<p class="loading">Cargando detalle...</p>
+		} @else if (!cotizacionSeleccionada()) {
+		<p class="empty">Selecciona "Ver detalle" en una cotización para visualizarla aquí.</p>
+		} @else {
+		<div class="detail-body">
+			<div class="detail-summary">
+				<div><span>ID cotización</span><strong>{{ cotizacionSeleccionada()!.cotizacion.idCotizacion }}</strong></div>
+				<div><span>Fecha</span><strong>{{ cotizacionSeleccionada()!.cotizacion.fecha | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+				<div><span>Cliente</span><strong>{{ cotizacionSeleccionada()!.cotizacion.nombre || '—' }}</strong></div>
+				<div><span>NIT</span><strong>{{ cotizacionSeleccionada()!.cotizacion.nit || '—' }}</strong></div>
+				<div><span>Usuario creación</span><strong>{{ cotizacionSeleccionada()!.cotizacion.usuarioCreacion | userEmail }}</strong></div>
+				<div><span>Creación</span><strong>{{ cotizacionSeleccionada()!.cotizacion.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+				<div><span>Subtotal</span><strong>{{ cotizacionSeleccionada()!.cotizacion.subtotal | number:'1.2-2' }}</strong></div>
+				<div><span>Descuento total</span><strong>{{ cotizacionSeleccionada()!.cotizacion.descuentoTotal | number:'1.2-2' }}</strong></div>
+				<div><span>Total</span><strong>{{ cotizacionSeleccionada()!.cotizacion.total | number:'1.2-2' }}</strong></div>
+			</div>
+
+			<div class="table-wrapper">
+				<table class="ledger-table">
+					<thead>
+						<tr>
+							<th>ID artículo</th>
+							<th>Artículo</th>
+							<th>Cantidad</th>
+							<th>Precio unitario</th>
+							<th>Subtotal bruto</th>
+							<th>Porc. desc. mayorista</th>
+							<th>Desc. mayorista</th>
+							<th>Porc. desc. manual</th>
+							<th>Desc. manual</th>
+							<th>Subtotal</th>
+						</tr>
+					</thead>
+					<tbody>
+						@if (cotizacionSeleccionada()!.detalles.length === 0) {
+						<tr><td colspan="10" class="empty">Esta cotización no tiene detalles.</td></tr>
+						}
+						@for (detalle of cotizacionSeleccionada()!.detalles; track detalle.idDetalleCotizacion) {
+						<tr>
+							<td>{{ detalle.idArticulo }}</td>
+							<td>{{ detalle.idArticulo | articuloNombre }}</td>
+							<td>{{ detalle.cantidad | number:'1.2-2' }}</td>
+							<td>{{ detalle.precioUnitario | number:'1.2-2' }}</td>
+							<td>{{ detalle.subtotalBruto | number:'1.2-2' }}</td>
+							<td>{{ detalle.porcDescuentoMayorista | number:'1.2-2' }}%</td>
+							<td>{{ detalle.montoDescuentoMayorista | number:'1.2-2' }}</td>
+							<td>{{ detalle.porcDescuentoManual | number:'1.2-2' }}%</td>
+							<td>{{ detalle.montoDescuentoManual | number:'1.2-2' }}</td>
+							<td>{{ detalle.subtotal | number:'1.2-2' }}</td>
+						</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+
+			<div class="detail-actions">
+				<button type="button" class="btn btn-secondary" disabled title="Próximamente">Imprimir cotización</button>
+			</div>
+		</div>
+		}
+	</div>
+
+	<div class="card filters-card">
+		<div class="filters-heading">
+			<div><h3 class="card-title">Buscar cotizaciones</h3><p>Consulta una cotización por el NIT del cliente.</p></div>
+			<span class="result-count">{{ totalElementos() }} resultados</span>
+		</div>
+		<form [formGroup]="nitForm" (ngSubmit)="buscar()" class="filters-form">
+			<div class="search-row">
+				<div class="form-group compact-field">
+					<label for="nitCotizacion">NIT cliente</label>
+					<input id="nitCotizacion" type="text" formControlName="nit" class="form-control" placeholder="NIT del cliente" />
+				</div>
+				<div class="action-buttons">
+					<button type="submit" class="btn btn-primary search-button" [disabled]="cargando()">Buscar</button>
+					<button type="button" class="btn btn-secondary clear-button" (click)="limpiarBusqueda()" [disabled]="cargando()">Mostrar todas</button>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<div class="card table-card">
+		<div class="table-header"><h3 class="card-title">Listado de cotizaciones</h3></div>
+		@if (cargando() && lista().length === 0) {
+		<p class="loading">Cargando...</p>
+		} @else if (lista().length === 0) {
+		<p class="empty">No hay cotizaciones que coincidan con la búsqueda.</p>
+		} @else {
+		<div class="table-wrapper">
+			<table class="ledger-table">
+				<thead><tr><th>ID</th><th>Fecha</th><th>Cliente</th><th>NIT</th><th>Total</th><th>Acciones</th><th>Usuario</th></tr></thead>
+				<tbody>
+					@for (item of lista(); track item.idCotizacion) {
+					<tr>
+						<td>{{ item.idCotizacion }}</td>
+						<td>{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+						<td>{{ item.nombre || '—' }}</td>
+						<td>{{ item.nit || '—' }}</td>
+						<td>{{ item.total | number:'1.2-2' }}</td>
+						<td class="acciones"><button type="button" class="btn-icon btn-edit" (click)="verDetalle(item.idCotizacion)" title="Ver detalles">Ver detalles</button></td>
+						<td>{{ item.idUsuario | userEmail }}</td>
+					</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		}
+
+		@if (!buscandoPorNit()) {
+		<div class="pagination">
+			<span>Mostrando {{ lista().length }} de {{ totalElementos() }}</span>
+			<label for="sizeCotizaciones">Por página</label>
+			<select id="sizeCotizaciones" [value]="tamanoPagina()" (change)="tamanoPagina.set(+$any($event.target).value); cambiarTamano()">
+				@for (tamano of tamanosPagina; track tamano) { <option [value]="tamano">{{ tamano }}</option> }
+			</select>
+			<button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
+			<button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 0">Anterior</button>
+			<strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
+			<button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+			<button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)" [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+		</div>
+		}
+	</div>
+</div>

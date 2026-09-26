@@ -37,12 +37,12 @@ public class FelSoapClient {
                     return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
                 }
             });
-        /* --SOUTs de depuracion
+
         System.out.println("=== FEL REQUEST ===");
         System.out.println(sobreXml);
         System.out.println("=== FEL RESPONSE ===");
         System.out.println(respuesta);
-        */
+
         return respuesta;
 }
  

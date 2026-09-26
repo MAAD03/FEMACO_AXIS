@@ -694,17 +694,17 @@ VALUES
 (12, 'Generar Ajuste de Inventario', 4, 'ajuste-inventario', 5, NOW(), 1, NOW(), 1),
 (14, 'Lista Ajuste de Inventario', 5, 'lista-ajuste-inventario', 5, NOW(), 1, NOW(), 1),
 -- Sucursales y Cotizaciones 
-(15, 'Sucursales', 1, 'sucursal', 6, NOW(), 1, NOW(), 1),
-(16, 'Cotizaciones', 2, 'cotizacion', 6, NOW(), 1, NOW(), 1),
+(16, 'Cotizaciones', 1, 'cotizacion', 6, NOW(), 1, NOW(), 1),
+(15, 'Sucursales', 2, 'sucursal', 6, NOW(), 1, NOW(), 1),
 -- Suministro
-(17, 'Proveedores', 1, 'proveedor', 7, NOW(), 1, NOW(), 1),
-(18, 'Órdenes de Compra', 2, 'orden-compra', 7, NOW(), 1, NOW(), 1),
+(18, 'Órdenes de Compra', 1, 'orden-compra', 7, NOW(), 1, NOW(), 1),
+(17, 'Proveedores', 2, 'proveedor', 7, NOW(), 1, NOW(), 1),
 (22, 'Lista Órdenes de Compra', 3, 'lista-orden-compra', 7, NOW(), 1, NOW(), 1),
 -- Ventas
-(19, 'Clientes', 1, 'cliente', 8, NOW(), 1, NOW(), 1),
-(20, 'Pedidos', 2, 'pedidos', 8, NOW(), 1, NOW(), 1),
-(21, 'Ventas', 3, 'ventas', 8, NOW(), 1, NOW(), 1),
-(25, 'Lista Ventas', 4, 'lista-ventas', 8, NOW(), 1, NOW(), 1),
+(21, 'Ventas', 1, 'ventas', 8, NOW(), 1, NOW(), 1),
+(25, 'Lista Ventas', 2, 'lista-ventas', 8, NOW(), 1, NOW(), 1),
+(19, 'Clientes', 3, 'cliente', 8, NOW(), 1, NOW(), 1),
+(20, 'Pedidos', 4, 'pedidos', 8, NOW(), 1, NOW(), 1),
 -- Datos
 (23, 'Datos Artículos', 1, 'datos-articulos', 9, NOW(), 1, NOW(), 1),
 (24, 'Datos Venta', 2, 'datos-venta', 9, NOW(), 1, NOW(), 1);
@@ -736,6 +736,7 @@ VALUES
 (1, 23, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Datos Artículos
 (1, 24, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Datos Venta
 (1, 25, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Lista Ventas
+
 -- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
 (`IdUsuario`, `Nombre`, `Apellido`, `Password`, `CorreoElectronico`, `RequiereCambioPassword`, `PuedeAplicarDescuento`, 

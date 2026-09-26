@@ -4,6 +4,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TimeoutError } from 'rxjs';
 import { EstadoVenta } from '../../../core/models/catalogo-models/estado-venta.model';
+import { Pedido } from '../../../core/models/pedido.model';
 import { Venta, VentaFiltro } from '../../../core/models/venta.model';
 import { ArticuloNombrePipe } from '../../../core/pipes/articulo-nombre-pipe-pipe';
 import { ClieneNitPipe } from '../../../core/pipes/cliene-nit-pipe';
@@ -14,6 +15,7 @@ import { ArticuloService } from '../../../core/services/articulo.service';
 import { ClienteService } from '../../../core/services/cliente.service';
 import { EstadoVentaService } from '../../../core/services/catalogo-services/estado-venta.service';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
+import { PedidoService } from '../../../core/services/pedido.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { VentaConDetalles, VentaService } from '../../../core/services/venta.service';
 import { VentaFelService } from '../../../core/services/venta-fel.service';
@@ -33,10 +35,12 @@ export class ListaVentas implements OnInit {
   private readonly articuloService = inject(ArticuloService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly conjuntoMenuService = inject(ConjuntoMenuService);
+  private readonly pedidoService = inject(PedidoService);
   private readonly ventaFelService = inject(VentaFelService);
 
   filtrosForm!: FormGroup;
   motivoAnulacionForm!: FormGroup;
+  pedidoForm!: FormGroup;
   lista = signal<Venta[]>([]);
   estados = signal<EstadoVenta[]>([]);
   cargando = signal(false);
@@ -53,6 +57,9 @@ export class ListaVentas implements OnInit {
   anulando = signal(false);
   certificandoFactura = signal(false);
   anulandoFactura = signal(false);
+  mostrandoFormularioPedido = signal(false);
+  creandoPedido = signal(false);
+  errorPedido = signal('');
   errorFactura = signal('');
   mostrarModalAnulacion = signal(false);
   ultimaOperacionFel = signal<'certificar' | 'anular' | null>(null);
@@ -64,6 +71,14 @@ export class ListaVentas implements OnInit {
 
   get puedeAnular(): boolean {
     return this.permisos.baja;
+  }
+
+  get permisosPedido() {
+    return this.conjuntoMenuService.getPermisosPorPagina('pedidos');
+  }
+
+  get puedeCrearPedido(): boolean {
+    return this.permisosPedido.alta;
   }
 
   ngOnInit(): void {
@@ -87,6 +102,13 @@ export class ListaVentas implements OnInit {
       size: [9],
     });
     this.motivoAnulacionForm = this.fb.group({ motivo: [''] });
+    this.pedidoForm = this.fb.group({
+      idVenta: [{ value: null, disabled: true }],
+      fechaEntrega: [''],
+      direccionEntrega: [''],
+      notasEntrega: [''],
+      numeroEntrega: [''],
+    });
   }
 
   cargarLista(): void {
@@ -158,10 +180,62 @@ export class ListaVentas implements OnInit {
   }
 
   cerrarDetalle(): void {
-    if (this.anulando() || this.anulandoFactura()) return;
+    if (this.anulando() || this.anulandoFactura() || this.creandoPedido()) return;
     this.ventaSeleccionada.set(null);
     this.errorDetalle.set('');
     this.errorFactura.set('');
+  }
+
+  abrirFormularioPedido(): void {
+    if (!this.puedeCrearPedido || this.creandoPedido()) return;
+    const idVenta = this.ventaSeleccionada()?.venta.idVenta;
+    if (idVenta == null) return;
+
+    this.errorPedido.set('');
+    this.pedidoForm.reset({
+      idVenta,
+      fechaEntrega: '',
+      direccionEntrega: '',
+      notasEntrega: '',
+      numeroEntrega: '',
+    });
+    this.mostrandoFormularioPedido.set(true);
+  }
+
+  cerrarFormularioPedido(): void {
+    if (this.creandoPedido()) return;
+    this.mostrandoFormularioPedido.set(false);
+    this.errorPedido.set('');
+  }
+
+  generarPedido(): void {
+    if (!this.puedeCrearPedido || this.creandoPedido()) return;
+    const idVenta = this.ventaSeleccionada()?.venta.idVenta;
+    if (idVenta == null) return;
+
+    const datos = this.pedidoForm.getRawValue();
+    const pedido: Pedido = {
+      idVenta,
+      fechaEntrega: datos.fechaEntrega || undefined,
+      direccionEntrega: datos.direccionEntrega?.trim() || undefined,
+      notasEntrega: datos.notasEntrega?.trim() || undefined,
+      numeroEntrega: datos.numeroEntrega?.trim() || undefined,
+    };
+
+    this.creandoPedido.set(true);
+    this.errorPedido.set('');
+    this.pedidoService.crear(pedido).subscribe({
+      next: () => {
+        this.mostrandoFormularioPedido.set(false);
+        this.creandoPedido.set(false);
+        this.mensaje.set('Pedido creado correctamente');
+        setTimeout(() => this.mensaje.set(''), 3500);
+      },
+      error: error => {
+        this.errorPedido.set(error?.error?.message || error?.error?.mensaje || 'Error al crear el pedido');
+        this.creandoPedido.set(false);
+      },
+    });
   }
 
   generarFactura(): void {

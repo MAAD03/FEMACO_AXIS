@@ -1,1 +1,97 @@
-<p>movimiento-inventario works!</p>
+<div class="list-container">
+    <section class="card ledger-card">
+        <div class="ledger-heading">
+            <div>
+                <p class="eyebrow">Inventario</p>
+                <h1 class="card-title">Libro de movimientos</h1>
+                <p class="subtitle">Historial cronológico de entradas, salidas y ajustes.</p>
+            </div>
+            <span class="result-count">{{ totalElementos() }} movimientos</span>
+        </div>
+
+        @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+        }
+
+        @if (cargando() && lista().length === 0) {
+        <p class="loading">Cargando movimientos...</p>
+        } @else if (lista().length === 0) {
+        <p class="empty">No hay movimientos registrados.</p>
+        } @else {
+        <div class="table-wrapper">
+            <table class="ledger-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Motivo</th>
+                        <th>Artículo</th>
+                        <th>Usuario</th>
+                        <th>Cantidad</th>
+                        <th>Stock anterior</th>
+                        <th>Stock nuevo</th>
+                        <th>ID venta</th>
+                        <th>ID orden compra</th>
+                        <th>ID ajuste</th>
+                        <th>Usuario creación</th>
+                        <th>Fecha modificación</th>
+                        <th>Usuario modificación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (item of lista(); track item.idMovimientoInventario ?? $index) {
+                    <tr>
+                        <td>{{ item.idMovimientoInventario }}</td>
+                        <td class="date-cell">{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td>
+                            <span class="badge" [class.badge-entrada]="item.tipoMovimiento === 'entrada'"
+                                [class.badge-salida]="item.tipoMovimiento === 'salida'"
+                                [class.badge-ajuste]="item.tipoMovimiento === 'ajuste'">
+                                {{ item.tipoMovimiento }}
+                            </span>
+                        </td>
+                        <td>{{ item.motivo }}</td>
+                        <td>{{ item.idArticulo | articuloNombre }}</td>
+                        <td>{{ item.idUsuario | userEmail }}</td>
+                        <td [class.positivo]="item.cantidad > 0" [class.negativo]="item.cantidad < 0">
+                            {{ item.cantidad | number:'1.2-2' }}
+                        </td>
+                        <td [class.positivo]="item.stockViejo > 0" [class.negativo]="item.stockViejo < 0">
+                            {{ item.stockViejo | number:'1.2-2' }}
+                        </td>
+                        <td [class.positivo]="item.stockNuevo > 0" [class.negativo]="item.stockNuevo < 0">
+                            {{ item.stockNuevo | number:'1.2-2' }}
+                        </td>
+                        <td>{{ item.idVenta ?? '—' }}</td>
+                        <td>{{ item.idOrdenCompra ?? '—' }}</td>
+                        <td>{{ item.idAjusteInventario ?? '—' }}</td>
+                        <td>{{ item.usuarioCreacion | userEmail }}</td>
+                        <td class="date-cell">{{ item.fechaModif | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td>{{ item.usuarioModif | userEmail }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <div class="pagination">
+            <span>Mostrando {{ lista().length }} de {{ totalElementos() }}</span>
+            <label for="page-size">Por página</label>
+            <select id="page-size" [value]="tamanoPagina()" (change)="cambiarTamano($any($event.target).value)">
+                @for (tamano of tamanosPagina; track tamano) {
+                <option [value]="tamano">{{ tamano }}</option>
+                }
+            </select>
+            <button class="btn btn-secondary" (click)="irAPagina(0)" [disabled]="paginaActual() === 0">Primera</button>
+            <button class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
+                [disabled]="paginaActual() === 0">Anterior</button>
+            <strong>Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} de {{ totalPaginas() }}</strong>
+            <button class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
+                [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+            <button class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)"
+                [disabled]="paginaActual() >= totalPaginas() - 1">Última</button>
+        </div>
+    </section>
+</div>

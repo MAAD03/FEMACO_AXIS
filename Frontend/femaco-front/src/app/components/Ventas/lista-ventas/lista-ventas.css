@@ -2,6 +2,79 @@
   display: block;
 }
 
+.sale-complete-overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(20, 31, 25, .58);
+}
+
+.sale-complete-panel {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow-y: auto;
+  padding: 3rem 2.5rem 2.5rem;
+  border-top: 8px solid var(--crud-success);
+  border-radius: 12px;
+  background: var(--crud-white);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .28);
+}
+
+.sale-complete-close {
+  position: absolute;
+  top: .7rem;
+  right: .8rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--crud-gray-200);
+  color: var(--crud-primary-dark);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.sale-complete-close:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+.sale-complete-panel h2 {
+  margin: 0;
+  color: var(--crud-primary-dark);
+  text-align: center;
+}
+
+.sale-complete-panel p {
+  margin: .7rem 0 1.5rem;
+  color: var(--crud-text);
+}
+
+.quote-form-panel {
+  text-align: left;
+}
+
+.quote-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.quote-form textarea {
+  resize: vertical;
+}
+
+.quote-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+  margin-top: .35rem;
+}
+
 .fel-modal-overlay {
   position: fixed;
   z-index: 1100;
@@ -135,6 +208,14 @@
   border: 1px solid var(--crud-gray-300);
   border-radius: 10px;
   background: #fff;
+}
+
+.detail-card .table-wrapper {
+  overflow-x: auto;
+}
+
+.detail-card .ledger-table {
+  min-width: 1200px;
 }
 
 .ledger-table {

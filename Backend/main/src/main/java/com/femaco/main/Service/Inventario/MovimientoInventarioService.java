@@ -2,6 +2,8 @@ package com.femaco.main.Service.Inventario;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.femaco.main.Entity.Inventario.MovimientoInventario;
@@ -18,6 +20,11 @@ public class MovimientoInventarioService {
 
     public List<MovimientoInventario> buscarTodos() {
         return movimientoInventarioRepository.findAll();
+    }
+
+    public Page<MovimientoInventario> buscarTodosPaginado(Pageable pageable) {
+        return movimientoInventarioRepository
+                .findAllByOrderByFechaCreacionDescIdMovimientoInventarioDesc(pageable);
     }
 
     public List<MovimientoInventario> buscarPorArticulo(Long idArticulo) {

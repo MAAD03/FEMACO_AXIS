@@ -1,4 +1,47 @@
 <div class="crud-container">
+  @if (mostrandoFormularioPedido()) {
+  <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="pedidoFormTitle">
+    <div class="sale-complete-panel quote-form-panel">
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
+        [disabled]="creandoPedido()" (click)="cerrarFormularioPedido()">×</button>
+      <h2 id="pedidoFormTitle">Datos del pedido</h2>
+      <p>Confirma los datos del pedido para la venta seleccionada.</p>
+      @if (errorPedido()) { <div class="alert alert-error" role="alert">{{ errorPedido() }}</div> }
+      <form [formGroup]="pedidoForm" (ngSubmit)="generarPedido()" class="quote-form">
+        <div class="form-group">
+          <label for="pedidoIdVenta">ID de venta</label>
+          <input id="pedidoIdVenta" type="number" formControlName="idVenta" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+          <label for="pedidoFechaEntrega">Fecha de entrega</label>
+          <input id="pedidoFechaEntrega" type="date" formControlName="fechaEntrega" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="pedidoDireccionEntrega">Dirección de entrega</label>
+          <textarea id="pedidoDireccionEntrega" formControlName="direccionEntrega" class="form-control" rows="2"
+            maxlength="1000" placeholder="Ingrese la dirección de entrega"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="pedidoNumeroEntrega">Número de entrega</label>
+          <input id="pedidoNumeroEntrega" type="text" formControlName="numeroEntrega" class="form-control"
+            maxlength="50" placeholder="Ingrese el número de entrega" />
+        </div>
+        <div class="form-group">
+          <label for="pedidoNotasEntrega">Notas de entrega</label>
+          <textarea id="pedidoNotasEntrega" formControlName="notasEntrega" class="form-control" rows="3"
+            maxlength="1000" placeholder="Indicaciones adicionales"></textarea>
+        </div>
+        <div class="quote-form-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="creandoPedido()"
+            (click)="cerrarFormularioPedido()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="creandoPedido()">
+            {{ creandoPedido() ? 'Guardando...' : 'Crear pedido' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  }
   @if (mostrarModalAnulacion()) {
   <div class="fel-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="anulacionFacturaTitulo">
     <form class="fel-modal" [formGroup]="motivoAnulacionForm" (ngSubmit)="anularFactura()">
@@ -75,11 +118,14 @@
         <table class="ledger-table">
           <thead>
             <tr>
+              <th>ID artículo</th>
               <th>Artículo</th>
               <th>Cantidad</th>
               <th>Precio unitario</th>
               <th>Subtotal bruto</th>
+              <th>Porc. desc. mayorista</th>
               <th>Desc. mayorista</th>
+              <th>Porc. desc. manual</th>
               <th>Desc. manual</th>
               <th>Subtotal</th>
             </tr>
@@ -87,16 +133,19 @@
           <tbody>
             @if (ventaSeleccionada()!.detalles.length === 0) {
             <tr>
-              <td colspan="7" class="empty">Esta venta no tiene detalles.</td>
+              <td colspan="10" class="empty">Esta venta no tiene detalles.</td>
             </tr>
             }
             @for (detalle of ventaSeleccionada()!.detalles; track detalle.idVentaDetalle) {
             <tr>
+              <td>{{ detalle.idArticulo }}</td>
               <td>{{ detalle.idArticulo | articuloNombre }}</td>
               <td>{{ detalle.cantidad | number:'1.2-2' }}</td>
               <td>{{ detalle.precioUnitario | number:'1.2-2' }}</td>
               <td>{{ detalle.subtotalBruto | number:'1.2-2' }}</td>
+              <td>{{ detalle.porcDescuentoMayorista | number:'1.2-2' }}%</td>
               <td>{{ detalle.montoDescuentoMayorista | number:'1.2-2' }}</td>
+              <td>{{ detalle.porcDescuentoManual | number:'1.2-2' }}%</td>
               <td>{{ detalle.montoDescuentoManual | number:'1.2-2' }}</td>
               <td>{{ detalle.subtotal | number:'1.2-2' }}</td>
             </tr>
@@ -116,7 +165,10 @@
           [disabled]="certificandoFactura() || anulandoFactura()">
           {{ certificandoFactura() ? 'Generando factura...' : 'Generar factura' }}
         </button>
-        <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar pedido</button>
+        @if (puedeCrearPedido) {
+        <button type="button" class="btn btn-secondary" (click)="abrirFormularioPedido()"
+          [disabled]="creandoPedido()">Generar pedido</button>
+        }
         <button type="button" class="btn btn-danger" (click)="abrirModalAnulacion()"
           [disabled]="certificandoFactura() || anulandoFactura()">
           {{ anulandoFactura() ? 'Anulando factura...' : 'Anular factura' }}

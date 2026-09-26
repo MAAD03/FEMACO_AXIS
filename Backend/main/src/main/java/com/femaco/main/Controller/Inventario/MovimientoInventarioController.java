@@ -2,9 +2,12 @@ package com.femaco.main.Controller.Inventario;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +29,13 @@ public class MovimientoInventarioController {
         return ResponseEntity.ok(movimientoInventarioService.buscarTodos());
     }
 
+    @GetMapping("/buscar-paginado")
+    public ResponseEntity<Page<MovimientoInventario>> buscarPaginado(
+            @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return ResponseEntity.ok(movimientoInventarioService.buscarTodosPaginado(pageable));
+    }
+/* 
     @GetMapping("/buscar/articulo/{idArticulo}")
     public ResponseEntity<List<MovimientoInventario>> buscarPorArticulo(@PathVariable Long idArticulo) {
         return ResponseEntity.ok(movimientoInventarioService.buscarPorArticulo(idArticulo));
@@ -40,5 +50,5 @@ public class MovimientoInventarioController {
     public ResponseEntity<List<MovimientoInventario>> buscarPorOrdenCompra(@PathVariable Long idOrdenCompra) {
         return ResponseEntity.ok(movimientoInventarioService.buscarPorOrdenCompra(idOrdenCompra));
     }
-
+*/
 }

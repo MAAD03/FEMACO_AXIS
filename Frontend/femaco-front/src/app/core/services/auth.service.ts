@@ -65,7 +65,7 @@ export class AuthService {
 
   private readonly STORAGE_KEY = 'auth_user';
   private readonly LAST_ACTIVITY_KEY = 'auth_last_activity';
-  private readonly IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+  private readonly IDLE_TIMEOUT_MS = 20 * 60 * 1000;
   private readonly ACTIVITY_STORAGE_INTERVAL_MS = 5000;
   private readonly activityEvents = ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'] as const;
   private currentUserSubject = new BehaviorSubject<UserData | null>(this.getUserFromStorage());
@@ -75,7 +75,7 @@ export class AuthService {
   private lastPersistedActivityAt = 0;
   private readonly activityHandler = (): void => {
     if (this.currentUserSubject.value) {
-      this.restoreIdleTimer();
+      this.resetIdleTimer();
     }
   };
 

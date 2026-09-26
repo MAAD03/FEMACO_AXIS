@@ -1,1 +1,48 @@
-<p>dashboard works!</p>
+<section class="dashboard" aria-labelledby="dashboard-title">
+	<div class="dashboard-topbar">
+		<p class="dashboard-eyebrow">Panel principal</p>
+		<time class="dashboard-clock" [attr.datetime]="fechaActual() | date:'yyyy-MM-ddTHH:mm:ss'">
+			<span class="clock-dot" aria-hidden="true"></span>
+			{{ fechaActual() | date:'dd/MM/yyyy' }} · {{ fechaActual() | date:'HH:mm:ss' }}
+		</time>
+	</div>
+
+	@if (usuario$ | async; as usuario) {
+	<header class="welcome-panel">
+		<div class="welcome-mark" aria-hidden="true">F</div>
+		<div class="welcome-copy">
+			<p class="welcome-kicker">Distribuidora Femaco</p>
+			<h1 id="dashboard-title">Bienvenido, {{ usuario.nombre }}</h1>
+			<p>Este es tu espacio de trabajo. Desde aquí puedes continuar con las operaciones disponibles para tu
+				cuenta.</p>
+		</div>
+	</header>
+	}
+
+	<div class="dashboard-section-heading">
+		<div>
+			<p class="section-kicker">Tu navegación</p>
+			<h2>Accesos rápidos</h2>
+		</div>
+		<span class="section-note">Basados en tus permisos</span>
+	</div>
+
+	@if (accesosRapidos$ | async; as accesos) {
+	@if (accesos.length > 0) {
+	<div class="quick-links">
+		@for (acceso of accesos; track acceso.id; let indice = $index) {
+		<a class="quick-link" [routerLink]="acceso.pagina">
+			<span class="quick-link-index" aria-hidden="true">{{ (indice + 1).toString().padStart(2, '0') }}</span>
+			<span class="quick-link-copy">
+				<span class="quick-link-module">{{ acceso.modulo }}</span>
+				<strong>{{ acceso.nombre }}</strong>
+			</span>
+			<span class="quick-link-arrow" aria-hidden="true">→</span>
+		</a>
+		}
+	</div>
+	} @else {
+	<div class="empty-state">Cargando tus opciones disponibles...</div>
+	}
+	}
+</section>

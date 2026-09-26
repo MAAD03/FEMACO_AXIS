@@ -6,6 +6,8 @@ import { TimeoutError } from 'rxjs';
 import { AreaArticulo as AreaArticuloModel } from '../../../core/models/area-articulo.model';
 import { Articulo, ArticuloFiltro } from '../../../core/models/articulo.model';
 import { Cliente as ClienteModel } from '../../../core/models/cliente.model';
+import { CotizacionCreateRequest } from '../../../core/models/cotizacion.model';
+import { Pedido } from '../../../core/models/pedido.model';
 import { UnidadMedida as UnidadMedidaModel } from '../../../core/models/unidad-medida.model';
 import { AreaArticuloNombrePipe } from '../../../core/pipes/area-articulo-nombre-pipe';
 import { UnidadMedidaAbreviaturaPipe } from '../../../core/pipes/unidad-medida-abreviatura-pipe';
@@ -14,6 +16,8 @@ import { ArticuloService } from '../../../core/services/articulo.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClienteService } from '../../../core/services/cliente.service';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
+import { CotizacionService } from '../../../core/services/cotizacion.service';
+import { PedidoService } from '../../../core/services/pedido.service';
 import { UnidadMedidaService } from '../../../core/services/unidad-medida.service';
 import { VentaCreateRequest, VentaDetalleCreateRequest, VentaService } from '../../../core/services/venta.service';
 import { VentaFelService } from '../../../core/services/venta-fel.service';
@@ -43,6 +47,8 @@ interface VentaDetalleCarrito extends VentaDetalleCreateRequest {
 export class Ventas implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly clienteService = inject(ClienteService);
+  private readonly cotizacionService = inject(CotizacionService);
+  private readonly pedidoService = inject(PedidoService);
   private readonly articuloService = inject(ArticuloService);
   private readonly areaArticuloService = inject(AreaArticuloService);
   private readonly unidadMedidaService = inject(UnidadMedidaService);
@@ -54,6 +60,23 @@ export class Ventas implements OnInit {
   busquedaClienteForm: FormGroup = this.fb.group({
     nit: ['', [Validators.required, Validators.maxLength(45)]],
   });
+  cotizacionForm: FormGroup = this.fb.group({
+    nit: ['', [Validators.required, Validators.maxLength(45)]],
+    nombre: ['', [Validators.required, Validators.maxLength(150)]],
+  });
+  pedidoForm: FormGroup = this.fb.group({
+    idVenta: [{ value: null, disabled: true }, [Validators.required]],
+    fechaEntrega: [''],
+    direccionEntrega: ['', Validators.maxLength(1000)],
+    notasEntrega: ['', Validators.maxLength(1000)],
+    numeroEntrega: ['', Validators.maxLength(50)],
+  });
+  mostrandoFormularioCotizacion = signal(false);
+  mostrandoFormularioPedido = signal(false);
+  creandoPedido = signal(false);
+  pedidoCreado = signal(false);
+  errorPedido = signal('');
+  mensajePedido = signal('');
   clienteSeleccionado = signal<ClienteModel | null>(null);
   idClienteSeleccionado = signal<number | null>(null);
   buscandoCliente = signal(false);
@@ -78,6 +101,10 @@ export class Ventas implements OnInit {
 
   get permisos() { return this.conjuntoMenuService.getPermisosPorPagina('ventas'); }
   get puedeCrear(): boolean { return this.permisos.alta; }
+  get permisosCotizacion() { return this.conjuntoMenuService.getPermisosPorPagina('cotizacion'); }
+  get puedeCrearCotizacion(): boolean { return this.permisosCotizacion.alta; }
+  get permisosPedido() { return this.conjuntoMenuService.getPermisosPorPagina('pedidos'); }
+  get puedeCrearPedido(): boolean { return this.permisosPedido.alta; }
   get puedeAplicarDescuento(): boolean {
     const usuario = this.authService.getCurrentUser() as (Record<string, unknown> | null);
     return usuario?.['PuedeAplicarDescuento'] === true;
@@ -207,6 +234,7 @@ export class Ventas implements OnInit {
     const idCliente = this.idClienteSeleccionado();
     if (!idCliente) { this.error.set('Debes buscar y seleccionar un cliente'); return; }
     if (!this.items().length) { this.error.set('Debes agregar al menos un artículo al carrito'); return; }
+    if (!window.confirm('¿Desea crear la venta con el cliente y los artículos seleccionados?')) return;
     const dto: VentaCreateRequest = { idCliente, detalles: this.items().map(item => ({ idArticulo: item.idArticulo, cantidad: item.cantidad, porcDescuentoManual: item.porcDescuentoManual })) };
     this.cargando.set(true); this.error.set(''); this.mensaje.set('');
     this.ventaService.crearConDetalles(dto).subscribe({
@@ -218,6 +246,108 @@ export class Ventas implements OnInit {
         this.cargando.set(false);
       },
       error: error => { this.error.set(error?.error?.message || error?.error?.mensaje || 'Error al crear la venta'); this.cargando.set(false); },
+    });
+  }
+
+  abrirFormularioCotizacion(): void {
+    if (!this.puedeCrearCotizacion) { this.error.set('No tienes permiso para crear cotizaciones'); return; }
+    if (!this.items().length) { this.error.set('Debes agregar al menos un artículo al carrito'); return; }
+    this.error.set('');
+    this.cotizacionForm.reset({ nit: '', nombre: '' });
+    this.mostrandoFormularioCotizacion.set(true);
+  }
+
+  cerrarFormularioCotizacion(): void {
+    if (this.cargando()) return;
+    this.mostrandoFormularioCotizacion.set(false);
+  }
+
+  abrirFormularioPedido(): void {
+    if (!this.puedeCrearPedido) { this.error.set('No tienes permiso para crear pedidos'); return; }
+    const idVenta = this.idVentaCompletada();
+    if (idVenta == null) return;
+
+    this.errorPedido.set('');
+    this.mensajePedido.set('');
+    this.pedidoForm.reset({ idVenta, fechaEntrega: '', direccionEntrega: '', notasEntrega: '', numeroEntrega: '' });
+    this.mostrandoFormularioPedido.set(true);
+  }
+
+  cerrarFormularioPedido(): void {
+    if (this.creandoPedido()) return;
+    this.mostrandoFormularioPedido.set(false);
+    this.errorPedido.set('');
+    this.mensajePedido.set('');
+  }
+
+  generarPedido(): void {
+    if (!this.puedeCrearPedido) { this.errorPedido.set('No tienes permiso para crear pedidos'); return; }
+    const idVenta = this.idVentaCompletada();
+    if (idVenta == null || this.creandoPedido()) return;
+    if (this.pedidoForm.invalid) {
+      this.pedidoForm.markAllAsTouched();
+      return;
+    }
+
+    const datos = this.pedidoForm.getRawValue();
+    const pedido: Pedido = {
+      idVenta,
+      fechaEntrega: datos.fechaEntrega || undefined,
+      direccionEntrega: datos.direccionEntrega?.trim() || undefined,
+      notasEntrega: datos.notasEntrega?.trim() || undefined,
+      numeroEntrega: datos.numeroEntrega?.trim() || undefined,
+    };
+
+    this.creandoPedido.set(true);
+    this.errorPedido.set('');
+    this.pedidoService.crear(pedido).subscribe({
+      next: () => {
+        this.creandoPedido.set(false);
+        this.pedidoCreado.set(true);
+        this.mensajePedido.set('Pedido creado correctamente');
+        window.setTimeout(() => {
+          if (this.mostrandoFormularioPedido()) {
+            this.cerrarFormularioPedido();
+          }
+        }, 2500);
+      },
+      error: error => {
+        this.errorPedido.set(error?.error?.message || error?.error?.mensaje || 'Error al crear el pedido');
+        this.creandoPedido.set(false);
+      },
+    });
+  }
+
+  generarCotizacion(): void {
+    if (!this.puedeCrearCotizacion) { this.error.set('No tienes permiso para crear cotizaciones'); return; }
+    if (!this.items().length) { this.error.set('Debes agregar al menos un artículo al carrito'); return; }
+    if (this.cotizacionForm.invalid) {
+      this.cotizacionForm.markAllAsTouched();
+      return;
+    }
+
+    const { nit, nombre } = this.cotizacionForm.getRawValue();
+    const dto: CotizacionCreateRequest = {
+      nombre: nombre.trim(),
+      nit: nit.trim(),
+      detalles: this.items().map(item => ({
+        idArticulo: item.idArticulo,
+        cantidad: item.cantidad,
+        porcDescuentoManual: item.porcDescuentoManual,
+      })),
+    };
+    this.cargando.set(true); this.error.set(''); this.mensaje.set('');
+    this.cotizacionService.crearConDetalles(dto).subscribe({
+      next: () => {
+        this.mostrandoFormularioCotizacion.set(false);
+        this.resetearCompra();
+        this.mensaje.set('Cotización creada correctamente');
+        this.cargando.set(false);
+      },
+      error: error => {
+        this.error.set(error?.error?.message || error?.error?.mensaje || 'Error al crear la cotización');
+        this.cargando.set(false);
+      },
     });
   }
 
@@ -317,6 +447,7 @@ export class Ventas implements OnInit {
   private resetearCompra(): void {
     this.ventaCompletada.set(false);
     this.idVentaCompletada.set(null);
+    this.pedidoCreado.set(false);
     this.certificando.set(false);
     this.errorFactura.set('');
     this.mensaje.set('');

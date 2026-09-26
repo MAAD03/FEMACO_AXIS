@@ -2,6 +2,8 @@ package com.femaco.main.Repository.Inventario;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,5 +17,7 @@ public interface MovimientoInventarioRepository extends JpaRepository<Movimiento
     List<MovimientoInventario> findByIdVenta(Long idVenta);
 
     List<MovimientoInventario> findByIdOrdenCompra(Long idOrdenCompra);
+
+    Page<MovimientoInventario> findAllByOrderByFechaCreacionDescIdMovimientoInventarioDesc(Pageable pageable);
     
 }

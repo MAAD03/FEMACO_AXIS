@@ -854,7 +854,7 @@ VALUES
 
 -- Cliente CF para funcionamiento de facturas consumidor final
 INSERT INTO cliente (idCliente, Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)
-VALUES (1, 'CF', 'Consumidor Final', '--', '--', 'Guatemala', 1, NOW(), 1, NOW(), 1);
+VALUES (1, 'CF', 'Consumidor Final', '0000-0000', 'consumidorfinal@femaco.com.gt', 'Guatemala', 1, NOW(), 1, NOW(), 1);
 
 -- Cliente de prueba (usa NIT ficticio válido para ambiente de pruebas en TEKRA)
 INSERT INTO cliente (Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)

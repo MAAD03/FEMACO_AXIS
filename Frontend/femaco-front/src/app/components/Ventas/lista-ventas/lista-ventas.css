@@ -2,6 +2,64 @@
   display: block;
 }
 
+.fel-modal-overlay {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(20, 31, 25, 0.58);
+}
+
+.fel-modal {
+  width: min(520px, 100%);
+  padding: 1.5rem;
+  border-top: 4px solid var(--crud-danger);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.fel-modal h3 {
+  margin: 0;
+  color: var(--crud-primary-dark);
+}
+
+.fel-modal p {
+  margin: 0.6rem 0 1rem;
+  color: var(--crud-text);
+}
+
+.fel-modal label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--crud-primary-dark);
+  font-weight: 700;
+}
+
+.fel-modal textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  padding: 0.65rem;
+  border: 1px solid var(--crud-gray-300);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.fel-modal textarea:focus {
+  outline: 2px solid var(--crud-primary-light);
+  border-color: var(--crud-primary);
+}
+
+.fel-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
 .filters-card {
   border-top: 4px solid var(--crud-primary);
 }
@@ -85,12 +143,88 @@
   min-width: 800px;
 }
 
+.table-card .ledger-table {
+  min-width: 1120px;
+  table-layout: fixed;
+}
+
 .ledger-table th,
 .ledger-table td {
   padding: 0.8rem 0.75rem;
   border-bottom: 1px solid var(--crud-gray-300);
   text-align: left;
   vertical-align: top;
+  white-space: nowrap;
+}
+
+.table-card .ledger-table th,
+.table-card .ledger-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-card .ledger-table th:nth-child(1),
+.table-card .ledger-table td:nth-child(1) {
+  width: 70px;
+}
+
+.table-card .ledger-table th:nth-child(2),
+.table-card .ledger-table td:nth-child(2) {
+  width: 150px;
+}
+
+.table-card .ledger-table th:nth-child(3),
+.table-card .ledger-table td:nth-child(3) {
+  width: 180px;
+}
+
+.table-card .ledger-table th:nth-child(4),
+.table-card .ledger-table td:nth-child(4) {
+  width: 130px;
+}
+
+.table-card .ledger-table th:nth-child(5),
+.table-card .ledger-table td:nth-child(5) {
+  width: 130px;
+}
+
+.table-card .ledger-table th:nth-child(6),
+.table-card .ledger-table td:nth-child(6) {
+  width: 130px;
+}
+
+.table-card .ledger-table th:nth-child(7),
+.table-card .ledger-table td:nth-child(7) {
+  width: 110px;
+}
+
+.table-card .ledger-table th:nth-child(8),
+.table-card .ledger-table td:nth-child(8) {
+  width: 175px;
+}
+
+.table-card .ledger-table th:nth-child(9),
+.table-card .ledger-table td:nth-child(9) {
+  width: 190px;
+}
+
+.table-card .acciones .btn-icon {
+  white-space: nowrap;
+}
+
+.table-card .acciones .btn-edit {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--crud-primary-dark);
+  border-radius: 6px;
+  background: var(--crud-primary-dark);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.table-card .acciones .btn-edit:hover {
+  background: var(--crud-primary);
+  color: #fff;
 }
 
 .ledger-table thead th {
@@ -190,6 +324,26 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+.fel-loading,
+.fel-error {
+  flex-basis: 100%;
+}
+
+.fel-loading {
+  color: var(--crud-primary-dark);
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .fel-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .fel-modal-actions .btn {
+    width: 100%;
+  }
 }
 
 .btn-danger {

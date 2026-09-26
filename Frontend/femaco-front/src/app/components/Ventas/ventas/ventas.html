@@ -3,15 +3,22 @@
   <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="saleCompleteTitle">
     <div class="sale-complete-panel">
       <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
-        (click)="cerrarVentaCompletada()">×</button>
+        [disabled]="certificando()" (click)="cerrarVentaCompletada()">×</button>
       <div class="sale-complete-icon" aria-hidden="true">✓</div>
       <h2 id="saleCompleteTitle">Venta completada exitosamente</h2>
       <p>La venta fue registrada correctamente.</p>
       <div class="sale-complete-actions">
         <button type="button" class="btn btn-primary">Generar comprobante</button>
-        <button type="button" class="btn btn-primary">Generar factura</button>
+        <button type="button" class="btn btn-primary" [disabled]="certificando()" (click)="generarFactura()">
+          {{ certificando() ? 'Generando factura...' : 'Generar factura' }}
+        </button>
         <button type="button" class="btn btn-secondary">Generar pedido</button>
       </div>
+      @if (certificando()) { <p class="fel-loading" aria-live="polite">Certificando la venta y generando el PDF. Esto puede tardar hasta un minuto...</p> }
+      @if (errorFactura()) {
+      <div class="alert alert-error" role="alert">{{ errorFactura() }}</div>
+      <button type="button" class="btn btn-secondary" [disabled]="certificando()" (click)="generarFactura()">Reintentar factura</button>
+      }
     </div>
   </div>
   }

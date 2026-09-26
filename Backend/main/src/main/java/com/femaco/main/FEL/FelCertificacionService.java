@@ -77,7 +77,7 @@ public class FelCertificacionService {
         VentaFel guardado = ventaFelRepository.save(ventaFel);
 
         if (!resultado.exito()) {
-            throw new IllegalStateException("TEKRA rechazó la certificación: " + resultado.mensajeError());
+            throw new TekraRechazoException("TEKRA rechazó la certificación: " + resultado.mensajeError());
         }
         return guardado;
     }

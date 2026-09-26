@@ -40,7 +40,7 @@ public class FelAnulacionService {
         FelSoapResponseParser.AnulacionResultado resultado = responseParser.parsearAnulacion(respuestaSoap);
 
         if (!resultado.exito()) {
-            throw new IllegalStateException("TEKRA rechazó la anulación: " + resultado.mensajeError());
+            throw new TekraRechazoException("TEKRA rechazó la anulación: " + resultado.mensajeError());
         }
 
         LocalDateTime ahora = LocalDateTime.now();

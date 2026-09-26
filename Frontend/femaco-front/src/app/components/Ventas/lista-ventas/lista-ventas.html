@@ -1,4 +1,25 @@
 <div class="crud-container">
+  @if (mostrarModalAnulacion()) {
+  <div class="fel-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="anulacionFacturaTitulo">
+    <form class="fel-modal" [formGroup]="motivoAnulacionForm" (ngSubmit)="anularFactura()">
+      <h3 id="anulacionFacturaTitulo">Anular factura</h3>
+      <p>Indica el motivo de la anulación. Este dato será enviado al certificador.</p>
+      <label for="motivoAnulacionFactura">Motivo</label>
+      <textarea id="motivoAnulacionFactura" formControlName="motivo" rows="4" maxlength="500"
+        placeholder="Escribe el motivo de la anulación" [disabled]="anulandoFactura()"></textarea>
+      @if (motivoAnulacionForm.get('motivo')?.touched && !motivoAnulacionForm.value.motivo?.trim()) {
+      <div class="error-msg">El motivo es obligatorio.</div>
+      }
+      <div class="fel-modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalAnulacion()"
+          [disabled]="anulandoFactura()">Cancelar</button>
+        <button type="submit" class="btn btn-danger" [disabled]="anulandoFactura()">
+          {{ anulandoFactura() ? 'Anulando factura...' : 'Confirmar anulación' }}
+        </button>
+      </div>
+    </form>
+  </div>
+  }
   <h2 class="crud-title">Ventas</h2>
 
   @if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
@@ -9,7 +30,8 @@
     <div class="detail-header">
       <h3 class="card-title">Detalle de venta</h3>
       @if (ventaSeleccionada()) {
-      <button type="button" class="btn-icon btn-close" (click)="cerrarDetalle()" title="Cerrar detalle">✕</button>
+      <button type="button" class="btn-icon btn-close" (click)="cerrarDetalle()"
+        [disabled]="anulando() || anulandoFactura()" title="Cerrar detalle">✕</button>
       }
     </div>
 
@@ -90,9 +112,23 @@
         </button>
         }
         <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar comprobante</button>
-        <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar factura</button>
+        <button type="button" class="btn btn-secondary" (click)="generarFactura()"
+          [disabled]="certificandoFactura() || anulandoFactura()">
+          {{ certificandoFactura() ? 'Generando factura...' : 'Generar factura' }}
+        </button>
         <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar pedido</button>
-        <button type="button" class="btn btn-danger" disabled title="Próximamente">Anular factura</button>
+        <button type="button" class="btn btn-danger" (click)="abrirModalAnulacion()"
+          [disabled]="certificandoFactura() || anulandoFactura()">
+          {{ anulandoFactura() ? 'Anulando factura...' : 'Anular factura' }}
+        </button>
+        @if (certificandoFactura() || anulandoFactura()) {
+        <span class="fel-loading" aria-live="polite">Procesando la factura. Esto puede tardar hasta un minuto...</span>
+        }
+        @if (errorFactura()) {
+        <div class="alert alert-error fel-error" role="alert">{{ errorFactura() }}</div>
+        <button type="button" class="btn btn-secondary" (click)="reintentarFactura()"
+          [disabled]="certificandoFactura() || anulandoFactura()">Reintentar operación FEL</button>
+        }
       </div>
     </div>
     }
@@ -175,11 +211,11 @@
             <th>Fecha</th>
             <th>Cliente</th>
             <th>NIT cliente</th>
-            <th>Usuario</th>
             <th>N.º factura</th>
             <th>Estado</th>
             <th>Total</th>
             <th>Acciones</th>
+            <th>Usuario</th>
           </tr>
         </thead>
         <tbody>
@@ -189,7 +225,6 @@
             <td>{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ item.idCliente | clienteNombre }}</td>
             <td>{{ item.idCliente | clieneNit }}</td>
-            <td>{{ item.idUsuario | userEmail }}</td>
             <td>{{ item.numeroFactura || '—' }}</td>
             <td>{{ item.idEstadoVenta | estadoVentaNombre }}</td>
             <td>{{ item.total | number:'1.2-2' }}</td>
@@ -197,6 +232,7 @@
               <button type="button" class="btn-icon btn-edit" (click)="verDetalle(item.idVenta)"
                 title="Ver detalles">Ver detalles</button>
             </td>
+            <td>{{ item.idUsuario | userEmail }}</td>
           </tr>
           }
         </tbody>

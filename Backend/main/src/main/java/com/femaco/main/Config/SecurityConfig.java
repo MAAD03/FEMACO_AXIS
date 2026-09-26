@@ -51,7 +51,7 @@ public class SecurityConfig {
         ));
 
         config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE"
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
         config.setAllowedHeaders(List.of(
@@ -63,7 +63,8 @@ public class SecurityConfig {
         ));
 
         config.setExposedHeaders(List.of(
-                "Authorization"
+            "Authorization",
+            "Content-Disposition"
         ));
 
         config.setAllowCredentials(true);

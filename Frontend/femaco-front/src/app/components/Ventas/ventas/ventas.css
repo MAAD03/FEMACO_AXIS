@@ -38,6 +38,11 @@
     line-height: 1;
 }
 
+.sale-complete-close:disabled {
+    cursor: wait;
+    opacity: .55;
+}
+
 .sale-complete-icon {
     display: grid;
     width: 4.5rem;
@@ -70,6 +75,12 @@
 
 .sale-complete-actions .btn {
     min-height: 44px;
+}
+
+.fel-loading {
+    margin: 1rem 0 0;
+    color: var(--crud-primary-dark);
+    font-weight: 700;
 }
 
 .form-card,

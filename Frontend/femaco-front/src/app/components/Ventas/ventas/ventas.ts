@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TimeoutError } from 'rxjs';
 import { AreaArticulo as AreaArticuloModel } from '../../../core/models/area-articulo.model';
 import { Articulo, ArticuloFiltro } from '../../../core/models/articulo.model';
 import { Cliente as ClienteModel } from '../../../core/models/cliente.model';
@@ -14,6 +16,7 @@ import { ClienteService } from '../../../core/services/cliente.service';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
 import { UnidadMedidaService } from '../../../core/services/unidad-medida.service';
 import { VentaCreateRequest, VentaDetalleCreateRequest, VentaService } from '../../../core/services/venta.service';
+import { VentaFelService } from '../../../core/services/venta-fel.service';
 
 interface VentaDetalleCarrito extends VentaDetalleCreateRequest {
   codigo?: string;
@@ -44,6 +47,7 @@ export class Ventas implements OnInit {
   private readonly areaArticuloService = inject(AreaArticuloService);
   private readonly unidadMedidaService = inject(UnidadMedidaService);
   private readonly ventaService = inject(VentaService);
+  private readonly ventaFelService = inject(VentaFelService);
   private readonly authService = inject(AuthService);
   private readonly conjuntoMenuService = inject(ConjuntoMenuService);
 
@@ -64,6 +68,9 @@ export class Ventas implements OnInit {
   mensaje = signal('');
   error = signal('');
   ventaCompletada = signal(false);
+  idVentaCompletada = signal<number | null>(null);
+  certificando = signal(false);
+  errorFactura = signal('');
   paginaActual = signal(0);
   totalPaginas = signal(0);
   totalElementos = signal(0);
@@ -203,9 +210,90 @@ export class Ventas implements OnInit {
     const dto: VentaCreateRequest = { idCliente, detalles: this.items().map(item => ({ idArticulo: item.idArticulo, cantidad: item.cantidad, porcDescuentoManual: item.porcDescuentoManual })) };
     this.cargando.set(true); this.error.set(''); this.mensaje.set('');
     this.ventaService.crearConDetalles(dto).subscribe({
-      next: () => { this.mensaje.set('Venta creada correctamente'); this.ventaCompletada.set(true); this.cargando.set(false); },
+      next: venta => {
+        this.mensaje.set('Venta creada correctamente');
+        this.idVentaCompletada.set(venta.idVenta ?? null);
+        this.errorFactura.set('');
+        this.ventaCompletada.set(true);
+        this.cargando.set(false);
+      },
       error: error => { this.error.set(error?.error?.message || error?.error?.mensaje || 'Error al crear la venta'); this.cargando.set(false); },
     });
+  }
+
+  generarFactura(): void {
+    const idVenta = this.idVentaCompletada();
+    if (idVenta == null || this.certificando()) return;
+
+    this.certificando.set(true);
+    this.errorFactura.set('');
+
+    this.ventaFelService.certificar(idVenta).subscribe({
+      next: response => {
+        if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
+          void this.manejarErrorFactura({ error: response.body, status: response.status });
+          return;
+        }
+
+        this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
+        this.certificando.set(false);
+      },
+      error: error => void this.manejarErrorFactura(error),
+    });
+  }
+
+  private descargarFactura(pdf: Blob, contentDisposition: string | null): void {
+    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'factura.pdf';
+    const url = URL.createObjectURL(pdf);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombre;
+    enlace.style.display = 'none';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  private obtenerNombreArchivo(contentDisposition: string | null): string | null {
+    if (!contentDisposition) return null;
+    const codificado = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (codificado) return decodeURIComponent(codificado.replace(/^"|"$/g, ''));
+    return contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null;
+  }
+
+  private async manejarErrorFactura(error: unknown): Promise<void> {
+    this.certificando.set(false);
+
+    if (error instanceof TimeoutError || (error as { name?: string })?.name === 'TimeoutError') {
+      this.errorFactura.set('La operación está tardando más de lo esperado. Puede que se haya completado del lado del servidor. Verifica el estado de la venta antes de reintentar, o inténtalo de nuevo en unos momentos.');
+      return;
+    }
+
+    const respuesta = error as HttpErrorResponse;
+    const payload = await this.leerErrorFel(respuesta?.error ?? error);
+    const origen = payload?.origen ? ` [${payload.origen}]` : '';
+    this.errorFactura.set(`No se pudo generar la factura${origen}: ${payload?.mensaje || 'Error inesperado al certificar la venta.'}`);
+  }
+
+  private async leerErrorFel(error: unknown): Promise<{ origen?: string; mensaje?: string } | null> {
+    if (error instanceof Blob) {
+      try {
+        return JSON.parse(await error.text()) as { origen?: string; mensaje?: string };
+      } catch {
+        return null;
+      }
+    }
+
+    if (typeof error === 'string') {
+      try {
+        return JSON.parse(error) as { origen?: string; mensaje?: string };
+      } catch {
+        return { mensaje: error };
+      }
+    }
+
+    return error && typeof error === 'object' ? error as { origen?: string; mensaje?: string } : null;
   }
 
   cerrarVentaCompletada(): void {
@@ -228,6 +316,9 @@ export class Ventas implements OnInit {
 
   private resetearCompra(): void {
     this.ventaCompletada.set(false);
+    this.idVentaCompletada.set(null);
+    this.certificando.set(false);
+    this.errorFactura.set('');
     this.mensaje.set('');
     this.error.set('');
     this.limpiarCliente();

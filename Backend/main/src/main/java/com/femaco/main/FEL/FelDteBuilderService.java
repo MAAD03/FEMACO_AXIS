@@ -1,20 +1,24 @@
 package com.femaco.main.FEL;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.femaco.main.Config.FEL.FelProperties;
 import com.femaco.main.Entity.Inventario.Articulo;
@@ -159,8 +163,7 @@ public class FelDteBuilderService {
         Articulo articulo = articuloRepository.findById(d.getIdArticulo())
                 .orElseThrow(() -> new IllegalStateException("Artículo no encontrado: " + d.getIdArticulo()));
 
-        BigDecimal precioBruto = d.getCantidad().multiply(d.getPrecioUnitario());
-        BigDecimal descuentoMonto = precioBruto.subtract(d.getSubtotal()).max(BigDecimal.ZERO);
+        BigDecimal descuentoMonto = d.getMontoDescuentoMayorista().add(d.getMontoDescuentoManual());
 
         return new FelItemContexto(articulo.getNombre(), d.getCantidad(), d.getPrecioUnitario(),
                 descuentoMonto, d.getSubtotal());
@@ -186,7 +189,7 @@ public class FelDteBuilderService {
                 return new DatosDocumentoCertificado(nitEmisor, idReceptor, OffsetDateTime.parse(fechaEmisionStr));
         } catch (IllegalStateException e) {
                 throw e;
-        } catch (Exception e) {
+        } catch (ParserConfigurationException | SAXException | IOException | DateTimeParseException e) {
                 throw new IllegalStateException("No se pudo leer el XML certificado de la venta: " + e.getMessage(), e);
                 }
         }

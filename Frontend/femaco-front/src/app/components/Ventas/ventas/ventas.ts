@@ -208,8 +208,14 @@ export class Ventas implements OnInit {
   }
 
   actualizarCantidad(index: number, cantidad: number): void { this.actualizarItem(index, { cantidad: this.normalizarNumero(cantidad) }); }
+  limitarDescuentoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const valor = Number(input.value);
+    if (Number.isFinite(valor) && valor > 100) input.value = '100';
+  }
+
   actualizarDescuentoManual(index: number, descuento: number): void {
-    this.actualizarItem(index, { porcDescuentoManual: this.puedeAplicarDescuento ? this.normalizarNumero(descuento) : 0 });
+    this.actualizarItem(index, { porcDescuentoManual: this.puedeAplicarDescuento ? this.normalizarDescuento(descuento) : 0 });
   }
 
   private actualizarItem(index: number, cambios: Partial<VentaDetalleCarrito>): void {
@@ -470,6 +476,7 @@ export class Ventas implements OnInit {
 
   private obtenerTamano(): number { return Number(this.filtrosForm.value.size) || 9; }
   private normalizarNumero(value: number): number { return Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0; }
+  private normalizarDescuento(value: number): number { return Math.min(100, this.normalizarNumero(value)); }
 
   get f() {
     return this.busquedaClienteForm.controls;

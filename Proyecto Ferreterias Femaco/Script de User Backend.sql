@@ -31,10 +31,12 @@ GRANT INSERT, UPDATE, DELETE ON `femacodb`.`detalle_cotizacion` TO 'femaco_app'@
 
 -- 4. Tablas con EDICIÓN PARCIAL (INSERT, UPDATE - Sin DELETE)
 GRANT INSERT, UPDATE ON `femacodb`.`orden_compra_detalle` TO 'femaco_app'@'%';
+GRANT INSERT, UPDATE ON `femacodb`.`venta_fel` TO 'femaco_app'@'%';
 
 -- 5. Tablas de SOLO INSERCIÓN (INSERT - Sin UPDATE, Sin DELETE)
 GRANT INSERT ON `femacodb`.`ajuste_inventario` TO 'femaco_app'@'%';
 GRANT INSERT ON `femacodb`.`venta_detalle` TO 'femaco_app'@'%';
+
 
 -- =============================================================================
 -- Las siguientes tablas se quedan EXCLUSIVAMENTE con permiso de LECTURA (SELECT)

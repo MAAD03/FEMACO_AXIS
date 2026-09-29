@@ -262,12 +262,6 @@ public class OrdenCompraService {
                                 + ordenCompra.getIdOrdenCompra());
             }
 
-            if (detalleExistente.getIdEstadoOrdenCompra() != null
-                    && Set.of(2L, 4L).contains(detalleExistente.getIdEstadoOrdenCompra())) {
-                throw new BusinessException(
-                        "El detalle con ID " + idDetalle + " ya está en estado final y no puede modificarse");
-            }
-
             Long nuevoEstadoDetalle = detalleDto.getIdEstadoOrdenCompra();
             if (nuevoEstadoDetalle == null) {
                 nuevoEstadoDetalle = detalleExistente.getIdEstadoOrdenCompra() != null
@@ -278,17 +272,6 @@ public class OrdenCompraService {
             if (Long.valueOf(3L).equals(nuevoEstadoDetalle)) {
                 throw new BusinessException(
                         "El detalle con ID " + idDetalle + " no puede quedar en estado 3 (Parcialmente completada)");
-            }
-
-            if (detalleDto.getIdArticulo() != null) {
-                Articulo articulo = articuloRepository.findById(detalleDto.getIdArticulo())
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Artículo no encontrado con ID: " + detalleDto.getIdArticulo()));
-
-                if (articulo.getIdEstadoArticulo() == null || !ESTADO_PENDIENTE.equals(articulo.getIdEstadoArticulo())) {
-                    throw new BusinessException(
-                            "El artículo con ID " + detalleDto.getIdArticulo() + " no está activo");
-                }
             }
 
             BigDecimal cantidad = detalleDto.getCantidad();
@@ -310,16 +293,39 @@ public class OrdenCompraService {
             cantidad = cantidad.setScale(2, RoundingMode.HALF_UP);
             precioUnitario = precioUnitario.setScale(2, RoundingMode.HALF_UP);
 
-            boolean cambioCantidadPrecio = detalleExistente.getCantidad() == null
+                boolean detalleFinalizado = detalleExistente.getIdEstadoOrdenCompra() != null
+                    && Set.of(2L, 4L).contains(detalleExistente.getIdEstadoOrdenCompra());
+                if (detalleFinalizado) {
+                boolean cambioArticulo = detalleDto.getIdArticulo() != null
+                    && !Objects.equals(detalleDto.getIdArticulo(), detalleExistente.getIdArticulo());
+                boolean cambioCantidadPrecio = detalleExistente.getCantidad() == null
                     || detalleExistente.getPrecioUnitario() == null
                     || detalleExistente.getCantidad().compareTo(cantidad) != 0
                     || detalleExistente.getPrecioUnitario().compareTo(precioUnitario) != 0;
+                boolean cambioEstado = detalleDto.getIdEstadoOrdenCompra() != null
+                    && !Objects.equals(detalleDto.getIdEstadoOrdenCompra(), detalleExistente.getIdEstadoOrdenCompra());
 
-            if (detalleExistente.getIdEstadoOrdenCompra() != null
-                    && Set.of(2L, 4L).contains(detalleExistente.getIdEstadoOrdenCompra())) {
-                throw new BusinessException(
-                        "El detalle con ID " + idDetalle + " ya está Completado o Cancelado y no puede modificarse");
+                if (cambioArticulo || cambioCantidadPrecio || cambioEstado) {
+                    throw new BusinessException(
+                        "El detalle con ID " + idDetalle + " ya está en estado final y no puede modificarse");
+                }
+
+                BigDecimal totalDetalle = cantidad.multiply(precioUnitario).setScale(2, RoundingMode.HALF_UP);
+                totalOrden = totalOrden.add(
+                    detalleExistente.getTotal() != null ? detalleExistente.getTotal() : totalDetalle);
+                continue;
+                }
+
+                if (detalleDto.getIdArticulo() != null) {
+                Articulo articulo = articuloRepository.findById(detalleDto.getIdArticulo())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                        "Artículo no encontrado con ID: " + detalleDto.getIdArticulo()));
+
+                if (articulo.getIdEstadoArticulo() == null || !ESTADO_PENDIENTE.equals(articulo.getIdEstadoArticulo())) {
+                    throw new BusinessException(
+                        "El artículo con ID " + detalleDto.getIdArticulo() + " no está activo");
             }
+                }
 
             detalleExistente.setIdArticulo(detalleDto.getIdArticulo() != null
                     ? detalleDto.getIdArticulo()
@@ -333,11 +339,7 @@ public class OrdenCompraService {
             detalleExistente.setFechaModif(ahora);
             detalleExistente.setUsuarioModif(usuarioActual);
 
-            if (cambioCantidadPrecio) {
-                totalOrden = totalOrden.add(totalDetalle);
-            } else {
-                totalOrden = totalOrden.add(detalleExistente.getTotal() != null ? detalleExistente.getTotal() : totalDetalle);
-            }
+            totalOrden = totalOrden.add(totalDetalle);
 
             detallesActualizados.add(detalleExistente);
         }

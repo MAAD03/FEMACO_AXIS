@@ -2,8 +2,8 @@
   @if (mostrandoFormularioPedido()) {
   <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="pedidoFormTitle">
     <div class="sale-complete-panel quote-form-panel">
-      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
-        [disabled]="creandoPedido()" (click)="cerrarFormularioPedido()">×</button>
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar" [disabled]="creandoPedido()"
+        (click)="cerrarFormularioPedido()">×</button>
       <h2 id="pedidoFormTitle">Datos del pedido</h2>
       <p>Confirma los datos del pedido para la venta seleccionada.</p>
       @if (errorPedido()) { <div class="alert alert-error" role="alert">{{ errorPedido() }}</div> }
@@ -17,24 +17,53 @@
           <input id="pedidoFechaEntrega" type="date" formControlName="fechaEntrega" class="form-control" />
         </div>
         <div class="form-group">
-          <label for="pedidoDireccionEntrega">Dirección de entrega</label>
+          <label for="pedidoDireccionEntrega">Dirección de entrega *</label>
           <textarea id="pedidoDireccionEntrega" formControlName="direccionEntrega" class="form-control" rows="2"
             maxlength="1000" placeholder="Ingrese la dirección de entrega"></textarea>
+          @if (pedidoForm.get('direccionEntrega')?.touched && pedidoForm.get('direccionEntrega')?.invalid) {
+          <div class="error-msg">La dirección de entrega es obligatoria</div>
+          }
         </div>
         <div class="form-group">
-          <label for="pedidoNumeroEntrega">Número de entrega</label>
+          <label for="pedidoNumeroEntrega">Número de entrega *</label>
           <input id="pedidoNumeroEntrega" type="text" formControlName="numeroEntrega" class="form-control"
             maxlength="50" placeholder="Ingrese el número de entrega" />
+          @if (pedidoForm.get('numeroEntrega')?.touched && pedidoForm.get('numeroEntrega')?.invalid) {
+          <div class="error-msg">El número de entrega es obligatorio</div>
+          }
         </div>
         <div class="form-group">
           <label for="pedidoNotasEntrega">Notas de entrega</label>
           <textarea id="pedidoNotasEntrega" formControlName="notasEntrega" class="form-control" rows="3"
             maxlength="1000" placeholder="Indicaciones adicionales"></textarea>
         </div>
+        <div class="form-group pedido-detalles-form-group">
+          <label>Artículos del pedido</label>
+          @if (detallesPedido().length === 0) { <p class="empty">La venta no tiene artículos registrados.</p> }
+          @else {
+          <div class="pedido-detalles-grid">
+            <div class="pedido-detalles-grid-header"><span>ID artículo</span><span>Artículo</span><span>Cantidad</span>
+            </div>
+            @for (item of detallesPedido(); track item.detalle.idVentaDetalle ?? item.detalle.idArticulo) {
+            <div class="pedido-detalle-row">
+              <span>{{ item.detalle.idArticulo ?? '—' }}</span>
+              <span>{{ item.detalle.idArticulo | articuloNombre }}</span>
+              <input type="number" min="0" [max]="item.detalle.cantidad" step="0.01" class="form-control"
+                [value]="item.cantidad" (input)="actualizarCantidadPedido($index, $event)" />
+            </div>
+            }
+          </div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="pedidoProducto">Producto de pedido</label>
+          <textarea id="pedidoProducto" formControlName="productoDePedido" class="form-control pedido-producto-text"
+            rows="4" readonly></textarea>
+        </div>
         <div class="quote-form-actions">
           <button type="button" class="btn btn-secondary" [disabled]="creandoPedido()"
             (click)="cerrarFormularioPedido()">Cancelar</button>
-          <button type="submit" class="btn btn-primary" [disabled]="creandoPedido()">
+          <button type="submit" class="btn btn-primary" [disabled]="creandoPedido() || pedidoForm.invalid">
             {{ creandoPedido() ? 'Guardando...' : 'Crear pedido' }}
           </button>
         </div>

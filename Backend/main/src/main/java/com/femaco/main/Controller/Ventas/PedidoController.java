@@ -4,7 +4,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.PedidoFiltroDTO;
 import com.femaco.main.Entity.Ventas.Pedido;
+import com.femaco.main.Service.Ventas.PedidoPdfService;
 import com.femaco.main.Service.Ventas.PedidoService;
 
 @RestController
@@ -23,17 +28,28 @@ import com.femaco.main.Service.Ventas.PedidoService;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final PedidoPdfService pedidoPdfService;
 
-    public PedidoController(PedidoService pedidoService) {
+    public PedidoController(PedidoService pedidoService, PedidoPdfService pedidoPdfService) {
         this.pedidoService = pedidoService;
+        this.pedidoPdfService = pedidoPdfService;
     }
 
     @GetMapping("/buscar")
     @PreAuthorize("hasAuthority('PERMISO_PEDIDOS_ACCESO')")
     public ResponseEntity<Page<Pedido>> buscar(
-            @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
+            PedidoFiltroDTO filtro,
+            @PageableDefault(size = 5, sort = "fechaCreacion", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        return ResponseEntity.ok(pedidoService.buscarTodos(pageable));
+        return ResponseEntity.ok(pedidoService.buscarTodos(filtro, pageable));
+    }
+
+    @GetMapping("/buscar-pendientes")
+    @PreAuthorize("hasAuthority('PERMISO_PEDIDOS_ACCESO')")
+    public ResponseEntity<Page<Pedido>> buscarPendientes(
+            @PageableDefault(size = 5, sort = "fechaCreacion", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return ResponseEntity.ok(pedidoService.buscarPendientes(pageable));
     }
 
     @PostMapping("/crear")
@@ -50,6 +66,22 @@ public class PedidoController {
         return pedidoService.actualizar(idPedido, pedido)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/listado-entrega/{idPedido}")
+    @PreAuthorize("hasAuthority('PERMISO_PEDIDOS_ACCESO')")
+    public ResponseEntity<byte[]> generarListadoEntrega(@PathVariable Long idPedido) {
+        byte[] pdf = pedidoPdfService.generarPdf(idPedido);
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename("listado-entrega-pedido-" + idPedido + ".pdf")
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(disposition);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 /*
     @DeleteMapping("/eliminar/{idPedido}")

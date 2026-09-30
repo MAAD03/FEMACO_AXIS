@@ -1,11 +1,201 @@
 .pedido-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  gap: 1rem 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .form-group-wide { grid-column: 1 / -1; }
+
+.pedido-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pedido-form-header .card-title { margin-bottom: 0.5rem; }
+
+.pedido-form-header .form-hint { margin: 0; }
+
+.pedido-id {
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: var(--crud-gray-100);
+  color: var(--crud-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.form-section-heading {
+  grid-column: 1 / -1;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--crud-gray-300);
+  color: var(--crud-primary-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.pedido-form-actions {
+  justify-content: flex-start;
+  padding-top: 1rem;
+  border-top: 1px solid var(--crud-gray-200);
+}
+
+.pedido-form .form-control:disabled {
+  opacity: 0.82;
+  background: var(--crud-gray-100);
+  color: var(--crud-text);
+}
+
+.pedidos-semana-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pedidos-semana-header .card-title { margin-bottom: 0.5rem; }
+
+.semana-rango {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: var(--crud-gray-100);
+  color: var(--crud-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pedidos-semana-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(220px, 1fr));
+  gap: 0.75rem;
+  min-width: 1550px;
+  padding-bottom: 0.25rem;
+}
+
+.pedidos-semana-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+}
+
+.dia-pedidos {
+  min-height: 220px;
+  padding: 1rem;
+  border: 1px solid var(--crud-gray-300);
+  border-radius: 8px;
+  background: var(--crud-gray-100);
+}
+
+.dia-pedidos.dia-hoy {
+  border-color: var(--crud-primary);
+  box-shadow: inset 0 3px 0 var(--crud-primary);
+}
+
+.dia-pedidos-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--crud-gray-300);
+  color: var(--crud-primary-dark);
+  font-size: 0.82rem;
+}
+
+.dia-pedidos-header span {
+  color: var(--crud-text);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.dia-pedidos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.pedido-dashboard-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 58px;
+  padding: 0.7rem;
+  border: 1px solid var(--crud-primary-light);
+  border-radius: 6px;
+  background: var(--crud-white);
+  color: var(--crud-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.pedido-dashboard-item:hover,
+.pedido-dashboard-item:focus-visible {
+  border-color: var(--crud-primary);
+  background: var(--crud-bg-light);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.pedido-dashboard-id {
+  color: var(--crud-primary-dark);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pedido-dashboard-fecha {
+  width: 100%;
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dia-vacio {
+  color: var(--crud-text);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.filtros-card {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--crud-gray-200);
+}
+
+.listado-title {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom-width: 1px;
+}
+
+.pedidos-listado-card {
+  padding: 1.25rem;
+}
+
+.filtros-card .card-title {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+}
+
+.filtros-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.filtros-form .form-row { display: contents; }
+
+.filtros-form .form-actions {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+}
+
+.filtros-card .form-control { padding: 0.5rem 0.7rem; }
 
 .form-hint {
   margin: -0.5rem 0 1.25rem;
@@ -24,6 +214,70 @@
   color: var(--crud-primary-dark);
   font-size: 0.9rem;
 }
+
+.pedido-usuarios {
+  display: flex;
+  flex-basis: 100%;
+  gap: 0.75rem 1.5rem;
+  color: inherit;
+  font-size: inherit;
+}
+
+.venta-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(44, 62, 45, 0.48);
+}
+
+.venta-modal {
+  width: min(900px, 100%);
+  max-height: min(720px, 90vh);
+  overflow-y: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--crud-gray-200);
+  border-radius: var(--crud-radius);
+  background: var(--crud-white);
+  box-shadow: 0 12px 36px rgba(44, 62, 45, 0.24);
+}
+
+.venta-consultada-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.venta-consultada-header .card-title { margin-bottom: 0; }
+
+.venta-modal-close {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--crud-gray-200);
+  color: var(--crud-primary-dark);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.venta-modal-close:hover,
+.venta-modal-close:focus-visible {
+  background: var(--crud-primary-light);
+  outline: 2px solid var(--crud-primary);
+  outline-offset: 2px;
+}
+
+.venta-detalles-table { min-width: 620px; }
 
 .table-card .crud-table { min-width: 980px; }
 
@@ -84,9 +338,21 @@
 @media (max-width: 768px) {
   .pedido-form-grid { grid-template-columns: 1fr; }
 
+  .pedido-form-header { flex-direction: column; }
+
+  .pedidos-semana-header { flex-direction: column; }
+
+  .filtros-form { grid-template-columns: 1fr 1fr; }
+
   .pagination { align-items: stretch; flex-direction: column; }
 
   .pagination-controls { justify-content: stretch; }
 
   .pagination-controls .btn { flex: 1; }
+
+  .venta-modal { padding: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .filtros-form { grid-template-columns: 1fr; }
 }

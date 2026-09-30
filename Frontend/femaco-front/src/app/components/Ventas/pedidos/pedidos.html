@@ -3,13 +3,58 @@
     @if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
     @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
 
-    <div class="card form-card">
-        <h3 class="card-title">Editar pedido</h3>
-        @if (!editando) { <p class="form-hint">Selecciona un pedido del listado para cargar sus datos.</p> }
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form">
+    <div class="card pedidos-semana-card">
+        <div class="pedidos-semana-header">
+            <div>
+                <h3 class="card-title">Pedidos pendientes por fecha de entrega</h3>
+                <p class="form-hint">Selecciona un pedido para consultar sus datos.</p>
+            </div>
+            <span class="semana-rango">Hoy y los próximos 6 días</span>
+        </div>
+        @if (cargandoDashboard()) {
+        <p class="loading">Cargando pedidos pendientes...</p>
+        } @else {
+        <div class="pedidos-semana-scroll">
+            <div class="pedidos-semana-grid">
+                @for (dia of diasDashboard(); track dia.clave) {
+                <section class="dia-pedidos" [class.dia-hoy]="dia.clave === diasDashboard()[0].clave">
+                    <div class="dia-pedidos-header">
+                        <strong>{{ dia.nombre | titlecase }}</strong>
+                        <span>{{ dia.fecha }}</span>
+                    </div>
+                    <div class="dia-pedidos-lista">
+                        @for (pedido of dia.pedidos; track pedido.idPedido) {
+                        <button type="button" class="pedido-dashboard-item" (click)="verDetalles(pedido)"
+                            [title]="'Ver detalles del pedido #' + pedido.idPedido">
+                            <span class="pedido-dashboard-id">Pedido #{{ pedido.idPedido }}</span>
+                            <span class="pedido-dashboard-fecha">Entrega: {{ pedido.fechaEntrega | date:'dd/MM/yyyy'
+                                }}</span>
+                        </button>
+                        } @empty {
+                        <span class="dia-vacio">Sin pedidos</span>
+                        }
+                    </div>
+                </section>
+                }
+            </div>
+        </div>
+        }
+    </div>
+
+    <div class="card form-card pedido-card">
+        <div class="pedido-form-header">
+            <div>
+                <h3 class="card-title">Detalle del pedido</h3>
+                @if (!editando) { <p class="form-hint">Selecciona un pedido del listado para consultar sus datos.</p> }
+            </div>
+            @if (pedidoEditando(); as pedido) { <span class="pedido-id">Pedido #{{ pedido.idPedido }}</span> }
+        </div>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="crud-form pedido-form">
+            <div class="form-section-heading">Datos de entrega</div>
             <div class="pedido-form-grid">
                 <div class="form-group"><label for="fechaEntrega">Fecha de entrega *</label><input id="fechaEntrega"
-                        type="date" formControlName="fechaEntrega" class="form-control" />@if (f['fechaEntrega'].touched
+                        type="date" formControlName="fechaEntrega" class="form-control" />@if
+                    (f['fechaEntrega'].touched
                     && f['fechaEntrega'].invalid) {
                     <div class="error-msg">La fecha de entrega es obligatoria</div> }
                 </div>
@@ -21,8 +66,12 @@
                     (f['direccionEntrega'].touched && f['direccionEntrega'].invalid) { <div class="error-msg">La
                         dirección es obligatoria</div> }</div>
                 <div class="form-group form-group-wide"><label for="notasEntrega">Notas de entrega</label><textarea
-                        id="notasEntrega" formControlName="notasEntrega" class="form-control" rows="3"
+                        id="notasEntrega" formControlName="notasEntrega" class="form-control" rows="2"
                         maxlength="500"></textarea></div>
+                <div class="form-section-heading form-group-wide">Información del pedido</div>
+                <div class="form-group form-group-wide"><label for="productoDePedido">Producto de
+                        pedido</label><textarea id="productoDePedido" formControlName="productoDePedido"
+                        class="form-control" rows="2" readonly></textarea></div>
                 <div class="form-group"><label for="idEstadoPedido">Estado *</label><select id="idEstadoPedido"
                         formControlName="idEstadoPedido" class="form-control">
                         <option [ngValue]="null">Seleccione estado</option>@for (estado of estados(); track
@@ -33,37 +82,53 @@
                 </div>
             </div>
             @if (pedidoEditando(); as pedido) {
-            <div class="pedido-metadata"><span>ID pedido: <strong>{{ pedido.idPedido }}</strong></span><span>Estado
+            <div class="pedido-metadata"><span>ID pedido: <strong>{{ pedido.idPedido }}</strong></span><span>ID venta:
+                    <strong>{{ pedido.idVenta ?? '—' }}</strong></span><span>Estado
                     actual: <strong>{{ pedido.idEstadoPedido | estadoPedidoNombre }}</strong></span><span>Creación:
                     <strong>{{ pedido.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</strong></span><span>Última
-                    modificación: <strong>{{ pedido.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong></span></div>
+                    modificación: <strong>{{ pedido.fechaModif | date:'dd/MM/yyyy HH:mm' }}</strong></span>
+                <div class="pedido-usuarios"><span>Usuario creación: <strong>{{ pedido.usuarioCreacion | userEmail
+                            }}</strong></span><span>Usuario modificación: <strong>{{ pedido.usuarioModif | userEmail
+                            }}</strong></span></div>
+            </div>
             }
-            <div class="form-actions"><button type="submit" class="btn btn-primary"
-                    [disabled]="cargando() || !editando || form.invalid">Actualizar</button>@if (editando) { <button
-                    type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button> }</div>
+            <div class="form-actions pedido-form-actions">
+                @if (modoEdicion) { <button type="submit" class="btn btn-primary"
+                    [disabled]="cargando() || form.invalid">Actualizar pedido</button> }
+                @if (editando && !modoEdicion && puedeEditar) { <button type="button" class="btn btn-primary"
+                    (click)="editarPedido()">Editar pedido</button> }
+                @if (pedidoEditando()?.idVenta != null) { <button type="button" class="btn btn-secondary"
+                    (click)="verVentaActual()" [disabled]="cargandoVenta()">Ver venta asociada</button> }
+                <button type="button" class="btn btn-secondary" (click)="imprimirListado()"
+                    [disabled]="generandoListado()">{{ generandoListado() ? 'Generando...' : 'Imprimir listado'
+                    }}</button>
+                @if (editando) { <button type="button" class="btn btn-secondary" (click)="cancelar()">Cerrar</button> }
+            </div>
         </form>
     </div>
 
     <div class="card table-card">
-        <h3 class="card-title">Listado de pedidos</h3>
-        @if (cargando() && lista().length === 0) { <p class="loading">Cargando...</p> } @else if (lista().length === 0)
-        { <p class="empty">No hay pedidos registrados.</p> } @else {
+        <h3 class="card-title">Pedidos pendientes de entrega</h3>
+        @if (errorPendientes()) { <div class="alert alert-error">{{ errorPendientes() }}</div> }
+        @if (cargandoPendientes() && pendientes().length === 0) { <p class="loading">Cargando...</p> } @else if
+        (pendientes().length === 0)
+        { <p class="empty">No hay pedidos pendientes de entrega.</p> } @else {
         <div class="table-responsive">
             <table class="crud-table">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Venta</th>
+                        <th>ID venta</th>
                         <th>Entrega</th>
                         <th>Dirección</th>
-                        <th>N.º entrega</th>
+                        <th>Numeros de entrega</th>
                         <th>Estado</th>
                         <th>Creación</th>
                         <th class="acciones">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @for (item of lista(); track item.idPedido) { <tr>
+                    @for (item of pendientes(); track item.idPedido) { <tr>
                         <td>{{ item.idPedido }}</td>
                         <td>{{ item.idVenta ?? '—' }}</td>
                         <td>{{ item.fechaEntrega | date:'dd/MM/yyyy' }}</td>
@@ -71,36 +136,215 @@
                         <td>{{ item.numeroEntrega || '—' }}</td>
                         <td>{{ item.idEstadoPedido | estadoPedidoNombre }}</td>
                         <td>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-                        <td class="acciones">@if (puedeEditar) { <button type="button" class="btn-icon btn-edit"
-                                (click)="editar(item)" title="Editar pedido">Editar</button> }</td>
+                        <td class="acciones"><button type="button" class="btn-icon" (click)="verDetalles(item)"
+                                title="Ver detalles del pedido">Ver detalles</button></td>
                     </tr> }
                 </tbody>
             </table>
         </div>
         <div class="pagination">
             <div class="pagination-meta">
-                <span class="results-summary">Mostrando {{ lista().length }} de {{ totalElementos() }} pedidos</span>
+                <span class="results-summary">Mostrando {{ pendientes().length }} de {{ totalElementosPendientes() }}
+                    pedidos</span>
                 <label class="page-size-selector">
                     <span>Elementos</span>
-                    <select class="form-control compact-select" [value]="tamanioPagina()"
-                        (change)="onTamanioPaginaChange($event)">
+                    <select class="form-control compact-select" [value]="tamanioPaginaPendientes()"
+                        (change)="onTamanioPaginaPendientesChange($event)">
                         @for (size of tamanosPagina; track size) { <option [value]="size">{{ size }}</option> }
                     </select>
                 </label>
             </div>
             <div class="pagination-controls">
-                <button type="button" class="btn btn-secondary" (click)="irAPagina(0)"
-                    [disabled]="paginaActual() === 0">Primera</button>
-                <button type="button" class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
-                    [disabled]="paginaActual() === 0">Anterior</button>
-                <span class="page-indicator">Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} / {{
-                    totalPaginas() }}</span>
-                <button type="button" class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
-                    [disabled]="totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1">Siguiente</button>
-                <button type="button" class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)"
-                    [disabled]="totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1">Última</button>
+                <button type="button" class="btn btn-secondary" (click)="irAPaginaPendientes(0)"
+                    [disabled]="cargandoPendientes() || paginaPendientes() === 0">Primera</button>
+                <button type="button" class="btn btn-secondary" (click)="irAPaginaPendientes(paginaPendientes() - 1)"
+                    [disabled]="cargandoPendientes() || paginaPendientes() === 0">Anterior</button>
+                <span class="page-indicator">Página {{ totalPaginasPendientes() === 0 ? 0 : paginaPendientes() + 1 }} /
+                    {{
+                    totalPaginasPendientes() }}</span>
+                <button type="button" class="btn btn-secondary" (click)="irAPaginaPendientes(paginaPendientes() + 1)"
+                    [disabled]="cargandoPendientes() || totalPaginasPendientes() === 0 || paginaPendientes() >= totalPaginasPendientes() - 1">Siguiente</button>
+                <button type="button" class="btn btn-secondary"
+                    (click)="irAPaginaPendientes(totalPaginasPendientes() - 1)"
+                    [disabled]="cargandoPendientes() || totalPaginasPendientes() === 0 || paginaPendientes() >= totalPaginasPendientes() - 1">Última</button>
             </div>
         </div>
         }
+    </div>
+
+    @if (cargandoVenta()) {
+    <div class="venta-modal-backdrop">
+        <div class="venta-modal" role="dialog" aria-modal="true" aria-label="Consultando venta">
+            <p class="loading">Consultando venta...</p>
+        </div>
+    </div>
+    }
+    @if (errorVenta()) { <div class="alert alert-error">{{ errorVenta() }}</div> }
+    @if (ventaConsultada(); as consulta) {
+    <div class="venta-modal-backdrop" (click)="cerrarVentaConsultada()">
+        <div class="venta-modal" role="dialog" aria-modal="true" aria-label="Venta asociada"
+            (click)="$event.stopPropagation()">
+            <div class="venta-consultada-header">
+                <h3 class="card-title">Venta asociada #{{ consulta.venta.idVenta }}</h3>
+                <button type="button" class="venta-modal-close" (click)="cerrarVentaConsultada()"
+                    aria-label="Cerrar venta asociada" title="Cerrar">&times;</button>
+            </div>
+            <div class="pedido-metadata">
+                <span>Fecha: <strong>{{ consulta.venta.fecha | date:'dd/MM/yyyy' }}</strong></span>
+                <span>Factura: <strong>{{ consulta.venta.numeroFactura || '—' }}</strong></span>
+                <span>NIT cliente: <strong>{{ consulta.venta.idCliente | clieneNit }}</strong></span>
+                <span>Estado: <strong>{{ consulta.estadoDocumento || '—' }}</strong></span>
+                <span>Total: <strong>{{ consulta.venta.total ?? 0 | number:'1.2-2' }}</strong></span>
+            </div>
+            @if (consulta.detalles.length) {
+            <div class="table-responsive">
+                <table class="crud-table venta-detalles-table">
+                    <thead>
+                        <tr>
+                            <th>ID artículo</th>
+                            <th>Artículo</th>
+                            <th>Cantidad</th>
+                            <th>Precio unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (detalle of consulta.detalles; track detalle.idVentaDetalle) {
+                        <tr>
+                            <td>{{ detalle.idArticulo ?? '—' }}</td>
+                            <td>{{ detalle.idArticulo | articuloNombre }}</td>
+                            <td>{{ detalle.cantidad }}</td>
+                            <td>{{ detalle.precioUnitario | number:'1.2-2' }}</td>
+                            <td>{{ detalle.subtotal | number:'1.2-2' }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            } @else { <p class="empty">La venta no tiene detalles registrados.</p> }
+        </div>
+    </div>
+    }
+
+    <h3 class="card-title listado-title">Listado de todos los pedidos</h3>
+    <div class="card pedidos-listado-card">
+        <div class="filtros-card">
+            <h3 class="card-title">Filtros de búsqueda</h3>
+            <form [formGroup]="filtrosForm" (ngSubmit)="aplicarFiltros()" class="crud-form filtros-form">
+                <div class="form-row">
+                    <div class="form-group"><label for="filtroQ">Búsqueda general</label><input id="filtroQ" type="text"
+                            formControlName="q" class="form-control"
+                            placeholder="Dirección, notas, producto o entrega" />
+                    </div>
+                    <div class="form-group"><label for="filtroEstado">Estado</label><select id="filtroEstado"
+                            formControlName="idEstadoPedido" class="form-control">
+                            <option [ngValue]="null">Todos</option>
+                            @for (estado of estados(); track estado.idEstadoPedido) { <option
+                                [ngValue]="estado.idEstadoPedido">{{ estado.nombre }}</option> }
+                        </select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="filtroNumeroEntrega">Número de entrega</label><input
+                            id="filtroNumeroEntrega" type="text" formControlName="numeroEntrega" class="form-control" />
+                    </div>
+                    <div class="form-group"><label for="filtroNumeroFactura">Número de factura</label><input
+                            id="filtroNumeroFactura" type="text" formControlName="numeroFactura" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="filtroNitCliente">NIT del cliente</label><input
+                            id="filtroNitCliente" type="text" formControlName="nitCliente" class="form-control" /></div>
+                    <div class="form-group"><label for="filtroIdPedido">ID pedido</label><input id="filtroIdPedido"
+                            type="number" min="1" formControlName="idPedido" class="form-control" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="filtroIdVenta">ID venta</label><input id="filtroIdVenta"
+                            type="number" min="1" formControlName="idVenta" class="form-control" /></div>
+                    <div class="form-group"><label for="fechaEntregaDesde">Entrega desde</label><input
+                            id="fechaEntregaDesde" type="date" formControlName="fechaEntregaDesde"
+                            class="form-control" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="fechaEntregaHasta">Entrega hasta</label><input
+                            id="fechaEntregaHasta" type="date" formControlName="fechaEntregaHasta"
+                            class="form-control" />
+                    </div>
+                    <div class="form-group"><label for="fechaCreacionDesde">Creación desde</label><input
+                            id="fechaCreacionDesde" type="date" formControlName="fechaCreacionDesde"
+                            class="form-control" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="fechaCreacionHasta">Creación hasta</label><input
+                            id="fechaCreacionHasta" type="date" formControlName="fechaCreacionHasta"
+                            class="form-control" />
+                    </div>
+                    <div class="form-actions"><button type="submit" class="btn btn-primary">Buscar</button><button
+                            type="button" class="btn btn-secondary" (click)="limpiarFiltros()">Limpiar</button></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            @if (cargando() && lista().length === 0) { <p class="loading">Cargando...</p> } @else if (lista().length ===
+            0)
+            { <p class="empty">No hay pedidos registrados.</p> } @else {
+            <div class="table-responsive">
+                <table class="crud-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ID venta</th>
+                            <th>Entrega</th>
+                            <th>Dirección</th>
+                            <th>Numeros de entrega</th>
+                            <th>Estado</th>
+                            <th>Creación</th>
+                            <th class="acciones">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of lista(); track item.idPedido) { <tr>
+                            <td>{{ item.idPedido }}</td>
+                            <td>{{ item.idVenta ?? '—' }}</td>
+                            <td>{{ item.fechaEntrega | date:'dd/MM/yyyy' }}</td>
+                            <td>{{ item.direccionEntrega || '—' }}</td>
+                            <td>{{ item.numeroEntrega || '—' }}</td>
+                            <td>{{ item.idEstadoPedido | estadoPedidoNombre }}</td>
+                            <td>{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                            <td class="acciones"><button type="button" class="btn-icon" (click)="verDetalles(item)"
+                                    title="Ver detalles del pedido">Ver detalles</button></td>
+                        </tr> }
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="pagination-meta">
+                    <span class="results-summary">Mostrando {{ lista().length }} de {{ totalElementos() }}
+                        pedidos</span>
+                    <label class="page-size-selector">
+                        <span>Elementos</span>
+                        <select class="form-control compact-select" [value]="tamanioPagina()"
+                            (change)="onTamanioPaginaChange($event)">
+                            @for (size of tamanosPagina; track size) { <option [value]="size">{{ size }}</option> }
+                        </select>
+                    </label>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button" class="btn btn-secondary" (click)="irAPagina(0)"
+                        [disabled]="cargando() || paginaActual() === 0">Primera</button>
+                    <button type="button" class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
+                        [disabled]="cargando() || paginaActual() === 0">Anterior</button>
+                    <span class="page-indicator">Página {{ totalPaginas() === 0 ? 0 : paginaActual() + 1 }} / {{
+                        totalPaginas() }}</span>
+                    <button type="button" class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
+                        [disabled]="cargando() || totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1">Siguiente</button>
+                    <button type="button" class="btn btn-secondary" (click)="irAPagina(totalPaginas() - 1)"
+                        [disabled]="cargando() || totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1">Última</button>
+                </div>
+            </div>
+            }
+        </div>
     </div>
 </div>

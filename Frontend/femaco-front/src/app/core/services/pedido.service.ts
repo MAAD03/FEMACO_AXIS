@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { PagePedido, Pedido } from '../models/pedido.model';
+import { PagePedido, Pedido, PedidoFiltros } from '../models/pedido.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,9 +12,25 @@ export class PedidoService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly api = `${this.baseUrl}/pedido`;
 
-  buscarPaginado(
+  buscarPaginado(filtros: PedidoFiltros = {}): Observable<PagePedido> {
+    const params = Object.entries({
+      page: 0,
+      size: 20,
+      sort: 'fechaCreacion,desc',
+      ...filtros,
+    }).reduce((resultado, [clave, valor]) => {
+      if (valor !== undefined && valor !== null && valor !== '') {
+        resultado = resultado.set(clave, String(valor));
+      }
+      return resultado;
+    }, new HttpParams());
+
+    return this.http.get<PagePedido>(`${this.api}/buscar`, { params });
+  }
+
+  buscarPendientes(
     page = 0,
-    size = 20,
+    size = 10,
     sort = 'fechaCreacion',
     direction: 'asc' | 'desc' = 'desc'
   ): Observable<PagePedido> {
@@ -23,7 +39,7 @@ export class PedidoService {
       .set('size', size.toString())
       .set('sort', `${sort},${direction}`);
 
-    return this.http.get<PagePedido>(`${this.api}/buscar`, { params });
+    return this.http.get<PagePedido>(`${this.api}/buscar-pendientes`, { params });
   }
 
   crear(pedido: Pedido): Observable<Pedido> {
@@ -32,5 +48,12 @@ export class PedidoService {
 
   actualizar(idPedido: number, datos: Pedido): Observable<Pedido> {
     return this.http.put<Pedido>(`${this.api}/editar/${idPedido}`, datos);
+  }
+
+  generarListadoEntrega(idPedido: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.api}/listado-entrega/${idPedido}`, {
+      observe: 'response',
+      responseType: 'blob',
+    });
   }
 }

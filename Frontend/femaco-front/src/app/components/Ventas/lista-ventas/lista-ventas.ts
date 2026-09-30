@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TimeoutError } from 'rxjs';
 import { EstadoVenta } from '../../../core/models/catalogo-models/estado-venta.model';
 import { Pedido } from '../../../core/models/pedido.model';
 import { Venta, VentaFiltro } from '../../../core/models/venta.model';
+import { VentaDetalle } from '../../../core/models/venta-detalle.model';
 import { ArticuloNombrePipe } from '../../../core/pipes/articulo-nombre-pipe-pipe';
 import { ClieneNitPipe } from '../../../core/pipes/cliene-nit-pipe';
 import { ClienteNombrePipe } from '../../../core/pipes/cliente-nombre-pipe';
@@ -19,6 +20,11 @@ import { PedidoService } from '../../../core/services/pedido.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { VentaConDetalles, VentaService } from '../../../core/services/venta.service';
 import { VentaFelService } from '../../../core/services/venta-fel.service';
+
+interface DetallePedidoEditable {
+  detalle: VentaDetalle;
+  cantidad: number;
+}
 
 @Component({
   selector: 'app-lista-ventas',
@@ -61,6 +67,7 @@ export class ListaVentas implements OnInit {
   mostrandoFormularioPedido = signal(false);
   creandoPedido = signal(false);
   errorPedido = signal('');
+  detallesPedido = signal<DetallePedidoEditable[]>([]);
   errorFactura = signal('');
   errorComprobante = signal('');
   mostrarModalAnulacion = signal(false);
@@ -107,9 +114,10 @@ export class ListaVentas implements OnInit {
     this.pedidoForm = this.fb.group({
       idVenta: [{ value: null, disabled: true }],
       fechaEntrega: [''],
-      direccionEntrega: [''],
+      direccionEntrega: ['', Validators.required],
       notasEntrega: [''],
-      numeroEntrega: [''],
+      numeroEntrega: ['', Validators.required],
+      productoDePedido: [{ value: '', disabled: true }],
     });
   }
 
@@ -202,7 +210,14 @@ export class ListaVentas implements OnInit {
       direccionEntrega: '',
       notasEntrega: '',
       numeroEntrega: '',
+      productoDePedido: '',
     });
+    const detalles = this.ventaSeleccionada()?.detalles ?? [];
+    this.detallesPedido.set(detalles.map(detalle => ({
+      detalle,
+      cantidad: Number(detalle.cantidad) || 0,
+    })));
+    this.actualizarProductoDePedido();
     this.mostrandoFormularioPedido.set(true);
   }
 
@@ -210,12 +225,17 @@ export class ListaVentas implements OnInit {
     if (this.creandoPedido()) return;
     this.mostrandoFormularioPedido.set(false);
     this.errorPedido.set('');
+    this.detallesPedido.set([]);
   }
 
   generarPedido(): void {
     if (!this.puedeCrearPedido || this.creandoPedido()) return;
     const idVenta = this.ventaSeleccionada()?.venta.idVenta;
     if (idVenta == null) return;
+    if (this.pedidoForm.invalid) {
+      this.pedidoForm.markAllAsTouched();
+      return;
+    }
 
     const datos = this.pedidoForm.getRawValue();
     const pedido: Pedido = {
@@ -224,6 +244,7 @@ export class ListaVentas implements OnInit {
       direccionEntrega: datos.direccionEntrega?.trim() || undefined,
       notasEntrega: datos.notasEntrega?.trim() || undefined,
       numeroEntrega: datos.numeroEntrega?.trim() || undefined,
+      productoDePedido: datos.productoDePedido || undefined,
     };
 
     this.creandoPedido.set(true);
@@ -240,6 +261,27 @@ export class ListaVentas implements OnInit {
         this.creandoPedido.set(false);
       },
     });
+  }
+
+  actualizarCantidadPedido(index: number, event: Event): void {
+    const detalleEditable = this.detallesPedido()[index];
+    if (!detalleEditable) return;
+
+    const input = event.target as HTMLInputElement;
+    const cantidadMaxima = Number(detalleEditable.detalle.cantidad) || 0;
+    const cantidad = Math.min(cantidadMaxima, Math.max(0, Number(input.value) || 0));
+    detalleEditable.cantidad = cantidad;
+    input.value = cantidad.toString();
+    this.detallesPedido.set([...this.detallesPedido()]);
+    this.actualizarProductoDePedido();
+  }
+
+  private actualizarProductoDePedido(): void {
+    const texto = this.detallesPedido()
+      .filter(item => item.cantidad > 0)
+      .map(item => `ID artículo: ${item.detalle.idArticulo ?? '—'} - ${this.articuloService.getNombreById(item.detalle.idArticulo)} - Cantidad: ${item.cantidad}`)
+      .join('\n');
+    this.pedidoForm.patchValue({ productoDePedido: texto });
   }
 
   generarFactura(): void {

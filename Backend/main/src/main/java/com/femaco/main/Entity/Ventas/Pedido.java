@@ -30,7 +30,10 @@ public class Pedido  {
     @Column(name = "NotasEntrega", columnDefinition = "TEXT")
     private String notasEntrega;
 
-    @Column(name = "NumeroEntrega", nullable = false, length = 50)
+    @Column(name = "Producto de Pedido", columnDefinition = "TEXT")
+    private String productoDePedido;
+
+    @Column(name = "NumeroEntrega", length = 50)
     private String numeroEntrega;
 
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
@@ -45,10 +48,10 @@ public class Pedido  {
     @Column(name = "UsuarioModif", nullable = false)
     private Integer usuarioModif;
 
-    @Column(name = "IdVenta")
+    @Column(name = "IdVenta", nullable = false)
     private Long idVenta;
 
-    @Column(name = "IdEstadoPedido")
+    @Column(name = "IdEstadoPedido", nullable = false)
     private Long idEstadoPedido;
     
     

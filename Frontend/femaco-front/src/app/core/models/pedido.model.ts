@@ -4,6 +4,7 @@ export interface Pedido {
   direccionEntrega?: string;
   notasEntrega?: string;
   numeroEntrega?: string;
+  productoDePedido?: string;
   idVenta?: number;
   idEstadoPedido?: number;
   usuarioCreacion?: number;
@@ -20,4 +21,21 @@ export interface PagePedido {
   number: number;
   first: boolean;
   last: boolean;
+}
+
+export interface PedidoFiltros {
+  idPedido?: number;
+  idVenta?: number;
+  idEstadoPedido?: number;
+  q?: string;
+  numeroEntrega?: string;
+  nitCliente?: string;
+  numeroFactura?: string;
+  fechaEntregaDesde?: string;
+  fechaEntregaHasta?: string;
+  fechaCreacionDesde?: string;
+  fechaCreacionHasta?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
 }

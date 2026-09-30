@@ -69,6 +69,8 @@
 
 .quote-form-panel {
     text-align: left;
+    max-height: calc(100vh - 2.5rem);
+    overflow-y: auto;
 }
 
 .quote-form-panel h2 {
@@ -82,6 +84,44 @@
 
 .quote-form textarea {
     resize: vertical;
+}
+
+.pedido-detalles-form-group {
+    min-width: 0;
+}
+
+.pedido-detalles-grid {
+    display: grid;
+    gap: .4rem;
+    overflow-x: auto;
+}
+
+.pedido-detalles-grid-header,
+.pedido-detalle-row {
+    display: grid;
+    grid-template-columns: 100px minmax(180px, 1fr) 120px;
+    gap: .65rem;
+    align-items: center;
+    min-width: 420px;
+}
+
+.pedido-detalles-grid-header {
+    padding: .35rem .55rem;
+    color: var(--crud-primary-dark);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.pedido-detalle-row {
+    padding: .45rem .55rem;
+    background: var(--crud-gray-100);
+    border: 1px solid var(--crud-gray-300);
+    border-radius: 6px;
+}
+
+.pedido-producto-text {
+    white-space: pre-line;
 }
 
 .quote-form-actions {

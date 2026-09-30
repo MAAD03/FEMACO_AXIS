@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.PedidoFiltroDTO;
 import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Entity.Ventas.Pedido;
 import com.femaco.main.Exception.BusinessException;
@@ -31,8 +32,12 @@ public class PedidoService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public Page<Pedido> buscarTodos(Pageable pageable) {
-        return pedidoRepository.findAll(pageable);
+    public Page<Pedido> buscarTodos(PedidoFiltroDTO filtro, Pageable pageable) {
+        return pedidoRepository.findAll(PedidoSpecification.conFiltros(filtro), pageable);
+    }
+
+    public Page<Pedido> buscarPendientes(Pageable pageable) {
+        return pedidoRepository.findByIdEstadoPedido(ESTADO_PENDIENTE, pageable);
     }
 
     @Transactional
@@ -58,15 +63,15 @@ public class PedidoService {
 
     @Transactional
     public Optional<Pedido> actualizar(Long idPedido, Pedido datosNuevos) {
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
         return pedidoRepository.findById(idPedido).map(existente -> {
             existente.setFechaEntrega(datosNuevos.getFechaEntrega());
             existente.setDireccionEntrega(datosNuevos.getDireccionEntrega());
             existente.setNotasEntrega(datosNuevos.getNotasEntrega());
             existente.setNumeroEntrega(datosNuevos.getNumeroEntrega());
-            existente.setIdVenta(datosNuevos.getIdVenta());
             existente.setIdEstadoPedido(datosNuevos.getIdEstadoPedido());
 
-            existente.setUsuarioModif(datosNuevos.getUsuarioModif());
+            existente.setUsuarioModif(usuarioAutenticado.getIdUsuario().intValue());
             existente.setFechaModif(LocalDateTime.now());
             return pedidoRepository.save(existente);
         });

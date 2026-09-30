@@ -8,8 +8,10 @@ import { Articulo, ArticuloFiltro } from '../../../core/models/articulo.model';
 import { Cliente as ClienteModel } from '../../../core/models/cliente.model';
 import { CotizacionCreateRequest } from '../../../core/models/cotizacion.model';
 import { Pedido } from '../../../core/models/pedido.model';
+import { VentaDetalle } from '../../../core/models/venta-detalle.model';
 import { UnidadMedida as UnidadMedidaModel } from '../../../core/models/unidad-medida.model';
 import { AreaArticuloNombrePipe } from '../../../core/pipes/area-articulo-nombre-pipe';
+import { ArticuloNombrePipe } from '../../../core/pipes/articulo-nombre-pipe-pipe';
 import { UnidadMedidaAbreviaturaPipe } from '../../../core/pipes/unidad-medida-abreviatura-pipe';
 import { AreaArticuloService } from '../../../core/services/area-articulo.service';
 import { ArticuloService } from '../../../core/services/articulo.service';
@@ -37,10 +39,15 @@ interface VentaDetalleCarrito extends VentaDetalleCreateRequest {
   descuentoMayoristaArticulo: number;
 }
 
+interface DetallePedidoEditable {
+  detalle: VentaDetalle;
+  cantidad: number;
+}
+
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, AreaArticuloNombrePipe, UnidadMedidaAbreviaturaPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AreaArticuloNombrePipe, ArticuloNombrePipe, UnidadMedidaAbreviaturaPipe],
   templateUrl: './ventas.html',
   styleUrl: './ventas.css',
 })
@@ -67,14 +74,17 @@ export class Ventas implements OnInit {
   pedidoForm: FormGroup = this.fb.group({
     idVenta: [{ value: null, disabled: true }, [Validators.required]],
     fechaEntrega: [''],
-    direccionEntrega: ['', Validators.maxLength(1000)],
+    direccionEntrega: ['', [Validators.required, Validators.maxLength(1000)]],
     notasEntrega: ['', Validators.maxLength(1000)],
-    numeroEntrega: ['', Validators.maxLength(50)],
+    numeroEntrega: ['', [Validators.required, Validators.maxLength(50)]],
+    productoDePedido: [{ value: '', disabled: true }],
   });
   mostrandoFormularioCotizacion = signal(false);
   mostrandoFormularioPedido = signal(false);
   creandoPedido = signal(false);
   pedidoCreado = signal(false);
+  detallesPedido = signal<DetallePedidoEditable[]>([]);
+  cargandoDetallesPedido = signal(false);
   errorPedido = signal('');
   mensajePedido = signal('');
   clienteSeleccionado = signal<ClienteModel | null>(null);
@@ -126,6 +136,7 @@ export class Ventas implements OnInit {
     });
     this.areaArticuloService.buscarTodos().subscribe({ next: data => this.areas.set(data ?? []) });
     this.unidadMedidaService.buscarTodos().subscribe({ next: data => this.unidades.set(data ?? []) });
+    this.articuloService.loadNombreCache().subscribe();
     this.cargarLista();
   }
 
@@ -280,8 +291,25 @@ export class Ventas implements OnInit {
 
     this.errorPedido.set('');
     this.mensajePedido.set('');
-    this.pedidoForm.reset({ idVenta, fechaEntrega: '', direccionEntrega: '', notasEntrega: '', numeroEntrega: '' });
+    this.pedidoForm.reset({ idVenta, fechaEntrega: '', direccionEntrega: '', notasEntrega: '', numeroEntrega: '', productoDePedido: '' });
+    this.detallesPedido.set([]);
     this.mostrandoFormularioPedido.set(true);
+    this.cargandoDetallesPedido.set(true);
+    this.ventaService.buscarPorId(idVenta).subscribe({
+      next: ventaConDetalles => {
+        const detalles = (ventaConDetalles.detalles ?? []).map(detalle => ({
+          detalle,
+          cantidad: Number(detalle.cantidad) || 0,
+        }));
+        this.detallesPedido.set(detalles);
+        this.actualizarProductoDePedido();
+        this.cargandoDetallesPedido.set(false);
+      },
+      error: () => {
+        this.errorPedido.set('No se pudieron cargar los artículos de la venta');
+        this.cargandoDetallesPedido.set(false);
+      },
+    });
   }
 
   cerrarFormularioPedido(): void {
@@ -294,7 +322,7 @@ export class Ventas implements OnInit {
   generarPedido(): void {
     if (!this.puedeCrearPedido) { this.errorPedido.set('No tienes permiso para crear pedidos'); return; }
     const idVenta = this.idVentaCompletada();
-    if (idVenta == null || this.creandoPedido()) return;
+    if (idVenta == null || this.creandoPedido() || this.cargandoDetallesPedido()) return;
     if (this.pedidoForm.invalid) {
       this.pedidoForm.markAllAsTouched();
       return;
@@ -307,6 +335,7 @@ export class Ventas implements OnInit {
       direccionEntrega: datos.direccionEntrega?.trim() || undefined,
       notasEntrega: datos.notasEntrega?.trim() || undefined,
       numeroEntrega: datos.numeroEntrega?.trim() || undefined,
+      productoDePedido: datos.productoDePedido || undefined,
     };
 
     this.creandoPedido.set(true);
@@ -327,6 +356,27 @@ export class Ventas implements OnInit {
         this.creandoPedido.set(false);
       },
     });
+  }
+
+  actualizarCantidadPedido(index: number, event: Event): void {
+    const detalleEditable = this.detallesPedido()[index];
+    if (!detalleEditable) return;
+
+    const input = event.target as HTMLInputElement;
+    const cantidadMaxima = Number(detalleEditable.detalle.cantidad) || 0;
+    const cantidad = Math.min(cantidadMaxima, Math.max(0, Number(input.value) || 0));
+    detalleEditable.cantidad = cantidad;
+    input.value = cantidad.toString();
+    this.detallesPedido.set([...this.detallesPedido()]);
+    this.actualizarProductoDePedido();
+  }
+
+  private actualizarProductoDePedido(): void {
+    const texto = this.detallesPedido()
+      .filter(item => item.cantidad > 0)
+      .map(item => `ID artículo: ${item.detalle.idArticulo ?? '—'} - ${this.articuloService.getNombreById(item.detalle.idArticulo)} - Cantidad: ${item.cantidad}`)
+      .join('\n');
+    this.pedidoForm.patchValue({ productoDePedido: texto });
   }
 
   generarCotizacion(): void {
@@ -484,6 +534,8 @@ export class Ventas implements OnInit {
     this.ventaCompletada.set(false);
     this.idVentaCompletada.set(null);
     this.pedidoCreado.set(false);
+    this.detallesPedido.set([]);
+    this.cargandoDetallesPedido.set(false);
     this.certificando.set(false);
     this.generandoComprobante.set(false);
     this.errorComprobante.set('');

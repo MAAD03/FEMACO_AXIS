@@ -53,24 +53,55 @@
           <input id="pedidoFechaEntrega" type="date" formControlName="fechaEntrega" class="form-control" />
         </div>
         <div class="form-group">
-          <label for="pedidoDireccionEntrega">Dirección de entrega</label>
+          <label for="pedidoDireccionEntrega">Dirección de entrega *</label>
           <textarea id="pedidoDireccionEntrega" formControlName="direccionEntrega" class="form-control" rows="2"
             maxlength="1000" placeholder="Ingrese la dirección de entrega"></textarea>
+          @if (pedidoForm.get('direccionEntrega')?.touched && pedidoForm.get('direccionEntrega')?.invalid) {
+          <div class="error-msg">La dirección de entrega es obligatoria</div>
+          }
         </div>
         <div class="form-group">
-          <label for="pedidoNumeroEntrega">Números de teléfono de entrega</label>
+          <label for="pedidoNumeroEntrega">Número de entrega *</label>
           <input id="pedidoNumeroEntrega" type="text" formControlName="numeroEntrega" class="form-control"
             maxlength="50" placeholder="Ingrese el número de entrega" />
+          @if (pedidoForm.get('numeroEntrega')?.touched && pedidoForm.get('numeroEntrega')?.invalid) {
+          <div class="error-msg">El número de entrega es obligatorio</div>
+          }
         </div>
         <div class="form-group">
           <label for="pedidoNotasEntrega">Notas de entrega</label>
           <textarea id="pedidoNotasEntrega" formControlName="notasEntrega" class="form-control" rows="3"
             maxlength="1000" placeholder="Indicaciones adicionales"></textarea>
         </div>
+        <div class="form-group pedido-detalles-form-group">
+          <label>Artículos del pedido</label>
+          @if (cargandoDetallesPedido()) { <p class="loading">Cargando artículos de la venta...</p> }
+          @else if (detallesPedido().length === 0) { <p class="empty">La venta no tiene artículos registrados.</p> }
+          @else {
+          <div class="pedido-detalles-grid">
+            <div class="pedido-detalles-grid-header"><span>ID artículo</span><span>Artículo</span><span>Cantidad</span>
+            </div>
+            @for (item of detallesPedido(); track item.detalle.idVentaDetalle ?? item.detalle.idArticulo) {
+            <div class="pedido-detalle-row">
+              <span>{{ item.detalle.idArticulo ?? '—' }}</span>
+              <span>{{ item.detalle.idArticulo | articuloNombre }}</span>
+              <input type="number" min="0" [max]="item.detalle.cantidad" step="0.01" class="form-control"
+                [value]="item.cantidad" (input)="actualizarCantidadPedido($index, $event)" />
+            </div>
+            }
+          </div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="pedidoProducto">Producto de pedido</label>
+          <textarea id="pedidoProducto" formControlName="productoDePedido" class="form-control pedido-producto-text"
+            rows="4" readonly></textarea>
+        </div>
         <div class="quote-form-actions">
           <button type="button" class="btn btn-secondary" [disabled]="creandoPedido()"
             (click)="cerrarFormularioPedido()">Cancelar</button>
-          <button type="submit" class="btn btn-primary" [disabled]="creandoPedido() || pedidoCreado()">
+          <button type="submit" class="btn btn-primary"
+            [disabled]="creandoPedido() || pedidoCreado() || cargandoDetallesPedido()">
             {{ creandoPedido() ? 'Guardando...' : pedidoCreado() ? 'Pedido creado' : 'Crear pedido' }}
           </button>
         </div>
@@ -159,10 +190,10 @@
           <span class="money">Q {{ item.precioUnitario | number:'1.2-2' }}</span>
           <span class="discount">{{ item.porcDescuentoMayorista | number:'1.2-2' }}%<small>Q {{
               item.montoDescuentoMayorista | number:'1.2-2' }}</small></span>
-          @if (puedeAplicarDescuento) { <span class="discount discount-manual"><input type="number" min="0" [max]="100 - item.porcDescuentoMayorista"
-              step="0.01" class="form-control compact-input" [ngModel]="item.porcDescuentoManual"
-              (input)="limitarDescuentoInput($event)" (ngModelChange)="actualizarDescuentoManual(i, $event)"
-              [ngModelOptions]="{ standalone: true }" /><small>Q
+          @if (puedeAplicarDescuento) { <span class="discount discount-manual"><input type="number" min="0"
+              [max]="100 - item.porcDescuentoMayorista" step="0.01" class="form-control compact-input"
+              [ngModel]="item.porcDescuentoManual" (input)="limitarDescuentoInput($event)"
+              (ngModelChange)="actualizarDescuentoManual(i, $event)" [ngModelOptions]="{ standalone: true }" /><small>Q
               {{ item.montoDescuentoManual | number:'1.2-2' }}</small></span> } @else { <span class="muted">No
             disponible</span> }
           <span class="money total-cell">Q {{ item.subtotal | number:'1.2-2' }}</span><button type="button"

@@ -5,16 +5,21 @@ USE `femacodb`;
 -- Tabla: bitacora
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bitacora` (
-  `IdBitacora` INT NOT NULL AUTO_INCREMENT,
-  `Operacion` VARCHAR(100) NULL,
-  `DetalleOperacion` VARCHAR(200) NULL,
-  `NombreTabla` VARCHAR(100) NULL,
-  `DatosNuevos` TEXT NULL,
-  `DatosAnterior` TEXT NULL,
+  `IdBitacora` BIGINT NOT NULL AUTO_INCREMENT,
+  `Operacion` VARCHAR(10) NOT NULL,   -- INSERT | UPDATE | DELETE
+  `DetalleOperacion` VARCHAR(200) NULL,      
+  `NombreTabla` VARCHAR(64) NOT NULL,
+  `IdRegistro` INT NULL,         -- PK del registro afectado
+  `DatosAnterior` JSON NULL,     -- UPDATE: valores previos de lo que cambió | DELETE: registro completo
+  `DatosNuevos` JSON NULL,       -- INSERT: registro completo | UPDATE: valores nuevos de lo que cambió
   `FechaModif` DATETIME NOT NULL,
   `UsuarioModif` INT NOT NULL,
-  PRIMARY KEY (`IdBitacora`)
-) ENGINE = InnoDB;
+  PRIMARY KEY (`IdBitacora`),
+  INDEX `idx_bitacora_tabla_registro` (`NombreTabla`, `IdRegistro`),
+  INDEX `idx_bitacora_fecha` (`FechaModif`),
+  INDEX `idx_bitacora_usuario` (`UsuarioModif`),
+  CONSTRAINT `chk_bitacora_operacion` CHECK (`Operacion` IN ('INSERT', 'UPDATE', 'DELETE'))
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- -----------------------------------------------------
 -- Tabla: estado_usuario
@@ -446,6 +451,7 @@ CREATE TABLE IF NOT EXISTS `pedido` (
   `DireccionEntrega` TEXT NULL,
   `NotasEntrega` TEXT NULL,
   `NumeroEntrega` VARCHAR(50) NULL,
+  `Producto de Pedido` TEXT NULL,
   `IdVenta` INT NOT NULL,
   `IdEstadoPedido` INT NOT NULL,
   `FechaCreacion` DATETIME NOT NULL,
@@ -605,7 +611,8 @@ VALUES
 (1, 'Pendiente', NOW(), 1, NOW(), 1),
 (2, 'Entregado', NOW(), 1, NOW(), 1),
 (3, 'Cancelado', NOW(), 1, NOW(), 1),
-(4, 'Entrega Parcial', NOW(), 1, NOW(), 1);
+(4, 'Entrega Parcial', NOW(), 1, NOW(), 1),
+(5, 'Anulado', NOW(), 1, NOW(), 1);
 
 -- 10. sucursal
 INSERT INTO `sucursal`

@@ -87,13 +87,19 @@
       <h2 id="saleCompleteTitle">Venta completada exitosamente</h2>
       <p>La venta fue registrada correctamente.</p>
       <div class="sale-complete-actions">
-        <button type="button" class="btn btn-primary">Generar comprobante</button>
+        <button type="button" class="btn btn-primary" [disabled]="generandoComprobante()"
+          (click)="generarComprobante()">
+          {{ generandoComprobante() ? 'Generando comprobante...' : 'Generar comprobante' }}
+        </button>
         <button type="button" class="btn btn-primary" [disabled]="certificando()" (click)="generarFactura()">
           {{ certificando() ? 'Generando factura...' : 'Generar factura' }}
         </button>
         @if (puedeCrearPedido) { <button type="button" class="btn btn-secondary"
           (click)="abrirFormularioPedido()">Generar pedido</button> }
       </div>
+      @if (errorComprobante()) {
+      <div class="alert alert-error" role="alert">{{ errorComprobante() }}</div>
+      }
       @if (certificando()) { <p class="fel-loading" aria-live="polite">Certificando la venta y generando el PDF. Esto
         puede tardar hasta un minuto...</p> }
       @if (errorFactura()) {

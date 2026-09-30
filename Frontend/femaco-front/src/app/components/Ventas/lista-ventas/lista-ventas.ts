@@ -57,10 +57,12 @@ export class ListaVentas implements OnInit {
   anulando = signal(false);
   certificandoFactura = signal(false);
   anulandoFactura = signal(false);
+  generandoComprobante = signal(false);
   mostrandoFormularioPedido = signal(false);
   creandoPedido = signal(false);
   errorPedido = signal('');
   errorFactura = signal('');
+  errorComprobante = signal('');
   mostrarModalAnulacion = signal(false);
   ultimaOperacionFel = signal<'certificar' | 'anular' | null>(null);
   motivoAnulacionFactura = signal('');
@@ -167,6 +169,7 @@ export class ListaVentas implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.cargandoDetalle.set(true);
     this.errorDetalle.set('');
+    this.errorComprobante.set('');
     this.ventaService.buscarPorId(idVenta).subscribe({
       next: detalle => {
         this.ventaSeleccionada.set(detalle);
@@ -180,10 +183,11 @@ export class ListaVentas implements OnInit {
   }
 
   cerrarDetalle(): void {
-    if (this.anulando() || this.anulandoFactura() || this.creandoPedido()) return;
+    if (this.anulando() || this.anulandoFactura() || this.generandoComprobante() || this.creandoPedido()) return;
     this.ventaSeleccionada.set(null);
     this.errorDetalle.set('');
     this.errorFactura.set('');
+    this.errorComprobante.set('');
   }
 
   abrirFormularioPedido(): void {
@@ -240,7 +244,7 @@ export class ListaVentas implements OnInit {
 
   generarFactura(): void {
     const idVenta = this.ventaSeleccionada()?.venta.idVenta;
-    if (idVenta == null || this.certificandoFactura() || this.anulandoFactura()) return;
+    if (idVenta == null || this.certificandoFactura() || this.anulandoFactura() || this.generandoComprobante()) return;
 
     this.certificandoFactura.set(true);
     this.errorFactura.set('');
@@ -251,9 +255,40 @@ export class ListaVentas implements OnInit {
     });
   }
 
+  generarComprobante(): void {
+    const idVenta = this.ventaSeleccionada()?.venta.idVenta;
+    if (idVenta == null || this.generandoComprobante() || this.certificandoFactura() || this.anulandoFactura()) return;
+
+    this.generandoComprobante.set(true);
+    this.errorComprobante.set('');
+    this.ventaService.generarComprobante(idVenta).subscribe({
+      next: response => {
+        if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
+          this.errorComprobante.set('La respuesta no contiene un comprobante PDF válido.');
+          this.generandoComprobante.set(false);
+          return;
+        }
+
+        this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
+        this.generandoComprobante.set(false);
+        this.mensaje.set('Comprobante generado correctamente');
+      },
+      error: error => {
+        this.generandoComprobante.set(false);
+        void this.manejarErrorComprobante(error);
+      },
+    });
+  }
+
+  private async manejarErrorComprobante(error: unknown): Promise<void> {
+    const respuesta = error as HttpErrorResponse;
+    const payload = await this.leerErrorFel(respuesta?.error ?? error);
+    this.errorComprobante.set(payload?.mensaje || 'No se pudo generar el comprobante');
+  }
+
   anularFactura(): void {
     const idVenta = this.ventaSeleccionada()?.venta.idVenta;
-    if (idVenta == null || this.certificandoFactura() || this.anulandoFactura()) return;
+    if (idVenta == null || this.certificandoFactura() || this.anulandoFactura() || this.generandoComprobante()) return;
 
     const motivo = this.motivoAnulacionForm.value.motivo?.trim();
     if (!motivo) {
@@ -273,7 +308,7 @@ export class ListaVentas implements OnInit {
   }
 
   abrirModalAnulacion(): void {
-    if (this.certificandoFactura() || this.anulandoFactura()) return;
+    if (this.certificandoFactura() || this.anulandoFactura() || this.generandoComprobante()) return;
     this.motivoAnulacionForm.reset({ motivo: '' });
     this.motivoAnulacionForm.markAsUntouched();
     this.mostrarModalAnulacion.set(true);

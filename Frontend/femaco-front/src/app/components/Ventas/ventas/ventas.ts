@@ -93,6 +93,8 @@ export class Ventas implements OnInit {
   ventaCompletada = signal(false);
   idVentaCompletada = signal<number | null>(null);
   certificando = signal(false);
+  generandoComprobante = signal(false);
+  errorComprobante = signal('');
   errorFactura = signal('');
   paginaActual = signal(0);
   totalPaginas = signal(0);
@@ -381,6 +383,31 @@ export class Ventas implements OnInit {
     });
   }
 
+  generarComprobante(): void {
+    const idVenta = this.idVentaCompletada();
+    if (idVenta == null || this.generandoComprobante()) return;
+
+    this.generandoComprobante.set(true);
+    this.errorComprobante.set('');
+
+    this.ventaService.generarComprobante(idVenta).subscribe({
+      next: response => {
+        if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
+          this.errorComprobante.set('La respuesta no contiene un comprobante PDF válido.');
+          this.generandoComprobante.set(false);
+          return;
+        }
+
+        this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
+        this.generandoComprobante.set(false);
+      },
+      error: error => {
+        this.errorComprobante.set(error?.error?.mensaje || error?.error?.message || 'No se pudo generar el comprobante');
+        this.generandoComprobante.set(false);
+      },
+    });
+  }
+
   private descargarFactura(pdf: Blob, contentDisposition: string | null): void {
     const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'factura.pdf';
     const url = URL.createObjectURL(pdf);
@@ -458,6 +485,8 @@ export class Ventas implements OnInit {
     this.idVentaCompletada.set(null);
     this.pedidoCreado.set(false);
     this.certificando.set(false);
+    this.generandoComprobante.set(false);
+    this.errorComprobante.set('');
     this.errorFactura.set('');
     this.mensaje.set('');
     this.error.set('');

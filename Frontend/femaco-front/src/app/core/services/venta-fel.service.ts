@@ -14,7 +14,7 @@ export class VentaFelService {
 	private readonly http = inject(HttpClient);
 	private readonly baseUrl = inject(API_BASE_URL);
 	private readonly api = `${this.baseUrl}/ventas`;
-	private readonly timeoutMs = 60000;
+	private readonly timeoutMs = 140000;
 
 	certificar(idVenta: number): Observable<HttpResponse<Blob>> {
 		return this.http.post(`${this.api}/${idVenta}/fel/certificar`, null, {

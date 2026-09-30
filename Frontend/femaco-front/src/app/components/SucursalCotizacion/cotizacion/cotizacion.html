@@ -69,7 +69,13 @@
 			</div>
 
 			<div class="detail-actions">
-				<button type="button" class="btn btn-secondary" disabled title="Próximamente">Imprimir cotización</button>
+				<button type="button" class="btn btn-secondary" (click)="generarComprobante()"
+					[disabled]="generandoComprobante()">
+					{{ generandoComprobante() ? 'Generando cotización...' : 'Imprimir cotización' }}
+				</button>
+				@if (errorComprobante()) {
+				<div class="alert alert-error" role="alert">{{ errorComprobante() }}</div>
+				}
 			</div>
 		</div>
 		}

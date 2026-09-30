@@ -68,6 +68,10 @@ public class VentaService {
         return ventaRepository.findAll();
     }
 
+    public Optional<Venta> buscarPorId(Long idVenta) {
+        return ventaRepository.findById(idVenta);
+    }
+
     @Transactional(readOnly = true)
     public Optional<VentaConDetallesDTO> buscarPorIdConDetalles(Long idVenta) {
         return ventaRepository.findById(idVenta)

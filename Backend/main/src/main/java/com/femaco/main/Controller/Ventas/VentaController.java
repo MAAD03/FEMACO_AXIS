@@ -4,7 +4,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import com.femaco.main.DTOs.VentaConDetallesDTO;
 import com.femaco.main.DTOs.VentaCreateDTO;
 import com.femaco.main.DTOs.VentaFiltroDTO;
 import com.femaco.main.Entity.Ventas.Venta;
+import com.femaco.main.Service.Ventas.ComprobanteVentaPdfService;
 import com.femaco.main.Service.Ventas.VentaService;
 
 import jakarta.validation.Valid;
@@ -28,9 +32,12 @@ import jakarta.validation.Valid;
 public class VentaController {
 
     private final VentaService ventaService;
+    private final ComprobanteVentaPdfService comprobanteVentaPdfService;
 
-    public VentaController(VentaService ventaService) {
+    public VentaController(VentaService ventaService,
+                           ComprobanteVentaPdfService comprobanteVentaPdfService) {
         this.ventaService = ventaService;
+        this.comprobanteVentaPdfService = comprobanteVentaPdfService;
     }
 
     @GetMapping("/buscar-paginado")
@@ -51,6 +58,30 @@ public class VentaController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+        @GetMapping("/comprobante/{idVenta}")
+        @PreAuthorize("hasAuthority('PERMISO_VENTAS_ACCESO')")
+        public ResponseEntity<byte[]> generarComprobante(@PathVariable Long idVenta) {
+        Venta venta = ventaService.buscarPorId(idVenta)
+            .orElseThrow(() -> new IllegalArgumentException("Venta no encontrada: " + idVenta));
+        byte[] pdf = comprobanteVentaPdfService.generarPdf(idVenta);
+        String numeroFactura = venta.getNumeroFactura();
+        String nombreArchivo = numeroFactura == null || numeroFactura.isBlank()
+            ? "comprobante-venta-" + idVenta
+            : numeroFactura;
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+            .filename(nombreArchivo + ".pdf")
+            .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(disposition);
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
+        }
+
     @PostMapping("/crear-con-detalles")
     @PreAuthorize("hasAuthority('PERMISO_VENTAS_ALTA')")
     public ResponseEntity<Venta> crearConDetalles(@Valid @RequestBody VentaCreateDTO dto) {
@@ -65,6 +96,8 @@ public class VentaController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    
 /* 
     @PostMapping("/crear")
     public ResponseEntity<Venta> crear(@RequestBody Venta venta) {

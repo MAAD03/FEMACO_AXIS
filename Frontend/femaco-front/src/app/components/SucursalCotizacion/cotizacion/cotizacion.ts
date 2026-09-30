@@ -36,6 +36,8 @@ export class Cotizacion implements OnInit {
   readonly tamanosPagina = [6, 9, 12, 18, 24];
   readonly tamanoPagina = signal(9);
   readonly buscandoPorNit = signal(false);
+  readonly generandoComprobante = signal(false);
+  readonly errorComprobante = signal('');
 
   get permisos() {
     return this.conjuntoMenuService.getPermisosPorPagina('cotizacion');
@@ -84,6 +86,7 @@ export class Cotizacion implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.cargandoDetalle.set(true);
     this.errorDetalle.set('');
+    this.errorComprobante.set('');
     this.cotizacionService.buscarPorId(idCotizacion).subscribe({
       next: detalle => {
         this.cotizacionSeleccionada.set(detalle);
@@ -97,8 +100,58 @@ export class Cotizacion implements OnInit {
   }
 
   cerrarDetalle(): void {
+    if (this.generandoComprobante()) return;
     this.cotizacionSeleccionada.set(null);
     this.errorDetalle.set('');
+    this.errorComprobante.set('');
+  }
+
+  generarComprobante(): void {
+    const idCotizacion = this.cotizacionSeleccionada()?.cotizacion.idCotizacion;
+    if (idCotizacion == null || this.generandoComprobante()) return;
+
+    this.generandoComprobante.set(true);
+    this.errorComprobante.set('');
+    this.cotizacionService.generarComprobante(idCotizacion).subscribe({
+      next: response => {
+        if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
+          this.errorComprobante.set('La respuesta no contiene un comprobante PDF válido.');
+          this.generandoComprobante.set(false);
+          return;
+        }
+
+        this.descargarComprobante(response.body, response.headers.get('Content-Disposition'));
+        this.generandoComprobante.set(false);
+      },
+      error: error => {
+        this.generandoComprobante.set(false);
+        this.errorComprobante.set(
+          error?.name === 'TimeoutError'
+            ? 'La generación tardó demasiado. Puedes intentarlo nuevamente.'
+            : error?.error?.mensaje || error?.error?.message || 'No se pudo generar el comprobante'
+        );
+      },
+    });
+  }
+
+  private descargarComprobante(pdf: Blob, contentDisposition: string | null): void {
+    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'cotizacion.pdf';
+    const url = URL.createObjectURL(pdf);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombre;
+    enlace.style.display = 'none';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  private obtenerNombreArchivo(contentDisposition: string | null): string | null {
+    if (!contentDisposition) return null;
+    const codificado = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (codificado) return decodeURIComponent(codificado.replace(/^"|"$/g, ''));
+    return contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null;
   }
 
   private cargarLista(): void {

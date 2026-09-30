@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- 1. Creación del usuario
-CREATE USER IF NOT EXISTS 'femaco_app'@'%' IDENTIFIED BY '!W958oIT{/1';
+CREATE USER IF NOT EXISTS 'femaco_app'@'%' IDENTIFIED BY '!W958oIT{/12';
 
 -- 2. Permiso de LECTURA GLOBAL (SELECT) en todas las tablas del esquema
 GRANT SELECT ON `femacodb`.* TO 'femaco_app'@'%';

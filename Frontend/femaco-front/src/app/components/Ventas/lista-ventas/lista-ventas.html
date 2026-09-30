@@ -160,7 +160,10 @@
           {{ anulando() ? 'Anulando...' : 'Anular venta' }}
         </button>
         }
-        <button type="button" class="btn btn-secondary" disabled title="Próximamente">Generar comprobante</button>
+        <button type="button" class="btn btn-secondary" (click)="generarComprobante()"
+          [disabled]="generandoComprobante() || certificandoFactura() || anulandoFactura()">
+          {{ generandoComprobante() ? 'Generando comprobante...' : 'Generar comprobante' }}
+        </button>
         <button type="button" class="btn btn-secondary" (click)="generarFactura()"
           [disabled]="certificandoFactura() || anulandoFactura()">
           {{ certificandoFactura() ? 'Generando factura...' : 'Generar factura' }}
@@ -180,6 +183,9 @@
         <div class="alert alert-error fel-error" role="alert">{{ errorFactura() }}</div>
         <button type="button" class="btn btn-secondary" (click)="reintentarFactura()"
           [disabled]="certificandoFactura() || anulandoFactura()">Reintentar operación FEL</button>
+        }
+        @if (errorComprobante()) {
+        <div class="alert alert-error" role="alert">{{ errorComprobante() }}</div>
         }
       </div>
     </div>

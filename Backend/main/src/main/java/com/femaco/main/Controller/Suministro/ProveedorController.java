@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,7 @@ public class ProveedorController {
     }
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('PERMISO_PROVEEDOR_ACCESO')")
     public ResponseEntity<List<Proveedor>> buscar() {
         return ResponseEntity.ok(proveedorService.buscarTodos());
     }
@@ -37,12 +39,14 @@ public class ProveedorController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_PROVEEDOR_ALTA')")
     public ResponseEntity<Proveedor> crear(@RequestBody Proveedor proveedor) {
         Proveedor creado = proveedorService.crear(proveedor);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idProveedor}")
+    @PreAuthorize("hasAuthority('PERMISO_PROVEEDOR_CAMBIO')")
     public ResponseEntity<Proveedor> editar(@PathVariable Long idProveedor,
                                               @RequestBody Proveedor proveedor) {
         return proveedorService.actualizar(idProveedor, proveedor)
@@ -51,6 +55,7 @@ public class ProveedorController {
     }
 
     @DeleteMapping("/eliminar/{idProveedor}")
+    @PreAuthorize("hasAuthority('PERMISO_PROVEEDOR_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idProveedor) {
         boolean eliminado = proveedorService.eliminar(idProveedor);
         if (!eliminado) {

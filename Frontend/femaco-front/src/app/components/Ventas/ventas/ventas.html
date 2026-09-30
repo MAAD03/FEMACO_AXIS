@@ -153,7 +153,7 @@
           <span class="money">Q {{ item.precioUnitario | number:'1.2-2' }}</span>
           <span class="discount">{{ item.porcDescuentoMayorista | number:'1.2-2' }}%<small>Q {{
               item.montoDescuentoMayorista | number:'1.2-2' }}</small></span>
-          @if (puedeAplicarDescuento) { <span class="discount discount-manual"><input type="number" min="0" max="100"
+          @if (puedeAplicarDescuento) { <span class="discount discount-manual"><input type="number" min="0" [max]="100 - item.porcDescuentoMayorista"
               step="0.01" class="form-control compact-input" [ngModel]="item.porcDescuentoManual"
               (input)="limitarDescuentoInput($event)" (ngModelChange)="actualizarDescuentoManual(i, $event)"
               [ngModelOptions]="{ standalone: true }" /><small>Q

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,12 +33,14 @@ public class MenuController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_MENU_ALTA')")
     public ResponseEntity<Menu> crear(@RequestBody Menu menu) {
         Menu creado = menuService.crear(menu);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idMenu}")
+    @PreAuthorize("hasAuthority('PERMISO_MENU_CAMBIO')")
     public ResponseEntity<Menu> editar(@PathVariable Long idMenu,
                                          @RequestBody Menu menu) {
         return menuService.actualizar(idMenu, menu)
@@ -46,6 +49,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/eliminar/{idMenu}")
+    @PreAuthorize("hasAuthority('PERMISO_MENU_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idMenu) {
         boolean eliminado = menuService.eliminar(idMenu);
         if (!eliminado) {

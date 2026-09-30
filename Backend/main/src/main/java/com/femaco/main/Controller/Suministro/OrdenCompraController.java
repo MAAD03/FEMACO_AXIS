@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class OrdenCompraController {
     }
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('PERMISO_ORDEN_COMPRA_ACCESO')")
     public ResponseEntity<Page<OrdenCompra>> buscar(
             @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
             Pageable pageable) {
@@ -40,6 +42,7 @@ public class OrdenCompraController {
     }
 
     @GetMapping("/buscar/{idOrdenCompra}")
+    @PreAuthorize("hasAuthority('PERMISO_ORDEN_COMPRA_ACCESO')")
     public ResponseEntity<OrdenCompraConDetallesDTO> buscarPorId(@PathVariable Long idOrdenCompra) {
         return ordenCompraService.buscarPorIdConDetalles(idOrdenCompra)
                 .map(ResponseEntity::ok)
@@ -47,12 +50,14 @@ public class OrdenCompraController {
     }
 
      @PostMapping("/crear-con-detalles")
+    @PreAuthorize("hasAuthority('PERMISO_ORDEN_COMPRA_ALTA')")
     public ResponseEntity<OrdenCompra> crearConDetalles(@Valid @RequestBody OrdenCompraCreateDTO dto) {
         OrdenCompra creada = ordenCompraService.crearConDetalles(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
     @PutMapping("/actualizar-con-detalles")
+    @PreAuthorize("hasAuthority('PERMISO_ORDEN_COMPRA_CAMBIO')")
     public ResponseEntity<OrdenCompra> actualizarConDetalles(@Valid @RequestBody OrdenCompraUpdateDTO dto) {
         OrdenCompra actualizada = ordenCompraService.actualizarConDetalles(dto);
         return ResponseEntity.ok(actualizada);

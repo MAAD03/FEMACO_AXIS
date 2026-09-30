@@ -83,4 +83,13 @@ export class ConjuntoMenuService {
   return { alta: false, baja: false, cambio: false };
   }
 
+  tienePagina(pagina: string): boolean {
+    const menu = this.menuSubject.value;
+    return menu.some(modulo =>
+      modulo.menus.some(m =>
+        m.opciones.some(opcion => opcion.pagina === pagina || opcion.pagina === '/' + pagina)
+      )
+    );
+  }
+
 }

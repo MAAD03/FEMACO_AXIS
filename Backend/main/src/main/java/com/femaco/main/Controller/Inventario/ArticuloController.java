@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,12 +34,14 @@ public class ArticuloController {
 
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('PERMISO_ARTICULO_ACCESO')")
     public ResponseEntity<List<Articulo>> buscar() {
         return ResponseEntity.ok(articuloService.buscarTodos());
     }
 
 
   @GetMapping("/buscar-paginado")
+        @PreAuthorize("hasAuthority('PERMISO_ARTICULO_ACCESO')")
     public ResponseEntity<Page<Articulo>> buscarPaginado(
             ArticuloFiltroDTO filtro,
             @PageableDefault(size = 20, sort = "nombre", direction = Sort.Direction.ASC)
@@ -49,12 +52,14 @@ public class ArticuloController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_ARTICULO_ALTA')")
     public ResponseEntity<Articulo> crear(@RequestBody Articulo articulo) {
         Articulo creado = articuloService.crear(articulo);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idArticulo}")
+    @PreAuthorize("hasAuthority('PERMISO_ARTICULO_CAMBIO')")
     public ResponseEntity<Articulo> editar(@PathVariable Long idArticulo,
                                               @RequestBody Articulo articulo) {
         return articuloService.actualizar(idArticulo, articulo)
@@ -63,6 +68,7 @@ public class ArticuloController {
     }
 
     @DeleteMapping("/eliminar/{idArticulo}")
+    @PreAuthorize("hasAuthority('PERMISO_ARTICULO_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idArticulo) {
         boolean eliminado = articuloService.eliminar(idArticulo);
         if (!eliminado) {

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,17 +28,20 @@ public class SucursalController {
     }
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('PERMISO_SUCURSAL_ACCESO')")
     public ResponseEntity<List<Sucursal>> buscar() {
         return ResponseEntity.ok(sucursalService.buscarTodos());
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_SUCURSAL_ALTA')")
     public ResponseEntity<Sucursal> crear(@RequestBody Sucursal sucursal) {
         Sucursal creado = sucursalService.crear(sucursal);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idSucursal}")
+    @PreAuthorize("hasAuthority('PERMISO_SUCURSAL_CAMBIO')")
     public ResponseEntity<Sucursal> editar(@PathVariable Long idSucursal,
                                               @RequestBody Sucursal sucursal) {
         return sucursalService.actualizar(idSucursal, sucursal)
@@ -46,6 +50,7 @@ public class SucursalController {
     }
 
     @DeleteMapping("/eliminar/{idSucursal}")
+    @PreAuthorize("hasAuthority('PERMISO_SUCURSAL_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idSucursal) {
         boolean eliminado = sucursalService.eliminar(idSucursal);
         if (!eliminado) {

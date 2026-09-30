@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ public class PedidoController {
     }
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('PERMISO_PEDIDOS_ACCESO')")
     public ResponseEntity<Page<Pedido>> buscar(
             @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
             Pageable pageable) {
@@ -35,12 +37,14 @@ public class PedidoController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_PEDIDOS_ALTA')")
     public ResponseEntity<Pedido> crear(@RequestBody Pedido pedido) {
         Pedido creado = pedidoService.crear(pedido);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idPedido}")
+    @PreAuthorize("hasAuthority('PERMISO_PEDIDOS_CAMBIO')")
     public ResponseEntity<Pedido> editar(@PathVariable Long idPedido,
                                            @RequestBody Pedido pedido) {
         return pedidoService.actualizar(idPedido, pedido)

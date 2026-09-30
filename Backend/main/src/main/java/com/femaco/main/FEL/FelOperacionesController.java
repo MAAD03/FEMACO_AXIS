@@ -4,6 +4,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,12 +45,14 @@ public class FelOperacionesController {
     public record AnulacionRequest(String motivo) {}
 
     @PostMapping("/certificar")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_ALTA')")
     public ResponseEntity<byte[]> certificar(@PathVariable Long idVenta) {
         VentaFel ventaFel = certificacionService.certificar(idVenta, obtenerIdUsuarioAccion());
         return construirRespuestaPdf(idVenta, ventaFel);
     }
 
     @PostMapping("/anular")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_BAJA')")
     public ResponseEntity<byte[]> anular(@PathVariable Long idVenta,
                                           @RequestBody AnulacionRequest request) {
         VentaFel ventaFel = anulacionService.anular(idVenta, request.motivo(), obtenerIdUsuarioAccion());

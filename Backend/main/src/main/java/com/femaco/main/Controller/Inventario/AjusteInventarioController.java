@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,11 +31,13 @@ public class AjusteInventarioController {
     }
 
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('PERMISO_AJUSTE_INVENTARIO_ACCESO')")
     public ResponseEntity<List<AjusteInventario>> buscar() {
         return ResponseEntity.ok(ajusteInventarioService.buscarTodos());
     }
 
     @GetMapping("/buscar-paginado")
+    @PreAuthorize("hasAuthority('PERMISO_AJUSTE_INVENTARIO_ACCESO')")
     public ResponseEntity<Page<AjusteInventario>> buscarPaginado(
             AjusteInventarioFiltroDTO filtro,
             @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
@@ -45,6 +48,7 @@ public class AjusteInventarioController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_AJUSTE_INVENTARIO_ALTA')")
     public ResponseEntity<AjusteInventario> crear(@RequestBody AjusteInventarioRequestDTO ajusteInventarioRequestDTO) {
         AjusteInventario creado = ajusteInventarioService.crear(ajusteInventarioRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);

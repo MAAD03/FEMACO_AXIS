@@ -226,9 +226,12 @@ export class Ventas implements OnInit {
     const cantidad = Math.max(0, Number(item.cantidad) || 0);
     const bruto = cantidad * (Number(item.precioUnitario) || 0);
     const aplicaMayorista = item.cantidadMinimaDescuento > 0 && cantidad >= item.cantidadMinimaDescuento;
-    const porcMayorista = aplicaMayorista ? item.descuentoMayoristaArticulo : 0;
+    const porcMayorista = aplicaMayorista ? Math.min(100, Math.max(0, Number(item.descuentoMayoristaArticulo) || 0)) : 0;
     const montoMayorista = bruto * porcMayorista / 100;
-    const porcManual = this.puedeAplicarDescuento ? Math.min(100, Math.max(0, Number(item.porcDescuentoManual) || 0)) : 0;
+    const porcManualMaximo = 100 - porcMayorista;
+    const porcManual = this.puedeAplicarDescuento
+      ? Math.min(porcManualMaximo, Math.max(0, Number(item.porcDescuentoManual) || 0))
+      : 0;
     const montoManual = bruto * porcManual / 100;
     return { ...item, cantidad, porcDescuentoMayorista: porcMayorista, porcDescuentoManual: porcManual, subtotalBruto: bruto, montoDescuentoMayorista: montoMayorista, montoDescuentoManual: montoManual, subtotal: bruto - montoMayorista - montoManual };
   }

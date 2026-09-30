@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,7 @@ public class ClienteController {
     }
 
     @GetMapping("/buscar-paginado")
+    @PreAuthorize("hasAuthority('PERMISO_CLIENTE_ACCESO')")
     public ResponseEntity<Page<Cliente>> buscarPaginado(Pageable pageable) {
         return ResponseEntity.ok(clienteService.buscarTodosPaginado(pageable));
     }
@@ -46,12 +48,14 @@ public class ClienteController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_CLIENTE_ALTA')")
     public ResponseEntity<Cliente> crear(@RequestBody Cliente cliente) {
         Cliente creado = clienteService.crear(cliente);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idCliente}")
+    @PreAuthorize("hasAuthority('PERMISO_CLIENTE_CAMBIO')")
     public ResponseEntity<Cliente> editar(@PathVariable Long idCliente,
                                            @RequestBody Cliente cliente) {
         return clienteService.actualizar(idCliente, cliente)
@@ -60,6 +64,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/eliminar/{idCliente}")
+    @PreAuthorize("hasAuthority('PERMISO_CLIENTE_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idCliente) {
         boolean eliminado = clienteService.eliminar(idCliente);
         if (!eliminado) {

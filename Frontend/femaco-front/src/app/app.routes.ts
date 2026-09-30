@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { permissionGuard } from './core/guards/permission.guard';
 import { MainLayout } from './layout/main-layout';
 
 export const routes: Routes = [
@@ -15,6 +16,7 @@ export const routes: Routes = [
     path: '',
     component: MainLayout,
     canActivate: [authGuard],
+    canActivateChild: [permissionGuard],
     children: [
       {
         path: 'dashboard',
@@ -53,6 +55,7 @@ export const routes: Routes = [
       },
       {
         path: 'unidad-medida',
+        data: { permiso: 'unidad-medida' },
         loadComponent: () =>
           import('./components/Catalogo/unidad-medida/unidad-medida').then(m => m.UnidadMedida)
       },

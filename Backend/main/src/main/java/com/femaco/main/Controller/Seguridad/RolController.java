@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,12 +33,14 @@ public class RolController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_ROL_ALTA')")
     public ResponseEntity<Rol> crear(@RequestBody Rol rol) {
         Rol creado = rolService.crear(rol);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idRol}")
+    @PreAuthorize("hasAuthority('PERMISO_ROL_CAMBIO')")
     public ResponseEntity<Rol> editar(@PathVariable Long idRol,
                                        @RequestBody Rol rol) {
         return rolService.actualizar(idRol, rol)
@@ -46,6 +49,7 @@ public class RolController {
     }
 
     @DeleteMapping("/eliminar/{idRol}")
+    @PreAuthorize("hasAuthority('PERMISO_ROL_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idRol) {
         boolean eliminado = rolService.eliminar(idRol);
         if (!eliminado) {

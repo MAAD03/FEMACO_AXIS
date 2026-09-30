@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +39,7 @@ public class CotizacionController {
     }
 
     @GetMapping("/buscar-por-nit/{nit}")
+    @PreAuthorize("hasAuthority('PERMISO_COTIZACION_ACCESO')")
     public ResponseEntity<Cotizacion> buscarPorNit(@PathVariable String nit) {
         return cotizacionService.buscarPorNit(nit)
                 .map(ResponseEntity::ok)
@@ -45,6 +47,7 @@ public class CotizacionController {
     }
 
     @GetMapping("/buscar/{idCotizacion}")
+    @PreAuthorize("hasAuthority('PERMISO_COTIZACION_ACCESO')")
     public ResponseEntity<CotizacionConDetallesDTO> buscarPorId(@PathVariable Long idCotizacion) {
         return cotizacionService.buscarPorIdConDetalles(idCotizacion)
                 .map(ResponseEntity::ok)
@@ -52,6 +55,7 @@ public class CotizacionController {
     }
 
     @PostMapping("/crear-con-detalles")
+    @PreAuthorize("hasAuthority('PERMISO_COTIZACION_ALTA')")
     public ResponseEntity<Cotizacion> crearConDetalles(@Valid @RequestBody CotizacionCreateDTO dto) {
         Cotizacion creada = cotizacionService.crearConDetalles(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);

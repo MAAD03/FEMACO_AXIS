@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
@@ -165,10 +166,6 @@ public class UsuarioService {
             return new LoginResultado(Optional.empty(), false, "Estado de usuario no válido", intentosFallidosActuales, false);
         }
 
-        if (Boolean.TRUE.equals(usuario.getRequiereCambioPassword())) {
-            return new LoginResultado(Optional.empty(), true, "El usuario requiere cambio de contraseña", intentosFallidosActuales, false);
-        }
-
         if (!passwordEncoder.matches(passwordPlano, usuario.getPassword())) {
             int nuevosIntentosFallidos = intentosFallidosActuales + 1;
             usuario.setIntentosFallidos(nuevosIntentosFallidos);
@@ -189,6 +186,10 @@ public class UsuarioService {
         usuario.setFechaModif(LocalDateTime.now());
         usuario.setUsuarioModif(usuario.getIdUsuario() != null ? usuario.getIdUsuario().intValue() : 0);
         usuarioRepository.save(usuario);
+
+        if (Boolean.TRUE.equals(usuario.getRequiereCambioPassword())) {
+            return new LoginResultado(Optional.empty(), true, "El usuario requiere cambio de contraseña", 0, false);
+        }
 
         return new LoginResultado(Optional.of(usuario), false, null, 0, true);
     }
@@ -231,7 +232,7 @@ public class UsuarioService {
                     "Saludos."
             );
             mailSender.send(mensaje);
-        } catch (Exception e) {
+        } catch (MailException e) {
             System.err.println("Error enviando correo de reinicio a " + destino + ": " + e.getMessage());
         }
     }
@@ -249,7 +250,7 @@ public class UsuarioService {
                     "Saludos."
             );
             mailSender.send(mensaje);
-        } catch (Exception e) {
+        } catch (MailException e) {
             System.err.println("Error enviando correo a " + destino + ": " + e.getMessage());
         }
     }

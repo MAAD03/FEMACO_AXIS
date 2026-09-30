@@ -1,14 +1,8 @@
 package com.femaco.main.Controller.Ventas;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.femaco.main.Entity.Ventas.VentaFel;
 import com.femaco.main.Service.Ventas.VentaFelService;
 
 @RestController
@@ -21,6 +15,7 @@ public class VentaFelController {
         this.ventaFelService = ventaFelService;
     }
 
+    /* 
     @GetMapping("/buscar")
     public ResponseEntity<List<VentaFel>> buscar() {
         return ResponseEntity.ok(ventaFelService.buscarTodos());
@@ -39,5 +34,5 @@ public class VentaFelController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
+*/
 }

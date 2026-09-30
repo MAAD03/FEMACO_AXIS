@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +37,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/buscar-paginado")
+    @PreAuthorize("hasAuthority('PERMISO_USUARIO_ACCESO')")
     public ResponseEntity<Page<Usuario>> buscarPaginado(
             @PageableDefault(size = 20, sort = "idUsuario", direction = Sort.Direction.ASC)
             Pageable pageable) {
@@ -43,12 +45,14 @@ public class UsuarioController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_USUARIO_ALTA')")
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
         Usuario creado = usuarioService.crear(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idUsuario}")
+    @PreAuthorize("hasAuthority('PERMISO_USUARIO_CAMBIO')")
     public ResponseEntity<Usuario> editar(@PathVariable Long idUsuario,
                                           @RequestBody Usuario usuario) {
         return usuarioService.actualizar(idUsuario, usuario)
@@ -57,6 +61,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/reiniciar-password/{idUsuario}")
+    @PreAuthorize("hasAuthority('PERMISO_USUARIO_CAMBIO')")
     public ResponseEntity<Usuario> reiniciarPassword(@PathVariable Long idUsuario) {
         return usuarioService.reiniciarPassword(idUsuario)
                 .map(ResponseEntity::ok)
@@ -64,6 +69,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/eliminar/{idUsuario}")
+    @PreAuthorize("hasAuthority('PERMISO_USUARIO_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idUsuario) {
         boolean eliminado = usuarioService.eliminar(idUsuario);
         if (!eliminado) {

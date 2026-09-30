@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class VentaController {
     }
 
     @GetMapping("/buscar-paginado")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_ACCESO')")
     public ResponseEntity<Page<Venta>> buscarPaginado(
             VentaFiltroDTO filtro,
             @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC)
@@ -42,6 +44,7 @@ public class VentaController {
     }
 
     @GetMapping("/buscar/{idVenta}")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_ACCESO')")
     public ResponseEntity<VentaConDetallesDTO> buscarPorId(@PathVariable Long idVenta) {
         return ventaService.buscarPorIdConDetalles(idVenta)
                 .map(ResponseEntity::ok)
@@ -49,12 +52,14 @@ public class VentaController {
     }
 
     @PostMapping("/crear-con-detalles")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_ALTA')")
     public ResponseEntity<Venta> crearConDetalles(@Valid @RequestBody VentaCreateDTO dto) {
         Venta creada = ventaService.crearConDetalles(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
     @PutMapping("/anular/{idVenta}")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_BAJA')")
     public ResponseEntity<Venta> anular(@PathVariable Long idVenta) {
         return ventaService.anular(idVenta)
                 .map(ResponseEntity::ok)

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,12 +33,14 @@ public class ModuloController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_MODULO_ALTA')")
     public ResponseEntity<Modulo> crear(@RequestBody Modulo modulo) {
         Modulo creado = moduloService.crear(modulo);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/editar/{idModulo}")
+    @PreAuthorize("hasAuthority('PERMISO_MODULO_CAMBIO')")
     public ResponseEntity<Modulo> editar(@PathVariable Long idModulo,
                                                    @RequestBody Modulo datosNuevos) {
         return moduloService.actualizar(idModulo, datosNuevos)
@@ -46,6 +49,7 @@ public class ModuloController {
     }
 
     @DeleteMapping("/eliminar/{idModulo}")
+    @PreAuthorize("hasAuthority('PERMISO_MODULO_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idModulo) {
         boolean eliminado = moduloService.eliminar(idModulo);
         if (!eliminado) {

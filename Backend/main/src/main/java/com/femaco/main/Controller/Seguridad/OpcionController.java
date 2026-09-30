@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,12 +33,14 @@ public class OpcionController {
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('PERMISO_OPCION_ALTA')")
     public ResponseEntity<Opcion> crear(@RequestBody Opcion opcion) {
         Opcion creada = opcionService.crear(opcion);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
     @PutMapping("/editar/{idOpcion}")
+    @PreAuthorize("hasAuthority('PERMISO_OPCION_CAMBIO')")
     public ResponseEntity<Opcion> editar(@PathVariable Long idOpcion,
                                            @RequestBody Opcion opcion) {
         return opcionService.actualizar(idOpcion, opcion)
@@ -46,6 +49,7 @@ public class OpcionController {
     }
 
     @DeleteMapping("/eliminar/{idOpcion}")
+    @PreAuthorize("hasAuthority('PERMISO_OPCION_BAJA')")
     public ResponseEntity<Void> eliminar(@PathVariable Long idOpcion) {
         boolean eliminado = opcionService.eliminar(idOpcion);
         if (!eliminado) {

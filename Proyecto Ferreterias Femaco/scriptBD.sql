@@ -868,3 +868,6 @@ VALUES (1, 'CF', 'Consumidor Final', '0000-0000', 'consumidorfinal@femaco.com.gt
 INSERT INTO cliente (Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)
 VALUES ('107310384', 'BYRON MENDOZA', '1234-5678', 'prueba@correo.com', 'Zona 1, Guatemala', 1, NOW(), 1, NOW(), 1);
 
+CREATE INDEX idx_venta_estado_fecha    ON venta (IdEstadoVenta, Fecha);
+CREATE INDEX idx_movinv_fecha          ON movimiento_inventario (FechaCreacion);
+CREATE INDEX idx_movinv_articulo_fecha ON movimiento_inventario (IdArticulo, FechaCreacion);

@@ -23,6 +23,8 @@ import { ArticuloService } from './articulo.service';
 import { UnidadMedidaService } from './unidad-medida.service';
 import { RolService } from './rol.service';
 import { SucursalService } from './sucursal.service';
+import { ClienteService } from './cliente.service';
+import { ProveedorService } from './proveedor.service';
 import { EstadoArticuloService } from './catalogo-services/estado-articulo.service';
 import { EstadoClienteService } from './catalogo-services/estado-cliente.service';
 import { EstadoOrdenCompraService } from './catalogo-services/estado-orden-compra.service';
@@ -53,6 +55,8 @@ export class AuthService {
   private unidadMedidaService = inject(UnidadMedidaService);
   private rolService = inject(RolService);
   private sucursalService = inject(SucursalService);
+  private clienteService = inject(ClienteService);
+  private proveedorService = inject(ProveedorService);
   private estadoArticuloService = inject(EstadoArticuloService);
   private estadoClienteService = inject(EstadoClienteService);
   private estadoOrdenCompraService = inject(EstadoOrdenCompraService);
@@ -126,6 +130,8 @@ export class AuthService {
     this.unidadMedidaService.clearCache();
     this.rolService.clearCache();
     this.sucursalService.clearCache();
+    this.clienteService.clearCache();
+    this.proveedorService.clearCache();
     this.estadoArticuloService.clearCache();
     this.estadoClienteService.clearCache();
     this.estadoOrdenCompraService.clearCache();

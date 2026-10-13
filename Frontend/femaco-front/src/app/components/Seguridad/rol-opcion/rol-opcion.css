@@ -75,6 +75,36 @@
   margin: 0 auto 1.5rem;
 }
 
+.filter-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-controls .form-group {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-controls label {
+  font-weight: 700;
+  color: #386641;
+}
+
+.filter-controls .form-control {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 1.5px solid #d0d8c4;
+  background: #f8f9f5;
+  color: #2c3e2d;
+  font-size: 0.95rem;
+}
+
 .groups-container {
   display: flex;
   flex-direction: column;
@@ -103,6 +133,11 @@
 @media (max-width: 768px) {
   .crud-form .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .filter-controls {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .checkbox-label {

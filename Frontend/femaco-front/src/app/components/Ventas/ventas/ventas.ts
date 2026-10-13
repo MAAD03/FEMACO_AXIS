@@ -117,6 +117,10 @@ export class Ventas implements OnInit {
   get puedeCrearCotizacion(): boolean { return this.permisosCotizacion.alta; }
   get permisosPedido() { return this.conjuntoMenuService.getPermisosPorPagina('pedidos'); }
   get puedeCrearPedido(): boolean { return this.permisosPedido.alta; }
+  get fechaMinimaEntrega(): string {
+    const hoy = new Date();
+    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  }
   get puedeAplicarDescuento(): boolean {
     const usuario = this.authService.getCurrentUser() as (Record<string, unknown> | null);
     return usuario?.['PuedeAplicarDescuento'] === true;
@@ -323,6 +327,11 @@ export class Ventas implements OnInit {
     if (!this.puedeCrearPedido) { this.errorPedido.set('No tienes permiso para crear pedidos'); return; }
     const idVenta = this.idVentaCompletada();
     if (idVenta == null || this.creandoPedido() || this.cargandoDetallesPedido()) return;
+    if (this.fechaEntregaAnterior()) {
+      this.pedidoForm.controls['fechaEntrega'].markAsTouched();
+      this.errorPedido.set('La fecha de entrega no puede ser anterior a hoy');
+      return;
+    }
     if (this.pedidoForm.invalid) {
       this.pedidoForm.markAllAsTouched();
       return;
@@ -356,6 +365,11 @@ export class Ventas implements OnInit {
         this.creandoPedido.set(false);
       },
     });
+  }
+
+  fechaEntregaAnterior(): boolean {
+    const fecha = this.pedidoForm.get('fechaEntrega')?.value;
+    return typeof fecha === 'string' && fecha !== '' && fecha < this.fechaMinimaEntrega;
   }
 
   actualizarCantidadPedido(index: number, event: Event): void {

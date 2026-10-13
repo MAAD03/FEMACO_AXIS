@@ -197,6 +197,11 @@ export class Pedidos implements OnInit {
     return Number.isNaN(valor.getTime()) ? '' : this.formatearClaveFecha(valor);
   }
 
+  estaVencido(fecha: string | Date | undefined): boolean {
+    const claveFecha = this.obtenerClaveFecha(fecha);
+    return claveFecha !== '' && claveFecha < this.formatearClaveFecha(new Date());
+  }
+
   private formatearClaveFecha(fecha: Date): string {
     const anio = fecha.getFullYear();
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');

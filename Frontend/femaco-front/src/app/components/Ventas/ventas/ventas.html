@@ -50,7 +50,11 @@
         </div>
         <div class="form-group">
           <label for="pedidoFechaEntrega">Fecha de entrega</label>
-          <input id="pedidoFechaEntrega" type="date" formControlName="fechaEntrega" class="form-control" />
+          <input id="pedidoFechaEntrega" type="date" formControlName="fechaEntrega" class="form-control"
+            [min]="fechaMinimaEntrega" />
+          @if (pedidoForm.get('fechaEntrega')?.touched && fechaEntregaAnterior()) {
+          <div class="error-msg">La fecha de entrega no puede ser anterior a hoy</div>
+          }
         </div>
         <div class="form-group">
           <label for="pedidoDireccionEntrega">Dirección de entrega *</label>
@@ -79,12 +83,14 @@
           @else if (detallesPedido().length === 0) { <p class="empty">La venta no tiene artículos registrados.</p> }
           @else {
           <div class="pedido-detalles-grid">
-            <div class="pedido-detalles-grid-header"><span>ID artículo</span><span>Artículo</span><span>Cantidad</span>
+            <div class="pedido-detalles-grid-header">
+              <span>ID artículo</span><span>Artículo</span><span>Cant. venta</span><span>Cant. pedido</span>
             </div>
             @for (item of detallesPedido(); track item.detalle.idVentaDetalle ?? item.detalle.idArticulo) {
             <div class="pedido-detalle-row">
               <span>{{ item.detalle.idArticulo ?? '—' }}</span>
               <span>{{ item.detalle.idArticulo | articuloNombre }}</span>
+              <span class="pedido-cantidad-venta">{{ item.detalle.cantidad | number:'1.0-2' }}</span>
               <input type="number" min="0" [max]="item.detalle.cantidad" step="0.01" class="form-control"
                 [value]="item.cantidad" (input)="actualizarCantidadPedido($index, $event)" />
             </div>

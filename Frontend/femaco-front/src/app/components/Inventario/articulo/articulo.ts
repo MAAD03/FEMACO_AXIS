@@ -251,6 +251,13 @@ export class Articulo implements OnInit {
     return this.calcularPrecioFinal(item.precioCompraUltimoProveedor, item.margenGanancia);
   }
 
+  montoDescuentoMayorista(item: ArticuloModel): number | null {
+    const precioFinal = this.precioFinal(item);
+    if (precioFinal === null || item.descuentoMayorista == null) return null;
+    const descuento = Math.min(100, Math.max(0, Number(item.descuentoMayorista) || 0));
+    return precioFinal * descuento / 100;
+  }
+
   private calcularPrecioFinal(precioCompra: number | undefined, margen: number | undefined): number | null {
     if (precioCompra === undefined || margen === undefined) return null;
     return precioCompra * (1 + margen / 100);

@@ -131,7 +131,14 @@
                     @for (item of pendientes(); track item.idPedido) { <tr>
                         <td>{{ item.idPedido }}</td>
                         <td>{{ item.idVenta ?? '—' }}</td>
-                        <td>{{ item.fechaEntrega | date:'dd/MM/yyyy' }}</td>
+                        <td>
+                            <span [class.fecha-entrega-vencida]="estaVencido(item.fechaEntrega)">
+                                {{ item.fechaEntrega | date:'dd/MM/yyyy' }}
+                            </span>
+                            @if (estaVencido(item.fechaEntrega)) {
+                            <span class="pedido-vencido-badge">Vencido</span>
+                            }
+                        </td>
                         <td>{{ item.direccionEntrega || '—' }}</td>
                         <td>{{ item.numeroEntrega || '—' }}</td>
                         <td>{{ item.idEstadoPedido | estadoPedidoNombre }}</td>

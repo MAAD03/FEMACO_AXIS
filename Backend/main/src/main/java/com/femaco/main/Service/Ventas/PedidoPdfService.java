@@ -33,13 +33,9 @@ public class PedidoPdfService {
     private static final float ANCHO_CARTA = 612f;
     private static final float MARGEN = 36f;
     private static final float ALTO_MINIMO = 330f;
-    private static final float ALTO_MAXIMO = 792f * 3;
-    private static final float ALTURA_ENCABEZADO = 90f;
-    private static final float ALTURA_FILA_BASE = 27f;
-    private static final float ALTURA_POR_LINEA_EXTRA = 12f;
+    private static final float ALTO_MAXIMO = 792f;
     private static final float MARGEN_SUPERIOR_INFERIOR = MARGEN * 2;
     private static final float COLCHON_SEGURIDAD = 16f;
-    private static final int CARACTERES_POR_LINEA = 68;
 
     private static final Font FUENTE_TITULO = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 15);
     private static final Font FUENTE_NORMAL = FontFactory.getFont(FontFactory.HELVETICA, 10);
@@ -77,37 +73,33 @@ public class PedidoPdfService {
     }
 
     private byte[] construirPdf(Pedido pedido, Sucursal sucursal) throws Exception {
-        Document document = new Document(new Rectangle(ANCHO_CARTA, estimarAltoPagina(pedido)));
+        PdfPTable encabezado = crearEncabezado(sucursal);
+        PdfPTable datos = crearDatosPedido(pedido);
+
+        // Se mide el alto real del contenido para ajustar la hoja; el limite es una carta.
+        float anchoUtil = ANCHO_CARTA - 2 * MARGEN;
+        encabezado.setTotalWidth(anchoUtil);
+        datos.setTotalWidth(anchoUtil);
+        float alto = encabezado.getTotalHeight() + datos.getTotalHeight()
+                + MARGEN_SUPERIOR_INFERIOR + COLCHON_SEGURIDAD;
+        boolean excedeCarta = alto > ALTO_MAXIMO;
+        datos.setSplitRows(excedeCarta);
+        float altoPagina = Math.min(Math.max(ALTO_MINIMO, alto), ALTO_MAXIMO);
+
+        Document document = new Document(new Rectangle(ANCHO_CARTA, altoPagina));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, baos);
         document.setMargins(MARGEN, MARGEN, MARGEN, MARGEN);
         document.open();
 
-        agregarEncabezado(document, sucursal);
-        agregarDatosPedido(document, pedido);
+        document.add(encabezado);
+        document.add(datos);
 
         document.close();
         return baos.toByteArray();
     }
 
-    private float estimarAltoPagina(Pedido pedido) {
-        float alto = ALTURA_ENCABEZADO + MARGEN_SUPERIOR_INFERIOR + COLCHON_SEGURIDAD;
-        alto += alturaFila("Fecha de entrega", pedido.getFechaEntrega() == null ? "-" : pedido.getFechaEntrega().toString());
-        alto += alturaFila("Numero de entrega / telefono", pedido.getNumeroEntrega());
-        alto += alturaFila("Direccion de entrega", pedido.getDireccionEntrega());
-        alto += alturaFila("Producto de pedido", pedido.getProductoDePedido());
-        alto += alturaFila("Notas de entrega", pedido.getNotasEntrega());
-        return Math.min(Math.max(ALTO_MINIMO, alto), ALTO_MAXIMO);
-    }
-
-    private float alturaFila(String etiqueta, String valor) {
-        int lineasEtiqueta = (int) Math.ceil(etiqueta.length() / 28d);
-        int lineasValor = (int) Math.ceil(valorOTexto(valor).length() / (double) CARACTERES_POR_LINEA);
-        int lineas = Math.max(1, Math.max(lineasEtiqueta, lineasValor));
-        return ALTURA_FILA_BASE + (lineas - 1) * ALTURA_POR_LINEA_EXTRA;
-    }
-
-    private void agregarEncabezado(Document document, Sucursal sucursal) throws Exception {
+    private PdfPTable crearEncabezado(Sucursal sucursal) throws Exception {
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
         tabla.setWidths(new float[]{58f, 42f});
@@ -129,10 +121,10 @@ public class PedidoPdfService {
         titulo.addElement(new Phrase("LISTADO DE ENTREGA", FUENTE_TITULO));
         tabla.addCell(titulo);
 
-        document.add(tabla);
+        return tabla;
     }
 
-    private void agregarDatosPedido(Document document, Pedido pedido) throws Exception {
+    private PdfPTable crearDatosPedido(Pedido pedido) throws Exception {
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
         tabla.setWidths(new float[]{25f, 75f});
@@ -143,7 +135,7 @@ public class PedidoPdfService {
         agregarFilaProducto(tabla, valorOTexto(pedido.getProductoDePedido()));
         agregarFila(tabla, "Notas de entrega", valorOTexto(pedido.getNotasEntrega()));
 
-        document.add(tabla);
+        return tabla;
     }
 
     private void agregarFila(PdfPTable tabla, String etiqueta, String valor) {

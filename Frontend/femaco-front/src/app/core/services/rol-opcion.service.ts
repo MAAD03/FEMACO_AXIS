@@ -17,6 +17,10 @@ export class RolOpcionService {
     return this.http.get<RolOpcion[]>(`${this.api}/buscar`);
   }
 
+  buscarPorIdRol(idRol: number): Observable<RolOpcion[]> {
+    return this.http.get<RolOpcion[]>(`${this.api}/buscar/rol/${idRol}`);
+  }
+
   crear(rolOpcion: RolOpcion): Observable<RolOpcion> {
     return this.http.post<RolOpcion>(`${this.api}/crear`, rolOpcion);
   }

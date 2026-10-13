@@ -23,6 +23,10 @@ public class RolOpcionService {
         return rolOpcionRepository.findAll();
     }
 
+    public List<RolOpcion> buscarPorIdRol(Long idRol) {
+        return rolOpcionRepository.findAllByIdRol(idRol);
+    }
+
     @Transactional
     public RolOpcion crear(RolOpcion rolOpcion) {
         LocalDateTime ahora = LocalDateTime.now();

@@ -32,6 +32,11 @@ public class RolOpcionController {
         return ResponseEntity.ok(rolOpcionService.buscarTodos());
     }
 
+    @GetMapping("/buscar/rol/{idRol}")
+    public ResponseEntity<List<RolOpcion>> buscarPorIdRol(@PathVariable Long idRol) {
+        return ResponseEntity.ok(rolOpcionService.buscarPorIdRol(idRol));
+    }
+
     @PostMapping("/crear")
     @PreAuthorize("hasAuthority('PERMISO_ROL_OPCION_ALTA')")
     public ResponseEntity<RolOpcion> crear(@RequestBody RolOpcion rolOpcion) {

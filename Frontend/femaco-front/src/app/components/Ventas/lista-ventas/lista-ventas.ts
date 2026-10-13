@@ -90,6 +90,11 @@ export class ListaVentas implements OnInit {
     return this.permisosPedido.alta;
   }
 
+  get fechaMinimaEntrega(): string {
+    const hoy = new Date();
+    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  }
+
   ngOnInit(): void {
     this.initForms();
     this.estadoVentaService.buscarTodos().subscribe({ next: data => this.estados.set(data ?? []) });
@@ -232,6 +237,11 @@ export class ListaVentas implements OnInit {
     if (!this.puedeCrearPedido || this.creandoPedido()) return;
     const idVenta = this.ventaSeleccionada()?.venta.idVenta;
     if (idVenta == null) return;
+    if (this.fechaEntregaAnterior()) {
+      this.pedidoForm.controls['fechaEntrega'].markAsTouched();
+      this.errorPedido.set('La fecha de entrega no puede ser anterior a hoy');
+      return;
+    }
     if (this.pedidoForm.invalid) {
       this.pedidoForm.markAllAsTouched();
       return;
@@ -261,6 +271,11 @@ export class ListaVentas implements OnInit {
         this.creandoPedido.set(false);
       },
     });
+  }
+
+  fechaEntregaAnterior(): boolean {
+    const fecha = this.pedidoForm.get('fechaEntrega')?.value;
+    return typeof fecha === 'string' && fecha !== '' && fecha < this.fechaMinimaEntrega;
   }
 
   actualizarCantidadPedido(index: number, event: Event): void {

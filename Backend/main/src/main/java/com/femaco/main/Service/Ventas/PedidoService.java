@@ -45,8 +45,8 @@ public class PedidoService {
         if (pedido.getFechaEntrega() == null) {
             throw new BusinessException("La fecha de entrega es obligatoria");
         }
-        if (!pedido.getFechaEntrega().isAfter(LocalDate.now())) {
-            throw new BusinessException("La fecha de entrega debe ser posterior a la fecha actual");
+        if (pedido.getFechaEntrega().isBefore(LocalDate.now())) {
+            throw new BusinessException("La fecha de entrega no puede ser anterior a la fecha actual");
         }
 
         Usuario usuarioAutenticado = obtenerUsuarioAutenticado();

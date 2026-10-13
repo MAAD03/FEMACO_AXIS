@@ -155,6 +155,9 @@
 							? '—' : (item.precioCompraUltimoProveedor | number:'1.2-2') }}</strong></div>
 					<div class="derived-metric"><span>Precio final</span><strong>{{ precioFinal(item) == null ? '—' :
 							(precioFinal(item) | number:'1.2-2') }}</strong></div>
+					<div class="derived-metric"><span>Monto descuento mayorista</span><strong>{{
+							montoDescuentoMayorista(item) == null ? '—' :
+							('Q ' + (montoDescuentoMayorista(item) | number:'1.2-2')) }}</strong></div>
 					<div><span>Margen</span><strong>{{ item.margenGanancia == null ? '—' : (item.margenGanancia |
 							number:'1.2-2') + '%' }}</strong></div>
 					<div><span>Cantidad mínima descuento</span><strong>{{ item.cantidadMinimaDescuento == null ? '—' :

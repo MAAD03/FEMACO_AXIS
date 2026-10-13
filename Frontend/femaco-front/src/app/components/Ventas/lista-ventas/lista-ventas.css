@@ -81,10 +81,10 @@
 .pedido-detalles-grid-header,
 .pedido-detalle-row {
   display: grid;
-  grid-template-columns: 100px minmax(180px, 1fr) 120px;
+  grid-template-columns: 100px minmax(180px, 1fr) 110px 125px;
   gap: .65rem;
   align-items: center;
-  min-width: 420px;
+  min-width: 565px;
 }
 
 .pedido-detalles-grid-header {
@@ -100,6 +100,15 @@
   background: var(--crud-gray-100);
   border: 1px solid var(--crud-gray-300);
   border-radius: 6px;
+}
+
+.pedido-cantidad-venta {
+  padding: .45rem .6rem;
+  border-radius: 4px;
+  background: var(--crud-white);
+  color: var(--crud-primary-dark);
+  font-weight: 600;
+  text-align: center;
 }
 
 .pedido-producto-text {

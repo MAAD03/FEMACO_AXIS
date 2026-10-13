@@ -4,56 +4,6 @@
     <p>Existencias, movimientos y rotación de inventario</p>
   </header>
 
-  <section class="card filters-card" aria-label="Filtros de movimientos y rotación">
-    <h2 class="card-title">Filtros</h2>
-    <div class="filters-grid">
-      <div class="form-group">
-        <label for="inventario-desde">Desde</label>
-        <input
-          id="inventario-desde"
-          class="form-control"
-          type="date"
-          [value]="desde()"
-          (input)="actualizarDesde($event)"
-        />
-      </div>
-      <div class="form-group">
-        <label for="inventario-hasta">Hasta</label>
-        <input
-          id="inventario-hasta"
-          class="form-control"
-          type="date"
-          [value]="hasta()"
-          (input)="actualizarHasta($event)"
-        />
-      </div>
-      <div class="form-group">
-        <label for="inventario-agrupacion">Agrupación</label>
-        <select
-          id="inventario-agrupacion"
-          class="form-control"
-          [value]="agrupacion()"
-          (change)="actualizarAgrupacion($event)"
-        >
-          <option value="DIA">Día</option>
-          <option value="SEMANA">Semana</option>
-          <option value="MES">Mes</option>
-        </select>
-      </div>
-    </div>
-
-    @if (rangoPredeterminado()) {
-      <p class="filter-note">Últimos 30 días (predeterminado).</p>
-    }
-    @if (errorRango()) {
-      <p class="error-msg" role="alert">{{ errorRango() }}</p>
-    }
-    <div class="form-actions">
-      <button class="btn btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
-      <button class="btn btn-primary" type="button" (click)="aplicarFiltros()">Aplicar</button>
-    </div>
-  </section>
-
   <section class="card inventory-panel" aria-labelledby="stock-bajo-titulo">
     <div class="inventory-heading">
       <h2 class="card-title" id="stock-bajo-titulo">Stock bajo mínimo</h2>
@@ -102,6 +52,56 @@
     } @else {
       <p class="section-state">No hay artículos con stock bajo mínimo.</p>
     }
+  </section>
+
+  <section class="card filters-card" aria-label="Filtros de movimientos y rotación">
+    <h2 class="card-title">Filtros</h2>
+    <div class="filters-grid">
+      <div class="form-group">
+        <label for="inventario-desde">Desde</label>
+        <input
+          id="inventario-desde"
+          class="form-control"
+          type="date"
+          [value]="desde()"
+          (input)="actualizarDesde($event)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="inventario-hasta">Hasta</label>
+        <input
+          id="inventario-hasta"
+          class="form-control"
+          type="date"
+          [value]="hasta()"
+          (input)="actualizarHasta($event)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="inventario-agrupacion">Agrupación</label>
+        <select
+          id="inventario-agrupacion"
+          class="form-control"
+          [value]="agrupacion()"
+          (change)="actualizarAgrupacion($event)"
+        >
+          <option value="DIA">Día</option>
+          <option value="SEMANA">Semana</option>
+          <option value="MES">Mes</option>
+        </select>
+      </div>
+    </div>
+
+    @if (rangoPredeterminado()) {
+      <p class="filter-note">Últimos 30 días (predeterminado).</p>
+    }
+    @if (errorRango()) {
+      <p class="error-msg" role="alert">{{ errorRango() }}</p>
+    }
+    <div class="form-actions">
+      <button class="btn btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
+      <button class="btn btn-primary" type="button" (click)="aplicarFiltros()">Aplicar</button>
+    </div>
   </section>
 
   <div class="dashboard-grid">

@@ -1,6 +1,7 @@
 .sidebar {
   width: 280px;
   height: 100vh;
+  height: 100dvh;
   background: var(--crud-primary-dark);
   color: white;
   display: flex;
@@ -45,6 +46,7 @@
 
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 1.25rem 0.65rem 1.5rem 0;

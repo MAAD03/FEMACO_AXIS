@@ -88,10 +88,41 @@
   <div class="card table-card">
     <h3 class="card-title">Listado de Permisos</h3>
 
+    <div class="filter-controls">
+      <div class="form-group">
+        <label for="filtroRol">Rol</label>
+        <select
+          id="filtroRol"
+          [formControl]="filtroRol"
+          (change)="limpiarBusqueda()"
+          [disabled]="cargando()"
+          class="form-control"
+        >
+          <option [ngValue]="null">Seleccione un rol</option>
+          @for (rol of roles(); track rol.idRol) {
+          <option [ngValue]="rol.idRol">{{ rol.idRol | rolNombre }}</option>
+          }
+        </select>
+        @if (filtroRol.touched && filtroRol.invalid) {
+        <div class="error-msg">Debe seleccionar un rol</div>
+        }
+      </div>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="buscarPorRol()"
+        [disabled]="cargando() || filtroRol.invalid"
+      >
+        Buscar
+      </button>
+    </div>
+
     @if (cargando() && lista().length === 0) {
     <p class="loading">Cargando...</p>
+    } @else if (!busquedaRealizada()) {
+    <p class="empty">Seleccione un rol y presione Buscar para consultar sus permisos.</p>
     } @else if (lista().length === 0) {
-    <p class="empty">No hay permisos registrados.</p>
+    <p class="empty">No hay permisos registrados para el rol seleccionado.</p>
     } @else {
     <div class="groups-container">
       @for (grupo of permisosPorRol(); track grupo.rol.idRol ?? 'sin-rol') {

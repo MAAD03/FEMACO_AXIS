@@ -281,6 +281,22 @@
 
 .table-card .crud-table { min-width: 980px; }
 
+.fecha-entrega-vencida {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.pedido-vencido-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fef3f2;
+  color: #b42318;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .pagination {
   display: flex;
   align-items: center;

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Opcion } from '../../../core/models/opcion.model';
 import { Rol } from '../../../core/models/rol.model';
 import { RolOpcion } from '../../../core/models/rol-opcion.model';
@@ -28,11 +28,13 @@ export class RolOpcionComponent implements OnInit {
   private opcionService = inject(OpcionService);
 
   form!: FormGroup;
+  filtroRol = new FormControl<number | null>(null, Validators.required);
 
   lista = signal<RolOpcion[]>([]);
   roles = signal<Rol[]>([]);
   opciones = signal<Opcion[]>([]);
   cargando = signal(false);
+  busquedaRealizada = signal(false);
   mensaje = signal('');
   error = signal('');
 
@@ -79,7 +81,6 @@ export class RolOpcionComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.cargarLista();
     this.cargarRoles();
     this.cargarOpciones();
     this.rolService.loadNombreCache().subscribe();
@@ -96,13 +97,32 @@ export class RolOpcionComponent implements OnInit {
     });
   }
 
-  cargarLista(): void {
+  buscarPorRol(): void {
+    const idRol = this.filtroRol.value;
+    if (idRol == null) {
+      this.filtroRol.markAsTouched();
+      return;
+    }
+
+    this.cargarListaPorRol(idRol);
+  }
+
+  limpiarBusqueda(): void {
+    this.lista.set([]);
+    this.busquedaRealizada.set(false);
+    this.error.set('');
+  }
+
+  private cargarListaPorRol(idRol: number): void {
     this.cargando.set(true);
     this.error.set('');
+    this.lista.set([]);
+    this.busquedaRealizada.set(false);
 
-    this.rolOpcionService.buscarTodos().subscribe({
+    this.rolOpcionService.buscarPorIdRol(idRol).subscribe({
       next: (data) => {
         this.lista.set(data ?? []);
+        this.busquedaRealizada.set(true);
         this.cargando.set(false);
       },
       error: () => {
@@ -110,6 +130,17 @@ export class RolOpcionComponent implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  private actualizarListaFiltrada(): void {
+    const idRol = this.filtroRol.value;
+    if (idRol == null) {
+      this.lista.set([]);
+      this.busquedaRealizada.set(false);
+      return;
+    }
+
+    this.cargarListaPorRol(idRol);
   }
 
   cargarRoles(): void {
@@ -137,7 +168,7 @@ export class RolOpcionComponent implements OnInit {
   private finalizarOperacion(mensaje: string): void {
     this.mensaje.set(mensaje);
     this.resetForm();
-    this.cargarLista();
+    this.actualizarListaFiltrada();
 
     setTimeout(() => {
       this.mensaje.set('');

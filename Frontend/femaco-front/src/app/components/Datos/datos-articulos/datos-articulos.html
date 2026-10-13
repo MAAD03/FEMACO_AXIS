@@ -1,1 +1,274 @@
-<p>datos-articulos works!</p>
+<main class="crud-container dashboard-container">
+  <header class="dashboard-header">
+    <h1 class="crud-title">Dashboard de artículos e inventario</h1>
+    <p>Existencias, movimientos y rotación de inventario</p>
+  </header>
+
+  <section class="card filters-card" aria-label="Filtros de movimientos y rotación">
+    <h2 class="card-title">Filtros</h2>
+    <div class="filters-grid">
+      <div class="form-group">
+        <label for="inventario-desde">Desde</label>
+        <input
+          id="inventario-desde"
+          class="form-control"
+          type="date"
+          [value]="desde()"
+          (input)="actualizarDesde($event)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="inventario-hasta">Hasta</label>
+        <input
+          id="inventario-hasta"
+          class="form-control"
+          type="date"
+          [value]="hasta()"
+          (input)="actualizarHasta($event)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="inventario-agrupacion">Agrupación</label>
+        <select
+          id="inventario-agrupacion"
+          class="form-control"
+          [value]="agrupacion()"
+          (change)="actualizarAgrupacion($event)"
+        >
+          <option value="DIA">Día</option>
+          <option value="SEMANA">Semana</option>
+          <option value="MES">Mes</option>
+        </select>
+      </div>
+    </div>
+
+    @if (rangoPredeterminado()) {
+      <p class="filter-note">Últimos 30 días (predeterminado).</p>
+    }
+    @if (errorRango()) {
+      <p class="error-msg" role="alert">{{ errorRango() }}</p>
+    }
+    <div class="form-actions">
+      <button class="btn btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
+      <button class="btn btn-primary" type="button" (click)="aplicarFiltros()">Aplicar</button>
+    </div>
+  </section>
+
+  <section class="card inventory-panel" aria-labelledby="stock-bajo-titulo">
+    <div class="inventory-heading">
+      <h2 class="card-title" id="stock-bajo-titulo">Stock bajo mínimo</h2>
+      @if (stockBajo(); as articulos) {
+        <div class="stock-count">
+          <span>Artículos con stock bajo</span>
+          <strong>{{ articulos.length }}</strong>
+        </div>
+      }
+    </div>
+    @if (stockCargando()) {
+      <p class="section-state" aria-live="polite">Cargando artículos con stock bajo…</p>
+    } @else if (stockError()) {
+      <p class="section-state error-msg" role="alert">{{ stockError() }}</p>
+    } @else if (stockBajo()?.length) {
+      <div class="table-responsive">
+        <table class="crud-table">
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Stock actual</th>
+              <th scope="col">Stock mínimo</th>
+              <th scope="col">Faltante</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (articulo of stockBajo(); track articulo.idArticulo) {
+              <tr
+                class="selectable-row"
+                tabindex="0"
+                [attr.aria-label]="'Ver historial de ' + articulo.nombre"
+                (click)="seleccionarArticulo(articulo)"
+                (keydown.enter)="seleccionarArticulo(articulo)"
+              >
+                <td>{{ articulo.codigo }}</td>
+                <td>{{ articulo.nombre }}</td>
+                <td>{{ articulo.stockActual | number:'1.0-2' }}</td>
+                <td>{{ articulo.stockMinimo | number:'1.0-2' }}</td>
+                <td><strong class="low-stock">{{ articulo.faltante | number:'1.0-2' }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="section-state">No hay artículos con stock bajo mínimo.</p>
+    }
+  </section>
+
+  <div class="dashboard-grid">
+    <section class="card dashboard-panel" aria-labelledby="movimientos-periodo-titulo">
+      <h2 class="card-title" id="movimientos-periodo-titulo">Movimientos por período</h2>
+      @if (movimientosCargando()) {
+        <p class="section-state" aria-live="polite">Cargando movimientos…</p>
+      } @else if (movimientosError()) {
+        <p class="section-state error-msg" role="alert">{{ movimientosError() }}</p>
+      } @else if (movimientosPivoteados()?.length) {
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [type]="movimientosChartType"
+            [data]="movimientosChartData()"
+            [options]="movimientosChartOptions"
+            aria-label="Entradas, salidas y ajustes netos por período"
+          ></canvas>
+        </div>
+      } @else {
+        <p class="section-state">No hay movimientos en el período seleccionado.</p>
+      }
+    </section>
+
+    <section class="card dashboard-panel rotation-panel" aria-labelledby="rotacion-titulo">
+      <div class="panel-heading">
+        <h2 class="card-title" id="rotacion-titulo">Rotación de inventario</h2>
+        <div class="toggle-group" role="group" aria-label="Orden de rotación">
+          <button
+            class="btn"
+            [class.btn-primary]="ordenRotacion() === 'MAS_MOVIDOS'"
+            [class.btn-secondary]="ordenRotacion() !== 'MAS_MOVIDOS'"
+            type="button"
+            [attr.aria-pressed]="ordenRotacion() === 'MAS_MOVIDOS'"
+            (click)="cambiarOrdenRotacion('MAS_MOVIDOS')"
+          >
+            Más movidos
+          </button>
+          <button
+            class="btn"
+            [class.btn-primary]="ordenRotacion() === 'MENOS_MOVIDOS'"
+            [class.btn-secondary]="ordenRotacion() !== 'MENOS_MOVIDOS'"
+            type="button"
+            [attr.aria-pressed]="ordenRotacion() === 'MENOS_MOVIDOS'"
+            (click)="cambiarOrdenRotacion('MENOS_MOVIDOS')"
+          >
+            Menos movidos
+          </button>
+        </div>
+      </div>
+      @if (rotacionCargando()) {
+        <p class="section-state" aria-live="polite">Cargando rotación…</p>
+      } @else if (rotacionError()) {
+        <p class="section-state error-msg" role="alert">{{ rotacionError() }}</p>
+      } @else if (rotacion()?.length) {
+        <div class="table-responsive">
+          <table class="crud-table">
+            <thead>
+              <tr>
+                <th scope="col">Código</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Stock actual</th>
+                <th scope="col">Salidas</th>
+                <th scope="col">Entradas</th>
+                <th scope="col">Ajuste neto</th>
+                <th scope="col">Movimientos</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (articulo of rotacion(); track articulo.idArticulo) {
+                <tr
+                  class="selectable-row"
+                  tabindex="0"
+                  [attr.aria-label]="'Ver historial de ' + articulo.nombre"
+                  (click)="seleccionarArticulo(articulo)"
+                  (keydown.enter)="seleccionarArticulo(articulo)"
+                >
+                  <td>{{ articulo.codigo }}</td>
+                  <td>{{ articulo.nombre }}</td>
+                  <td>{{ articulo.stockActual | number:'1.0-2' }}</td>
+                  <td>{{ articulo.totalSalidas | number:'1.0-2' }}</td>
+                  <td>{{ articulo.totalEntradas | number:'1.0-2' }}</td>
+                  <td>{{ articulo.ajusteNeto | number:'1.0-2' }}</td>
+                  <td>{{ articulo.cantidadMovimientos | number:'1.0-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="section-state">No hay datos de rotación para el período seleccionado.</p>
+      }
+    </section>
+  </div>
+
+  @if (articuloSeleccionado(); as seleccionado) {
+    <section class="card dashboard-panel history-panel" aria-labelledby="historial-titulo">
+      <div class="panel-heading">
+        <div>
+          <h2 class="card-title" id="historial-titulo">Historial de movimientos</h2>
+          <p class="selected-article">{{ seleccionado.codigo }} · {{ seleccionado.nombre }}</p>
+        </div>
+        <button class="btn btn-secondary" type="button" (click)="cerrarHistorial()">Cerrar</button>
+      </div>
+
+      @if (historialCargando()) {
+        <p class="section-state" aria-live="polite">Cargando historial…</p>
+      } @else if (historialError()) {
+        <p class="section-state error-msg" role="alert">{{ historialError() }}</p>
+      } @else if (historial()?.contenido?.length) {
+        <div class="table-responsive">
+          <table class="crud-table">
+            <thead>
+              <tr>
+                <th scope="col">Fecha y hora</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Motivo</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Stock anterior → nuevo</th>
+                <th scope="col">Usuario</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (movimiento of historial()?.contenido; track movimiento.idMovimientoInventario) {
+                <tr>
+                  <td>{{ fechaLegible(movimiento.fecha) }}</td>
+                  <td>{{ etiquetaTipoMovimiento(movimiento.tipoMovimiento) }}</td>
+                  <td>{{ etiquetaMotivo(movimiento.motivo) }}</td>
+                  <td>{{ movimiento.cantidad | number:'1.0-2' }}</td>
+                  <td>
+                    {{ movimiento.stockViejo | number:'1.0-2' }}
+                    →
+                    {{ movimiento.stockNuevo | number:'1.0-2' }}
+                  </td>
+                  <td>{{ movimiento.usuario }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-row">
+          <span>
+            Página {{ paginaHistorial() + 1 }} de {{ totalPaginasHistorial() }}
+            · {{ totalElementosHistorial() }} movimientos
+          </span>
+          <div class="form-actions">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              [disabled]="paginaHistorial() === 0"
+              (click)="cambiarPaginaHistorial(paginaHistorial() - 1)"
+            >
+              Anterior
+            </button>
+            <button
+              class="btn btn-secondary"
+              type="button"
+              [disabled]="paginaHistorial() + 1 >= totalPaginasHistorial()"
+              (click)="cambiarPaginaHistorial(paginaHistorial() + 1)"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      } @else {
+        <p class="section-state">Este artículo no tiene movimientos registrados.</p>
+      }
+    </section>
+  }
+</main>

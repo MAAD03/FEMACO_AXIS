@@ -1,0 +1,172 @@
+.dashboard-container {
+  width: 100%;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-header p,
+.filter-note {
+  color: var(--crud-primary-dark);
+  margin: 0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.filters-card .form-actions {
+  margin-top: 1rem;
+}
+
+.filter-note {
+  margin-top: 0.75rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.kpi-card {
+  min-width: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kpi-card h2 {
+  color: var(--crud-primary-dark);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.kpi-card strong {
+  color: var(--crud-text);
+  font-size: 1.35rem;
+  overflow-wrap: anywhere;
+}
+
+.kpi-card > span {
+  font-size: 0.85rem;
+}
+
+.variation-positive {
+  color: var(--crud-success);
+}
+
+.variation-negative {
+  color: var(--crud-danger);
+}
+
+.variation-neutral {
+  color: var(--crud-text);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.dashboard-panel {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.dashboard-panel .card-title {
+  margin-bottom: 1rem;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-heading .card-title {
+  flex: 1;
+}
+
+.toggle-group {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.toggle-group .btn {
+  padding: 0.45rem 0.75rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 320px;
+  min-width: 0;
+}
+
+.section-state {
+  margin: 0;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+}
+
+.state-card {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.clients-panel {
+  grid-column: 1 / -1;
+}
+
+.clients-panel .table-responsive {
+  max-width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .filters-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .clients-panel {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-heading {
+    flex-direction: column;
+  }
+
+  .panel-heading .card-title {
+    width: 100%;
+  }
+
+  .chart-container {
+    height: 280px;
+  }
+}

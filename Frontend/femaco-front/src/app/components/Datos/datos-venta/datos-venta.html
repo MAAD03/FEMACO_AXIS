@@ -1,1 +1,233 @@
-<p>datos-venta works!</p>
+<main class="crud-container dashboard-container">
+  <header class="dashboard-header">
+    <h1 class="crud-title">Dashboard de ventas</h1>
+    <p>Resumen y comportamiento de ventas</p>
+  </header>
+
+  <section class="card filters-card" aria-label="Filtros de ventas">
+    <h2 class="card-title">Filtros</h2>
+    <div class="filters-grid">
+      <div class="form-group">
+        <label for="ventas-desde">Desde</label>
+        <input
+          id="ventas-desde"
+          class="form-control"
+          type="date"
+          [value]="desde()"
+          (input)="actualizarDesde($event)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="ventas-hasta">Hasta</label>
+        <input
+          id="ventas-hasta"
+          class="form-control"
+          type="date"
+          [value]="hasta()"
+          (input)="actualizarHasta($event)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="ventas-agrupacion">Agrupación</label>
+        <select
+          id="ventas-agrupacion"
+          class="form-control"
+          [value]="agrupacion()"
+          (change)="actualizarAgrupacion($event)"
+        >
+          <option value="DIA">Día</option>
+          <option value="SEMANA">Semana</option>
+          <option value="MES">Mes</option>
+        </select>
+      </div>
+    </div>
+
+    @if (rangoPredeterminado()) {
+      <p class="filter-note">Últimos 30 días (predeterminado).</p>
+    }
+    @if (errorRango()) {
+      <p class="error-msg" role="alert">{{ errorRango() }}</p>
+    }
+    <div class="form-actions">
+      <button class="btn btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
+      <button class="btn btn-primary" type="button" (click)="aplicarFiltros()">Aplicar</button>
+    </div>
+  </section>
+
+  <section class="kpi-grid" aria-label="Indicadores de ventas">
+    @if (resumenCargando()) {
+      <article class="card state-card" aria-live="polite">Cargando resumen de ventas…</article>
+    } @else if (resumenError()) {
+      <article class="card state-card error-msg" role="alert">{{ resumenError() }}</article>
+    } @else if (resumen(); as datos) {
+      <article class="card kpi-card">
+        <h2>Ventas de hoy</h2>
+        <strong>{{ datos.hoy.total | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+        <span>{{ datos.hoy.cantidadVentas }} ventas</span>
+        @if (datos.variacionVsAyerPct === null) {
+          <span class="variation-neutral">— <small>Sin referencia</small></span>
+        } @else {
+          <span
+            class="variation"
+            [class.variation-positive]="datos.variacionVsAyerPct > 0"
+            [class.variation-negative]="datos.variacionVsAyerPct < 0"
+          >
+            {{ datos.variacionVsAyerPct > 0 ? '+' : '' }}{{ datos.variacionVsAyerPct | number:'1.0-2' }}% vs ayer
+          </span>
+        }
+      </article>
+      <article class="card kpi-card">
+        <h2>Ventas del mes</h2>
+        <strong>{{ datos.mesActual.total | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+        @if (datos.variacionMensualPct === null) {
+          <span class="variation-neutral">— <small>Sin referencia</small></span>
+        } @else {
+          <span
+            class="variation"
+            [class.variation-positive]="datos.variacionMensualPct > 0"
+            [class.variation-negative]="datos.variacionMensualPct < 0"
+          >
+            {{ datos.variacionMensualPct > 0 ? '+' : '' }}{{ datos.variacionMensualPct | number:'1.0-2' }}% vs mismo período
+          </span>
+        }
+      </article>
+      <article class="card kpi-card">
+        <h2>Ticket promedio del mes</h2>
+        <strong>{{ datos.mesActual.ticketPromedio | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+      </article>
+      <article class="card kpi-card">
+        <h2>Descuentos del mes</h2>
+        <strong>{{ datos.mesActual.descuentos | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+      </article>
+      <article class="card kpi-card">
+        <h2>Mes anterior completo</h2>
+        <strong>{{ datos.mesAnteriorCompleto.total | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+      </article>
+    }
+  </section>
+
+  <div class="dashboard-grid">
+    <section class="card dashboard-panel" aria-labelledby="ventas-periodo-titulo">
+      <h2 class="card-title" id="ventas-periodo-titulo">Ventas por período</h2>
+      @if (periodosCargando()) {
+        <p class="section-state" aria-live="polite">Cargando períodos…</p>
+      } @else if (periodosError()) {
+        <p class="section-state error-msg" role="alert">{{ periodosError() }}</p>
+      } @else if (periodos()?.length) {
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [type]="periodoChartType"
+            [data]="periodoChartData()"
+            [options]="periodoChartOptions"
+            aria-label="Ventas y descuentos por período"
+          ></canvas>
+        </div>
+      } @else {
+        <p class="section-state">No hay ventas en el período seleccionado.</p>
+      }
+    </section>
+
+    <section class="card dashboard-panel" aria-labelledby="top-productos-titulo">
+      <div class="panel-heading">
+        <h2 class="card-title" id="top-productos-titulo">Top productos</h2>
+        <div class="toggle-group" role="group" aria-label="Métrica del top de productos">
+          <button
+            class="btn"
+            [class.btn-primary]="ordenTop() === 'UNIDADES'"
+            [class.btn-secondary]="ordenTop() !== 'UNIDADES'"
+            type="button"
+            [attr.aria-pressed]="ordenTop() === 'UNIDADES'"
+            (click)="cambiarOrdenTop('UNIDADES')"
+          >
+            Unidades
+          </button>
+          <button
+            class="btn"
+            [class.btn-primary]="ordenTop() === 'MONTO'"
+            [class.btn-secondary]="ordenTop() !== 'MONTO'"
+            type="button"
+            [attr.aria-pressed]="ordenTop() === 'MONTO'"
+            (click)="cambiarOrdenTop('MONTO')"
+          >
+            Monto
+          </button>
+        </div>
+      </div>
+      @if (topProductosCargando()) {
+        <p class="section-state" aria-live="polite">Cargando productos…</p>
+      } @else if (topProductosError()) {
+        <p class="section-state error-msg" role="alert">{{ topProductosError() }}</p>
+      } @else if (topProductos()?.length) {
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [type]="barrasChartType"
+            [data]="productosChartData()"
+            [options]="productosChartOptions"
+            aria-label="Top de productos"
+          ></canvas>
+        </div>
+      } @else {
+        <p class="section-state">No hay productos vendidos en el período seleccionado.</p>
+      }
+    </section>
+
+    <section class="card dashboard-panel" aria-labelledby="ventas-vendedor-titulo">
+      <h2 class="card-title" id="ventas-vendedor-titulo">Ventas por vendedor</h2>
+      @if (vendedoresCargando()) {
+        <p class="section-state" aria-live="polite">Cargando vendedores…</p>
+      } @else if (vendedoresError()) {
+        <p class="section-state error-msg" role="alert">{{ vendedoresError() }}</p>
+      } @else if (ventasPorVendedor()?.length) {
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [type]="barrasChartType"
+            [data]="vendedoresChartData()"
+            [options]="vendedoresChartOptions"
+            aria-label="Ventas por vendedor"
+          ></canvas>
+        </div>
+      } @else {
+        <p class="section-state">No hay ventas por vendedor en el período seleccionado.</p>
+      }
+    </section>
+
+    <section class="card dashboard-panel clients-panel" aria-labelledby="top-clientes-titulo">
+      <h2 class="card-title" id="top-clientes-titulo">Top clientes</h2>
+      @if (clientesCargando()) {
+        <p class="section-state" aria-live="polite">Cargando clientes…</p>
+      } @else if (clientesError()) {
+        <p class="section-state error-msg" role="alert">{{ clientesError() }}</p>
+      } @else if (ventasPorCliente()?.length) {
+        <div class="table-responsive">
+          <table class="crud-table">
+            <thead>
+              <tr>
+                <th scope="col">NIT</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Compras</th>
+                <th scope="col">Total comprado</th>
+                <th scope="col">Descuentos recibidos</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cliente of ventasPorCliente(); track cliente.idCliente) {
+                <tr>
+                  <td>{{ cliente.nit }}</td>
+                  <td>{{ cliente.nombre }}</td>
+                  <td>{{ cliente.cantidadCompras }}</td>
+                  <td>{{ cliente.totalComprado | currency:'GTQ':'symbol-narrow':'1.2-2' }}</td>
+                  <td>{{ cliente.descuentosRecibidos | currency:'GTQ':'symbol-narrow':'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="section-state">No hay compras de clientes en el período seleccionado.</p>
+      }
+    </section>
+  </div>
+</main>

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.femaco.main.DTOs.VentaConDetallesDTO;
 import com.femaco.main.DTOs.VentaCreateDTO;
 import com.femaco.main.DTOs.VentaFiltroDTO;
+import com.femaco.main.DTOs.VentaPagoDTO;
 import com.femaco.main.Entity.Ventas.Venta;
 import com.femaco.main.Service.Ventas.ComprobanteVentaPdfService;
 import com.femaco.main.Service.Ventas.VentaService;
@@ -93,6 +94,16 @@ public class VentaController {
     @PreAuthorize("hasAuthority('PERMISO_VENTAS_BAJA')")
     public ResponseEntity<Venta> anular(@PathVariable Long idVenta) {
         return ventaService.anular(idVenta)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/agregar-modificar-pago/{idVenta}")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_ALTA')")
+    public ResponseEntity<Venta> actualizarPago(
+            @PathVariable Long idVenta,
+            @Valid @RequestBody VentaPagoDTO dto) {
+        return ventaService.actualizarPago(idVenta, dto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

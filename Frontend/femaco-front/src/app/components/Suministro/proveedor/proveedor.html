@@ -114,6 +114,25 @@
 			</article>
 			}
 		</div>
+
+		@if (totalElementos() > 0) {
+		<div class="pagination-controls" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+			<div>Mostrando {{ lista().length }} de {{ totalElementos() }} proveedores</div>
+			<div style="display: flex; align-items: center; gap: .75rem;">
+				<button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0 || cargando()" (click)="irAPagina(paginaActual() - 1)">Anterior</button>
+				<span>Página {{ paginaActual() + 1 }} de {{ totalPaginas() || 1 }}</span>
+				<button type="button" class="btn btn-secondary" [disabled]="paginaActual() >= totalPaginas() - 1 || cargando()" (click)="irAPagina(paginaActual() + 1)">Siguiente</button>
+			</div>
+			<div style="display: flex; align-items: center; gap: .5rem;">
+				<label for="tamanioPaginaProveedor">Por página</label>
+				<select id="tamanioPaginaProveedor" class="form-control" [value]="tamanioPagina()" (change)="onTamanioPaginaChange($event)">
+					@for (tamano of tamanosPagina; track tamano) {
+					<option [value]="tamano">{{ tamano }}</option>
+					}
+				</select>
+			</div>
+		</div>
+		}
 		}
 	</div>
 </div>

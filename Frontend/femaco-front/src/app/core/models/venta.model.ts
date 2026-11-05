@@ -1,3 +1,5 @@
+export type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'CHEQUE' | 'TRANSFERENCIA' | 'DEPOSITO';
+
 export interface Venta {
   idVenta?: number;
   fecha?: string | Date;
@@ -11,10 +13,17 @@ export interface Venta {
   idEstadoVenta?: number;
   idCliente?: number;
   idUsuario?: number;
+  metodoPago?: MetodoPago | null;
+  referenciaPago?: string | null;
   usuarioCreacion?: number;
   usuarioModif?: number;
   fechaCreacion?: string | Date;
   fechaModif?: string | Date;
+}
+
+export interface VentaPagoRequest {
+  metodoPago: MetodoPago;
+  referenciaPago?: string | null;
 }
 
 export interface VentaFiltro {

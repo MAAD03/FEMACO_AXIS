@@ -12,6 +12,10 @@
   background: rgba(20, 31, 25, .58);
 }
 
+.payment-overlay {
+  z-index: 1210;
+}
+
 .sale-complete-panel {
   position: relative;
   width: min(680px, 100%);
@@ -57,6 +61,19 @@
 
 .quote-form-panel {
   text-align: left;
+}
+
+.payment-total {
+  padding: .8rem 1rem;
+  border-radius: 6px;
+  background: var(--crud-gray-100);
+  color: var(--crud-primary-dark);
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.payment-total strong {
+  font-size: 1.25rem;
 }
 
 .quote-form {
@@ -120,64 +137,6 @@
   justify-content: flex-end;
   gap: .75rem;
   margin-top: .35rem;
-}
-
-.fel-modal-overlay {
-  position: fixed;
-  z-index: 1100;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: rgba(20, 31, 25, 0.58);
-}
-
-.fel-modal {
-  width: min(520px, 100%);
-  padding: 1.5rem;
-  border-top: 4px solid var(--crud-danger);
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-}
-
-.fel-modal h3 {
-  margin: 0;
-  color: var(--crud-primary-dark);
-}
-
-.fel-modal p {
-  margin: 0.6rem 0 1rem;
-  color: var(--crud-text);
-}
-
-.fel-modal label {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: var(--crud-primary-dark);
-  font-weight: 700;
-}
-
-.fel-modal textarea {
-  display: block;
-  width: 100%;
-  resize: vertical;
-  padding: 0.65rem;
-  border: 1px solid var(--crud-gray-300);
-  border-radius: 6px;
-  font: inherit;
-}
-
-.fel-modal textarea:focus {
-  outline: 2px solid var(--crud-primary-light);
-  border-color: var(--crud-primary);
-}
-
-.fel-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
 }
 
 .filters-card {
@@ -452,26 +411,6 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.25rem;
-}
-
-.fel-loading,
-.fel-error {
-  flex-basis: 100%;
-}
-
-.fel-loading {
-  color: var(--crud-primary-dark);
-  font-weight: 700;
-}
-
-@media (max-width: 520px) {
-  .fel-modal-actions {
-    flex-direction: column-reverse;
-  }
-
-  .fel-modal-actions .btn {
-    width: 100%;
-  }
 }
 
 .btn-danger {

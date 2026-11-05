@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,6 +43,13 @@ public class Venta  {
 
     @Column(name = "NumeroFactura", length = 45, unique = true)
     private String numeroFactura;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "MetodoPago")
+    private MetodoPago metodoPago;
+
+    @Column(name = "ReferenciaPago", length = 45)
+    private String referenciaPago;
 
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;

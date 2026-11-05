@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Proveedor as ProveedorModel } from '../../../core/models/proveedor.model';
+import { PageProveedor, Proveedor as ProveedorModel } from '../../../core/models/proveedor.model';
 import { EstadoProveedor } from '../../../core/models/catalogo-models/estado-proveedor.model';
 import { EstadoProveedorNombrePipe } from '../../../core/pipes/catalogo-pipes/estado-proveedor-nombre-pipe';
 import { UsuariosEmailPipe } from '../../../core/pipes/usuarios-email';
@@ -32,6 +32,11 @@ export class Proveedor implements OnInit {
   cargando = signal(false);
   mensaje = signal('');
   error = signal('');
+  paginaActual = signal(0);
+  totalPaginas = signal(0);
+  totalElementos = signal(0);
+  tamanioPagina = signal(20);
+  readonly tamanosPagina = [5, 10, 20, 50];
   editando = false;
   idEditando: number | null = null;
 
@@ -72,9 +77,12 @@ export class Proveedor implements OnInit {
   cargarLista(): void {
     this.cargando.set(true);
     this.error.set('');
-    this.proveedorService.buscarTodos().subscribe({
-      next: (data) => {
-        this.lista.set(data ?? []);
+    this.proveedorService.buscarPaginado(this.paginaActual(), this.tamanioPagina(), 'fechaCreacion,desc').subscribe({
+      next: (pagina: PageProveedor) => {
+        this.lista.set(pagina.content ?? []);
+        this.totalPaginas.set(pagina.totalPages ?? 0);
+        this.totalElementos.set(pagina.totalElements ?? 0);
+        this.paginaActual.set(pagina.number ?? 0);
         this.cargando.set(false);
       },
       error: () => {
@@ -82,6 +90,23 @@ export class Proveedor implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  cambiarTamano(): void {
+    this.paginaActual.set(0);
+    this.cargarLista();
+  }
+
+  onTamanioPaginaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement | null;
+    this.tamanioPagina.set(Number(target?.value ?? this.tamanioPagina()));
+    this.cambiarTamano();
+  }
+
+  irAPagina(pagina: number): void {
+    if (pagina < 0 || pagina >= this.totalPaginas() || pagina === this.paginaActual()) return;
+    this.paginaActual.set(pagina);
+    this.cargarLista();
   }
 
   private finalizarOperacion(mensaje: string): void {

@@ -2,10 +2,9 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TimeoutError } from 'rxjs';
 import { EstadoVenta } from '../../../core/models/catalogo-models/estado-venta.model';
 import { Pedido } from '../../../core/models/pedido.model';
-import { Venta, VentaFiltro } from '../../../core/models/venta.model';
+import { MetodoPago, Venta, VentaFiltro } from '../../../core/models/venta.model';
 import { VentaDetalle } from '../../../core/models/venta-detalle.model';
 import { ArticuloNombrePipe } from '../../../core/pipes/articulo-nombre-pipe-pipe';
 import { ClieneNitPipe } from '../../../core/pipes/cliene-nit-pipe';
@@ -19,7 +18,6 @@ import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.servic
 import { PedidoService } from '../../../core/services/pedido.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { VentaConDetalles, VentaService } from '../../../core/services/venta.service';
-import { VentaFelService } from '../../../core/services/venta-fel.service';
 
 interface DetallePedidoEditable {
   detalle: VentaDetalle;
@@ -42,11 +40,10 @@ export class ListaVentas implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly conjuntoMenuService = inject(ConjuntoMenuService);
   private readonly pedidoService = inject(PedidoService);
-  private readonly ventaFelService = inject(VentaFelService);
 
   filtrosForm!: FormGroup;
-  motivoAnulacionForm!: FormGroup;
   pedidoForm!: FormGroup;
+  pagoForm!: FormGroup;
   lista = signal<Venta[]>([]);
   estados = signal<EstadoVenta[]>([]);
   cargando = signal(false);
@@ -61,18 +58,18 @@ export class ListaVentas implements OnInit {
   cargandoDetalle = signal(false);
   errorDetalle = signal('');
   anulando = signal(false);
-  certificandoFactura = signal(false);
-  anulandoFactura = signal(false);
   generandoComprobante = signal(false);
   mostrandoFormularioPedido = signal(false);
   creandoPedido = signal(false);
+  mostrandoFormularioPago = signal(false);
+  actualizandoPago = signal(false);
+  pagoActualizado = signal(false);
+  errorPago = signal('');
+  mensajePago = signal('');
   errorPedido = signal('');
   detallesPedido = signal<DetallePedidoEditable[]>([]);
-  errorFactura = signal('');
   errorComprobante = signal('');
-  mostrarModalAnulacion = signal(false);
-  ultimaOperacionFel = signal<'certificar' | 'anular' | null>(null);
-  motivoAnulacionFactura = signal('');
+  readonly metodosPago: MetodoPago[] = ['EFECTIVO', 'TARJETA', 'CHEQUE', 'TRANSFERENCIA', 'DEPOSITO'];
 
   get permisos() {
     return this.conjuntoMenuService.getPermisosPorPagina('ventas');
@@ -80,6 +77,10 @@ export class ListaVentas implements OnInit {
 
   get puedeAnular(): boolean {
     return this.permisos.baja;
+  }
+
+  get puedeActualizarPago(): boolean {
+    return this.permisos.alta;
   }
 
   get permisosPedido() {
@@ -115,7 +116,6 @@ export class ListaVentas implements OnInit {
       correoUsuario: [''],
       size: [9],
     });
-    this.motivoAnulacionForm = this.fb.group({ motivo: [''] });
     this.pedidoForm = this.fb.group({
       idVenta: [{ value: null, disabled: true }],
       fechaEntrega: [''],
@@ -123,6 +123,10 @@ export class ListaVentas implements OnInit {
       notasEntrega: [''],
       numeroEntrega: ['', Validators.required],
       productoDePedido: [{ value: '', disabled: true }],
+    });
+    this.pagoForm = this.fb.group({
+      metodoPago: [null, Validators.required],
+      referenciaPago: ['', Validators.maxLength(45)],
     });
   }
 
@@ -196,11 +200,76 @@ export class ListaVentas implements OnInit {
   }
 
   cerrarDetalle(): void {
-    if (this.anulando() || this.anulandoFactura() || this.generandoComprobante() || this.creandoPedido()) return;
+    if (this.anulando() || this.generandoComprobante() || this.creandoPedido()
+      || this.actualizandoPago() || this.mostrandoFormularioPago()) return;
     this.ventaSeleccionada.set(null);
     this.errorDetalle.set('');
-    this.errorFactura.set('');
     this.errorComprobante.set('');
+  }
+
+  abrirFormularioPago(): void {
+    const venta = this.ventaSeleccionada()?.venta;
+    if (venta?.idVenta == null || this.actualizandoPago()) return;
+
+    this.errorPago.set('');
+    this.mensajePago.set('');
+    this.pagoActualizado.set(false);
+    this.pagoForm.enable();
+    this.pagoForm.reset({
+      metodoPago: venta.metodoPago ?? null,
+      referenciaPago: venta.referenciaPago ?? '',
+    });
+    this.mostrandoFormularioPago.set(true);
+  }
+
+  cerrarFormularioPago(): void {
+    if (this.actualizandoPago()) return;
+    this.mostrandoFormularioPago.set(false);
+    this.errorPago.set('');
+    this.mensajePago.set('');
+    this.pagoActualizado.set(false);
+  }
+
+  actualizarPago(): void {
+    const venta = this.ventaSeleccionada()?.venta;
+    if (venta?.idVenta == null || this.actualizandoPago() || this.pagoActualizado()) return;
+    if (this.pagoForm.invalid) {
+      this.pagoForm.markAllAsTouched();
+      return;
+    }
+
+    const { metodoPago, referenciaPago } = this.pagoForm.getRawValue();
+    if (metodoPago == null) return;
+
+    this.actualizandoPago.set(true);
+    this.pagoForm.disable();
+    this.errorPago.set('');
+    this.ventaService.actualizarPago(venta.idVenta, {
+      metodoPago,
+      referenciaPago: referenciaPago.trim() || null,
+    }).subscribe({
+      next: ventaActualizada => {
+        this.ventaSeleccionada.update(detalle =>
+          detalle ? { ...detalle, venta: ventaActualizada } : detalle
+        );
+        this.lista.update(ventas =>
+          ventas.map(item => item.idVenta === ventaActualizada.idVenta ? ventaActualizada : item)
+        );
+        this.actualizandoPago.set(false);
+        this.pagoActualizado.set(true);
+        this.mensajePago.set('Método de pago actualizado correctamente');
+        setTimeout(() => {
+          if (this.mostrandoFormularioPago() && this.pagoActualizado()) {
+            this.cerrarFormularioPago();
+          }
+        }, 1800);
+      },
+      error: error => {
+        this.errorPago.set(error?.error?.message || error?.error?.mensaje || 'Error al actualizar el método de pago');
+        this.actualizandoPago.set(false);
+        this.pagoForm.enable();
+      },
+    });
   }
 
   abrirFormularioPedido(): void {
@@ -299,22 +368,9 @@ export class ListaVentas implements OnInit {
     this.pedidoForm.patchValue({ productoDePedido: texto });
   }
 
-  generarFactura(): void {
-    const idVenta = this.ventaSeleccionada()?.venta.idVenta;
-    if (idVenta == null || this.certificandoFactura() || this.anulandoFactura() || this.generandoComprobante()) return;
-
-    this.certificandoFactura.set(true);
-    this.errorFactura.set('');
-    this.ultimaOperacionFel.set('certificar');
-    this.ventaFelService.certificar(idVenta).subscribe({
-      next: response => this.procesarRespuestaFactura(response, 'factura'),
-      error: error => void this.manejarErrorFactura(error),
-    });
-  }
-
   generarComprobante(): void {
     const idVenta = this.ventaSeleccionada()?.venta.idVenta;
-    if (idVenta == null || this.generandoComprobante() || this.certificandoFactura() || this.anulandoFactura()) return;
+    if (idVenta == null || this.generandoComprobante()) return;
 
     this.generandoComprobante.set(true);
     this.errorComprobante.set('');
@@ -326,7 +382,7 @@ export class ListaVentas implements OnInit {
           return;
         }
 
-        this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
+        this.descargarPdf(response.body, response.headers.get('Content-Disposition'));
         this.generandoComprobante.set(false);
         this.mensaje.set('Comprobante generado correctamente');
       },
@@ -339,75 +395,12 @@ export class ListaVentas implements OnInit {
 
   private async manejarErrorComprobante(error: unknown): Promise<void> {
     const respuesta = error as HttpErrorResponse;
-    const payload = await this.leerErrorFel(respuesta?.error ?? error);
+    const payload = await this.leerErrorRespuesta(respuesta?.error ?? error);
     this.errorComprobante.set(payload?.mensaje || 'No se pudo generar el comprobante');
   }
 
-  anularFactura(): void {
-    const idVenta = this.ventaSeleccionada()?.venta.idVenta;
-    if (idVenta == null || this.certificandoFactura() || this.anulandoFactura() || this.generandoComprobante()) return;
-
-    const motivo = this.motivoAnulacionForm.value.motivo?.trim();
-    if (!motivo) {
-      this.motivoAnulacionForm.get('motivo')?.markAsTouched();
-      return;
-    }
-
-    this.mostrarModalAnulacion.set(false);
-    this.anulandoFactura.set(true);
-    this.errorFactura.set('');
-    this.ultimaOperacionFel.set('anular');
-    this.motivoAnulacionFactura.set(motivo);
-    this.ventaFelService.anular(idVenta, motivo).subscribe({
-      next: response => this.procesarRespuestaFactura(response, 'anulación'),
-      error: error => void this.manejarErrorFactura(error),
-    });
-  }
-
-  abrirModalAnulacion(): void {
-    if (this.certificandoFactura() || this.anulandoFactura() || this.generandoComprobante()) return;
-    this.motivoAnulacionForm.reset({ motivo: '' });
-    this.motivoAnulacionForm.markAsUntouched();
-    this.mostrarModalAnulacion.set(true);
-  }
-
-  cerrarModalAnulacion(): void {
-    if (this.anulandoFactura()) return;
-    this.mostrarModalAnulacion.set(false);
-  }
-
-  reintentarFactura(): void {
-    if (this.ultimaOperacionFel() !== 'anular') {
-      this.generarFactura();
-      return;
-    }
-
-    const idVenta = this.ventaSeleccionada()?.venta.idVenta;
-    const motivo = this.motivoAnulacionFactura();
-    if (idVenta == null || !motivo || this.certificandoFactura() || this.anulandoFactura()) return;
-
-    this.anulandoFactura.set(true);
-    this.errorFactura.set('');
-    this.ventaFelService.anular(idVenta, motivo).subscribe({
-      next: response => this.procesarRespuestaFactura(response, 'anulación'),
-      error: error => void this.manejarErrorFactura(error),
-    });
-  }
-
-  private procesarRespuestaFactura(response: { body: Blob | null; headers: { get(name: string): string | null } }, operacion: string): void {
-    if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
-      void this.manejarErrorFactura({ error: response.body, status: 200 });
-      return;
-    }
-
-    this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
-    this.certificandoFactura.set(false);
-    this.anulandoFactura.set(false);
-    this.mensaje.set(`${operacion === 'factura' ? 'Factura generada' : 'Factura anulada'} correctamente`);
-  }
-
-  private descargarFactura(pdf: Blob, contentDisposition: string | null): void {
-    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'factura.pdf';
+  private descargarPdf(pdf: Blob, contentDisposition: string | null): void {
+    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'comprobante.pdf';
     const url = URL.createObjectURL(pdf);
     const enlace = document.createElement('a');
     enlace.href = url;
@@ -426,25 +419,10 @@ export class ListaVentas implements OnInit {
     return contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null;
   }
 
-  private async manejarErrorFactura(error: unknown): Promise<void> {
-    this.certificandoFactura.set(false);
-    this.anulandoFactura.set(false);
-
-    if (error instanceof TimeoutError || (error as { name?: string })?.name === 'TimeoutError') {
-      this.errorFactura.set('La operación está tardando más de lo esperado. Puede que se haya completado del lado del servidor. Verifica el estado de la venta antes de reintentar, o inténtalo de nuevo en unos momentos.');
-      return;
-    }
-
-    const respuesta = error as HttpErrorResponse;
-    const payload = await this.leerErrorFel(respuesta?.error ?? error);
-    const origen = payload?.origen ? ` [${payload.origen}]` : '';
-    this.errorFactura.set(`No se pudo completar la operación FEL${origen}: ${payload?.mensaje || 'Error inesperado.'}`);
-  }
-
-  private async leerErrorFel(error: unknown): Promise<{ origen?: string; mensaje?: string } | null> {
+  private async leerErrorRespuesta(error: unknown): Promise<{ mensaje?: string } | null> {
     if (error instanceof Blob) {
       try {
-        return JSON.parse(await error.text()) as { origen?: string; mensaje?: string };
+        return JSON.parse(await error.text()) as { mensaje?: string };
       } catch {
         return null;
       }
@@ -452,13 +430,13 @@ export class ListaVentas implements OnInit {
 
     if (typeof error === 'string') {
       try {
-        return JSON.parse(error) as { origen?: string; mensaje?: string };
+        return JSON.parse(error) as { mensaje?: string };
       } catch {
         return { mensaje: error };
       }
     }
 
-    return error && typeof error === 'object' ? error as { origen?: string; mensaje?: string } : null;
+    return error && typeof error === 'object' ? error as { mensaje?: string } : null;
   }
 
   anularVenta(): void {

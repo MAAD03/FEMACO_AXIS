@@ -25,6 +25,7 @@ GRANT INSERT, UPDATE, DELETE ON `femacodb`.`proveedor` TO 'femaco_app'@'%';
 GRANT INSERT, UPDATE, DELETE ON `femacodb`.`orden_compra` TO 'femaco_app'@'%';
 GRANT INSERT, UPDATE, DELETE ON `femacodb`.`cliente` TO 'femaco_app'@'%';
 GRANT INSERT, UPDATE, DELETE ON `femacodb`.`venta` TO 'femaco_app'@'%';
+GRANT INSERT, UPDATE, DELETE ON `femacodb`.`venta_detalle` TO 'femaco_app'@'%';
 GRANT INSERT, UPDATE, DELETE ON `femacodb`.`pedido` TO 'femaco_app'@'%';
 GRANT INSERT, UPDATE, DELETE ON `femacodb`.`cotizacion` TO 'femaco_app'@'%';
 GRANT INSERT, UPDATE, DELETE ON `femacodb`.`detalle_cotizacion` TO 'femaco_app'@'%';
@@ -35,7 +36,7 @@ GRANT INSERT, UPDATE ON `femacodb`.`venta_fel` TO 'femaco_app'@'%';
 
 -- 5. Tablas de SOLO INSERCIÓN (INSERT - Sin UPDATE, Sin DELETE)
 GRANT INSERT ON `femacodb`.`ajuste_inventario` TO 'femaco_app'@'%';
-GRANT INSERT ON `femacodb`.`venta_detalle` TO 'femaco_app'@'%';
+
 
 
 -- =============================================================================

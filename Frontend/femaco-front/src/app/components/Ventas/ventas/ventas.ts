@@ -1,13 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TimeoutError } from 'rxjs';
 import { AreaArticulo as AreaArticuloModel } from '../../../core/models/area-articulo.model';
 import { Articulo, ArticuloFiltro } from '../../../core/models/articulo.model';
 import { Cliente as ClienteModel } from '../../../core/models/cliente.model';
 import { CotizacionCreateRequest } from '../../../core/models/cotizacion.model';
 import { Pedido } from '../../../core/models/pedido.model';
+import { MetodoPago } from '../../../core/models/venta.model';
 import { VentaDetalle } from '../../../core/models/venta-detalle.model';
 import { UnidadMedida as UnidadMedidaModel } from '../../../core/models/unidad-medida.model';
 import { AreaArticuloNombrePipe } from '../../../core/pipes/area-articulo-nombre-pipe';
@@ -22,7 +21,6 @@ import { CotizacionService } from '../../../core/services/cotizacion.service';
 import { PedidoService } from '../../../core/services/pedido.service';
 import { UnidadMedidaService } from '../../../core/services/unidad-medida.service';
 import { VentaCreateRequest, VentaDetalleCreateRequest, VentaService } from '../../../core/services/venta.service';
-import { VentaFelService } from '../../../core/services/venta-fel.service';
 
 interface VentaDetalleCarrito extends VentaDetalleCreateRequest {
   codigo?: string;
@@ -44,6 +42,75 @@ interface DetallePedidoEditable {
   cantidad: number;
 }
 
+interface Decimal {
+  coefficient: bigint;
+  scale: number;
+}
+
+function powerOfTen(exponent: number): bigint {
+  return 10n ** BigInt(exponent);
+}
+
+function decimal(value: number): Decimal {
+  const text = Number.isFinite(value) ? String(value) : '0';
+  const match = text.match(/^([+-]?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);
+  if (!match) return { coefficient: 0n, scale: 0 };
+
+  const fraction = match[3] ?? '';
+  const exponent = Number(match[4] ?? 0);
+  let coefficient = BigInt(`${match[1]}${match[2]}${fraction}`);
+  let scale = fraction.length - exponent;
+  if (scale < 0) {
+    coefficient *= powerOfTen(-scale);
+    scale = 0;
+  }
+  return { coefficient, scale };
+}
+
+function addDecimals(left: Decimal, right: Decimal): Decimal {
+  const scale = Math.max(left.scale, right.scale);
+  return {
+    coefficient: left.coefficient * powerOfTen(scale - left.scale)
+      + right.coefficient * powerOfTen(scale - right.scale),
+    scale,
+  };
+}
+
+function multiplyDecimals(left: Decimal, right: Decimal): Decimal {
+  return { coefficient: left.coefficient * right.coefficient, scale: left.scale + right.scale };
+}
+
+function divideDecimalByHundred(value: Decimal): Decimal {
+  return { coefficient: value.coefficient, scale: value.scale + 2 };
+}
+
+function roundHalfUpToCents(value: Decimal): bigint {
+  const scaled = value.coefficient * 100n;
+  const divisor = powerOfTen(value.scale);
+  const quotient = scaled / divisor;
+  const remainder = scaled % divisor;
+  if (remainder === 0n || (remainder < 0n ? -remainder : remainder) * 2n < divisor) return quotient;
+  return quotient + (scaled < 0n ? -1n : 1n);
+}
+
+function roundUpToNickel(cents: bigint): bigint {
+  const remainder = cents % 5n;
+  if (remainder === 0n) return cents;
+  return cents >= 0n ? cents + (5n - remainder) : cents - remainder;
+}
+
+function roundMoney(value: Decimal): number {
+  return Number(roundUpToNickel(roundHalfUpToCents(value))) / 100;
+}
+
+function moneyCents(value: number): bigint {
+  return roundHalfUpToCents(decimal(value));
+}
+
+function sumMoney(values: number[]): number {
+  return Number(values.reduce((sum, value) => sum + moneyCents(value), 0n)) / 100;
+}
+
 @Component({
   selector: 'app-ventas',
   standalone: true,
@@ -60,7 +127,6 @@ export class Ventas implements OnInit {
   private readonly areaArticuloService = inject(AreaArticuloService);
   private readonly unidadMedidaService = inject(UnidadMedidaService);
   private readonly ventaService = inject(VentaService);
-  private readonly ventaFelService = inject(VentaFelService);
   private readonly authService = inject(AuthService);
   private readonly conjuntoMenuService = inject(ConjuntoMenuService);
 
@@ -79,14 +145,23 @@ export class Ventas implements OnInit {
     numeroEntrega: ['', [Validators.required, Validators.maxLength(50)]],
     productoDePedido: [{ value: '', disabled: true }],
   });
+  pagoForm = this.fb.group({
+    metodoPago: this.fb.control<MetodoPago | null>(null, Validators.required),
+    referenciaPago: this.fb.control('', Validators.maxLength(45)),
+  });
   mostrandoFormularioCotizacion = signal(false);
   mostrandoFormularioPedido = signal(false);
+  mostrandoFormularioPago = signal(false);
   creandoPedido = signal(false);
+  registrandoPago = signal(false);
+  pagoRegistrado = signal(false);
   pedidoCreado = signal(false);
   detallesPedido = signal<DetallePedidoEditable[]>([]);
   cargandoDetallesPedido = signal(false);
   errorPedido = signal('');
   mensajePedido = signal('');
+  errorPago = signal('');
+  mensajePago = signal('');
   clienteSeleccionado = signal<ClienteModel | null>(null);
   idClienteSeleccionado = signal<number | null>(null);
   buscandoCliente = signal(false);
@@ -102,14 +177,14 @@ export class Ventas implements OnInit {
   error = signal('');
   ventaCompletada = signal(false);
   idVentaCompletada = signal<number | null>(null);
-  certificando = signal(false);
+  totalVentaCompletada = signal<number | null>(null);
   generandoComprobante = signal(false);
   errorComprobante = signal('');
-  errorFactura = signal('');
   paginaActual = signal(0);
   totalPaginas = signal(0);
   totalElementos = signal(0);
   readonly tamanosPagina = [6, 9, 12, 18, 24];
+  readonly metodosPago: MetodoPago[] = ['EFECTIVO', 'TARJETA', 'CHEQUE', 'TRANSFERENCIA', 'DEPOSITO'];
 
   get permisos() { return this.conjuntoMenuService.getPermisosPorPagina('ventas'); }
   get puedeCrear(): boolean { return this.permisos.alta; }
@@ -126,11 +201,11 @@ export class Ventas implements OnInit {
     return usuario?.['PuedeAplicarDescuento'] === true;
   }
 
-  get subtotal(): number { return this.items().reduce((total, item) => total + item.subtotalBruto, 0); }
-  get descuentoMayoristaTotal(): number { return this.items().reduce((total, item) => total + item.montoDescuentoMayorista, 0); }
-  get descuentoManualTotal(): number { return this.items().reduce((total, item) => total + item.montoDescuentoManual, 0); }
-  get descuentoTotal(): number { return this.descuentoMayoristaTotal + this.descuentoManualTotal; }
-  get total(): number { return this.subtotal - this.descuentoTotal; }
+  get subtotal(): number { return sumMoney(this.items().map(item => item.subtotalBruto)); }
+  get descuentoMayoristaTotal(): number { return sumMoney(this.items().map(item => item.montoDescuentoMayorista)); }
+  get descuentoManualTotal(): number { return sumMoney(this.items().map(item => item.montoDescuentoManual)); }
+  get descuentoTotal(): number { return sumMoney([this.descuentoMayoristaTotal, this.descuentoManualTotal]); }
+  get total(): number { return sumMoney(this.items().map(item => item.subtotal)); }
   get tamanoControl(): FormControl { return this.filtrosForm.get('size') as FormControl; }
 
   ngOnInit(): void {
@@ -215,7 +290,7 @@ export class Ventas implements OnInit {
   private crearDetalle(articulo: Articulo): VentaDetalleCarrito {
     const precioCompra = Number(articulo.precioCompraUltimoProveedor ?? 0);
     const margen = Number(articulo.margenGanancia ?? 0);
-    const precioUnitario = precioCompra + precioCompra * margen / 100;
+    const precioUnitario = this.calcularPrecioVenta(precioCompra, margen);
     return this.recalcular({
       idArticulo: articulo.idArticulo!, codigo: articulo.codigo, nombre: articulo.nombre, descripcion: articulo.descripcion,
       stockActual: Number(articulo.stockActual ?? 0), cantidad: 1, precioUnitario, porcDescuentoManual: 0,
@@ -241,16 +316,25 @@ export class Ventas implements OnInit {
 
   private recalcular(item: VentaDetalleCarrito): VentaDetalleCarrito {
     const cantidad = Math.max(0, Number(item.cantidad) || 0);
-    const bruto = cantidad * (Number(item.precioUnitario) || 0);
+    const precioUnitario = this.calcularPrecioVenta(Number(item.precioUnitario) || 0, 0);
+    const bruto = roundMoney(multiplyDecimals(decimal(cantidad), decimal(precioUnitario)));
     const aplicaMayorista = item.cantidadMinimaDescuento > 0 && cantidad >= item.cantidadMinimaDescuento;
     const porcMayorista = aplicaMayorista ? Math.min(100, Math.max(0, Number(item.descuentoMayoristaArticulo) || 0)) : 0;
-    const montoMayorista = bruto * porcMayorista / 100;
+    const montoMayorista = roundMoney(multiplyDecimals(decimal(bruto), divideDecimalByHundred(decimal(porcMayorista))));
     const porcManualMaximo = 100 - porcMayorista;
     const porcManual = this.puedeAplicarDescuento
       ? Math.min(porcManualMaximo, Math.max(0, Number(item.porcDescuentoManual) || 0))
       : 0;
-    const montoManual = bruto * porcManual / 100;
-    return { ...item, cantidad, porcDescuentoMayorista: porcMayorista, porcDescuentoManual: porcManual, subtotalBruto: bruto, montoDescuentoMayorista: montoMayorista, montoDescuentoManual: montoManual, subtotal: bruto - montoMayorista - montoManual };
+    const montoManual = roundMoney(multiplyDecimals(decimal(bruto), divideDecimalByHundred(decimal(porcManual))));
+    const subtotalCents = moneyCents(bruto) - moneyCents(montoMayorista) - moneyCents(montoManual);
+    const subtotal = Number(roundUpToNickel(subtotalCents)) / 100;
+    return { ...item, cantidad, precioUnitario, porcDescuentoMayorista: porcMayorista, porcDescuentoManual: porcManual, subtotalBruto: bruto, montoDescuentoMayorista: montoMayorista, montoDescuentoManual: montoManual, subtotal };
+  }
+
+  calcularPrecioVenta(precioCompra: number, margen: number): number {
+    const costo = decimal(precioCompra);
+    const incremento = divideDecimalByHundred(multiplyDecimals(costo, decimal(margen)));
+    return roundMoney(addDecimals(costo, incremento));
   }
 
   eliminarArticulo(index: number): void { this.items.update(items => items.filter((_, itemIndex) => itemIndex !== index)); }
@@ -260,6 +344,7 @@ export class Ventas implements OnInit {
     const idCliente = this.idClienteSeleccionado();
     if (!idCliente) { this.error.set('Debes buscar y seleccionar un cliente'); return; }
     if (!this.items().length) { this.error.set('Debes agregar al menos un artículo al carrito'); return; }
+    if (this.items().some(item => item.subtotal < 0)) { this.error.set('Los descuentos no pueden ser mayores que el subtotal'); return; }
     if (!window.confirm('¿Desea crear la venta con el cliente y los artículos seleccionados?')) return;
     const dto: VentaCreateRequest = { idCliente, detalles: this.items().map(item => ({ idArticulo: item.idArticulo, cantidad: item.cantidad, porcDescuentoManual: item.porcDescuentoManual })) };
     this.cargando.set(true); this.error.set(''); this.mensaje.set('');
@@ -267,11 +352,66 @@ export class Ventas implements OnInit {
       next: venta => {
         this.mensaje.set('Venta creada correctamente');
         this.idVentaCompletada.set(venta.idVenta ?? null);
-        this.errorFactura.set('');
+        this.totalVentaCompletada.set(venta.total ?? this.total);
         this.ventaCompletada.set(true);
         this.cargando.set(false);
       },
       error: error => { this.error.set(error?.error?.message || error?.error?.mensaje || 'Error al crear la venta'); this.cargando.set(false); },
+    });
+  }
+
+  abrirFormularioPago(): void {
+    if (this.idVentaCompletada() == null) return;
+
+    this.errorPago.set('');
+    this.mensajePago.set('');
+    this.pagoRegistrado.set(false);
+    this.pagoForm.enable();
+    this.pagoForm.reset({ metodoPago: null, referenciaPago: '' });
+    this.mostrandoFormularioPago.set(true);
+  }
+
+  cerrarFormularioPago(): void {
+    if (this.registrandoPago()) return;
+    this.mostrandoFormularioPago.set(false);
+    this.errorPago.set('');
+    this.mensajePago.set('');
+    this.pagoRegistrado.set(false);
+  }
+
+  registrarPago(): void {
+    const idVenta = this.idVentaCompletada();
+    if (idVenta == null || this.registrandoPago() || this.pagoRegistrado()) return;
+    if (this.pagoForm.invalid) {
+      this.pagoForm.markAllAsTouched();
+      return;
+    }
+
+    const { metodoPago, referenciaPago } = this.pagoForm.getRawValue();
+    if (metodoPago == null) return;
+
+    this.registrandoPago.set(true);
+    this.pagoForm.disable();
+    this.errorPago.set('');
+    this.ventaService.actualizarPago(idVenta, {
+      metodoPago,
+      referenciaPago: referenciaPago?.trim() || null,
+    }).subscribe({
+      next: () => {
+        this.registrandoPago.set(false);
+        this.pagoRegistrado.set(true);
+        this.mensajePago.set('Pago registrado correctamente');
+        window.setTimeout(() => {
+          if (this.mostrandoFormularioPago() && this.pagoRegistrado()) {
+            this.cerrarFormularioPago();
+          }
+        }, 1800);
+      },
+      error: error => {
+        this.errorPago.set(error?.error?.message || error?.error?.mensaje || 'Error al registrar el pago');
+        this.registrandoPago.set(false);
+        this.pagoForm.enable();
+      },
     });
   }
 
@@ -426,27 +566,6 @@ export class Ventas implements OnInit {
     });
   }
 
-  generarFactura(): void {
-    const idVenta = this.idVentaCompletada();
-    if (idVenta == null || this.certificando()) return;
-
-    this.certificando.set(true);
-    this.errorFactura.set('');
-
-    this.ventaFelService.certificar(idVenta).subscribe({
-      next: response => {
-        if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
-          void this.manejarErrorFactura({ error: response.body, status: response.status });
-          return;
-        }
-
-        this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
-        this.certificando.set(false);
-      },
-      error: error => void this.manejarErrorFactura(error),
-    });
-  }
-
   generarComprobante(): void {
     const idVenta = this.idVentaCompletada();
     if (idVenta == null || this.generandoComprobante()) return;
@@ -462,7 +581,7 @@ export class Ventas implements OnInit {
           return;
         }
 
-        this.descargarFactura(response.body, response.headers.get('Content-Disposition'));
+        this.descargarPdf(response.body, response.headers.get('Content-Disposition'));
         this.generandoComprobante.set(false);
       },
       error: error => {
@@ -472,8 +591,8 @@ export class Ventas implements OnInit {
     });
   }
 
-  private descargarFactura(pdf: Blob, contentDisposition: string | null): void {
-    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'factura.pdf';
+  private descargarPdf(pdf: Blob, contentDisposition: string | null): void {
+    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? 'comprobante.pdf';
     const url = URL.createObjectURL(pdf);
     const enlace = document.createElement('a');
     enlace.href = url;
@@ -490,40 +609,6 @@ export class Ventas implements OnInit {
     const codificado = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
     if (codificado) return decodeURIComponent(codificado.replace(/^"|"$/g, ''));
     return contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null;
-  }
-
-  private async manejarErrorFactura(error: unknown): Promise<void> {
-    this.certificando.set(false);
-
-    if (error instanceof TimeoutError || (error as { name?: string })?.name === 'TimeoutError') {
-      this.errorFactura.set('La operación está tardando más de lo esperado. Puede que se haya completado del lado del servidor. Verifica el estado de la venta antes de reintentar, o inténtalo de nuevo en unos momentos.');
-      return;
-    }
-
-    const respuesta = error as HttpErrorResponse;
-    const payload = await this.leerErrorFel(respuesta?.error ?? error);
-    const origen = payload?.origen ? ` [${payload.origen}]` : '';
-    this.errorFactura.set(`No se pudo generar la factura${origen}: ${payload?.mensaje || 'Error inesperado al certificar la venta.'}`);
-  }
-
-  private async leerErrorFel(error: unknown): Promise<{ origen?: string; mensaje?: string } | null> {
-    if (error instanceof Blob) {
-      try {
-        return JSON.parse(await error.text()) as { origen?: string; mensaje?: string };
-      } catch {
-        return null;
-      }
-    }
-
-    if (typeof error === 'string') {
-      try {
-        return JSON.parse(error) as { origen?: string; mensaje?: string };
-      } catch {
-        return { mensaje: error };
-      }
-    }
-
-    return error && typeof error === 'object' ? error as { origen?: string; mensaje?: string } : null;
   }
 
   cerrarVentaCompletada(): void {
@@ -547,13 +632,16 @@ export class Ventas implements OnInit {
   private resetearCompra(): void {
     this.ventaCompletada.set(false);
     this.idVentaCompletada.set(null);
+    this.totalVentaCompletada.set(null);
+    this.mostrandoFormularioPago.set(false);
+    this.pagoRegistrado.set(false);
+    this.errorPago.set('');
+    this.mensajePago.set('');
     this.pedidoCreado.set(false);
     this.detallesPedido.set([]);
     this.cargandoDetallesPedido.set(false);
-    this.certificando.set(false);
     this.generandoComprobante.set(false);
     this.errorComprobante.set('');
-    this.errorFactura.set('');
     this.mensaje.set('');
     this.error.set('');
     this.limpiarCliente();

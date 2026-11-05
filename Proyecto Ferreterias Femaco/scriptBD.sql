@@ -360,6 +360,8 @@ CREATE TABLE IF NOT EXISTS `venta` (
   `DescuentoTotal` DECIMAL(12,2) NULL DEFAULT 0.00,               -- DescuentoMayoristaTotal + DescuentoManualTotal
   `Total` DECIMAL(12,2) NULL,                                     -- Subtotal - DescuentoTotal
   `NumeroFactura` VARCHAR(45) NULL,
+  `MetodoPago` ENUM('EFECTIVO','TARJETA','CHEQUE','TRANSFERENCIA','DEPOSITO') NULL DEFAULT NULL,
+  `ReferenciaPago` VARCHAR(45) NULL,
   `IdEstadoVenta` INT NOT NULL,
   `IdCliente` INT NOT NULL,
   `IdUsuario` INT NOT NULL,

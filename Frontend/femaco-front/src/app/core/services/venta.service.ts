@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { Venta, VentaFiltro } from '../models/venta.model';
+import { Venta, VentaFiltro, VentaPagoRequest } from '../models/venta.model';
 import { VentaDetalle } from '../models/venta-detalle.model';
 
 export interface PageVenta {
@@ -92,6 +92,10 @@ export class VentaService {
 
   anular(idVenta: number): Observable<Venta> {
     return this.http.put<Venta>(`${this.api}/anular/${idVenta}`, null);
+  }
+
+  actualizarPago(idVenta: number, dto: VentaPagoRequest): Observable<Venta> {
+    return this.http.put<Venta>(`${this.api}/agregar-modificar-pago/${idVenta}`, dto);
   }
 
   generarComprobante(idVenta: number): Observable<HttpResponse<Blob>> {

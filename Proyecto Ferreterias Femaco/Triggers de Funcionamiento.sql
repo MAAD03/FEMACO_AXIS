@@ -121,24 +121,6 @@ BEGIN
     );
 END$$
 
--- Una línea de venta ya facturada no se edita/borra
-DROP TRIGGER IF EXISTS `trg_venta_detalle_no_update`$$
-CREATE TRIGGER `trg_venta_detalle_no_update`
-BEFORE UPDATE ON `venta_detalle`
-FOR EACH ROW
-BEGIN
-    SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT = 'No se permite modificar venta_detalle una vez creada; anule la venta y use un ajuste de inventario';
-END$$
-
-DROP TRIGGER IF EXISTS `trg_venta_detalle_no_delete`$$
-CREATE TRIGGER `trg_venta_detalle_no_delete`
-BEFORE DELETE ON `venta_detalle`
-FOR EACH ROW
-BEGIN
-    SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT = 'No se permite eliminar venta_detalle; anule la venta y use un ajuste de inventario';
-END$$
 
 -- =======================================================================
 -- 3) ORDEN_COMPRA_DETALLE

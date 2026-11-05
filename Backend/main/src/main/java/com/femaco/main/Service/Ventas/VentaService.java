@@ -19,6 +19,7 @@ import com.femaco.main.DTOs.VentaConDetallesDTO;
 import com.femaco.main.DTOs.VentaCreateDTO;
 import com.femaco.main.DTOs.VentaDetalleCreateDTO;
 import com.femaco.main.DTOs.VentaFiltroDTO;
+import com.femaco.main.DTOs.VentaPagoDTO;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Entity.Ventas.Cliente;
@@ -41,6 +42,7 @@ public class VentaService {
     private static final Long ESTADO_ANULADA = 2L;
     private static final Long CONSUMIDOR_FINAL_ID_CLIENTE = 1L;
     private static final BigDecimal LIMITE_CONSUMIDOR_FINAL = BigDecimal.valueOf(2500);
+    private static final BigDecimal INCREMENTO_MONETARIO = new BigDecimal("0.05");
     private static final DateTimeFormatter FORMATO_FACTURA = DateTimeFormatter.ofPattern("ddMMyyyy");
 
     private final VentaRepository ventaRepository;
@@ -106,6 +108,19 @@ public class VentaService {
             return ventaRepository.save(existente);
         });
     }
+
+    @Transactional
+    public Optional<Venta> actualizarPago(Long idVenta, VentaPagoDTO dto) {
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        return ventaRepository.findById(idVenta).map(venta -> {
+            venta.setMetodoPago(dto.getMetodoPago());
+            venta.setReferenciaPago(dto.getReferenciaPago());
+            venta.setUsuarioModif(usuarioAutenticado.getIdUsuario().intValue());
+            venta.setFechaModif(LocalDateTime.now());
+            return ventaRepository.save(venta);
+        });
+    }
+
 /*
     @Transactional
     public Venta crear(Venta venta) {
@@ -199,14 +214,16 @@ public class VentaService {
             BigDecimal precioCompra = articulo.getPrecioCompraUltimoProveedor() != null
                     ? articulo.getPrecioCompraUltimoProveedor()
                     : BigDecimal.ZERO;
-            BigDecimal precioUnitario = precioCompra
+            BigDecimal precioCalculado = precioCompra
                     .add(precioCompra.multiply(margenGanancia).divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP))
                     .setScale(2, RoundingMode.HALF_UP);
-            if (precioUnitario.compareTo(BigDecimal.ZERO) < 0) {
+            if (precioCalculado.compareTo(BigDecimal.ZERO) < 0) {
                 throw new BusinessException("El precio unitario del artículo " + idArticulo + " no puede ser negativo");
             }
+            BigDecimal precioUnitario = redondearHaciaArribaAlIncremento(precioCalculado);
 
-            BigDecimal subtotalBruto = cantidad.multiply(precioUnitario).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal subtotalBruto = redondearHaciaArribaAlIncremento(
+                    cantidad.multiply(precioUnitario).setScale(2, RoundingMode.HALF_UP));
             if (subtotalBruto.compareTo(BigDecimal.ZERO) < 0) {
                 throw new BusinessException("El subtotal bruto del artículo " + idArticulo + " no puede ser negativo");
             }
@@ -223,6 +240,7 @@ public class VentaService {
                     .multiply(porcDescuentoMayorista)
                     .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
                     .setScale(2, RoundingMode.HALF_UP);
+            montoDescuentoMayorista = redondearHaciaArribaAlIncremento(montoDescuentoMayorista);
             if (montoDescuentoMayorista.compareTo(BigDecimal.ZERO) < 0) {
                 throw new BusinessException("El descuento mayorista del artículo " + idArticulo + " no puede ser negativo");
             }
@@ -241,15 +259,17 @@ public class VentaService {
                     .multiply(porcDescuentoManual)
                     .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
                     .setScale(2, RoundingMode.HALF_UP);
+            montoDescuentoManual = redondearHaciaArribaAlIncremento(montoDescuentoManual);
             if (montoDescuentoManual.compareTo(BigDecimal.ZERO) < 0) {
                 throw new BusinessException("El descuento manual del artículo " + idArticulo + " no puede ser negativo");
             }
 
-            BigDecimal subtotalDetalle = subtotalBruto.subtract(montoDescuentoMayorista).subtract(montoDescuentoManual)
+            BigDecimal subtotalCalculado = subtotalBruto.subtract(montoDescuentoMayorista).subtract(montoDescuentoManual)
                     .setScale(2, RoundingMode.HALF_UP);
-            if (subtotalDetalle.compareTo(BigDecimal.ZERO) < 0) {
+            if (subtotalCalculado.compareTo(BigDecimal.ZERO) < 0) {
                 throw new BusinessException("El subtotal del artículo " + idArticulo + " no puede ser negativo");
             }
+            BigDecimal subtotalDetalle = redondearHaciaArribaAlIncremento(subtotalCalculado);
 
             VentaDetalle detalle = new VentaDetalle();
             detalle.setIdArticulo(idArticulo);
@@ -300,6 +320,12 @@ public class VentaService {
         ventaDetalleRepository.saveAll(detalles);
 
         return ventaGuardada;
+    }
+
+    private static BigDecimal redondearHaciaArribaAlIncremento(BigDecimal monto) {
+        return monto.divide(INCREMENTO_MONETARIO, 0, RoundingMode.CEILING)
+                .multiply(INCREMENTO_MONETARIO)
+                .setScale(2, RoundingMode.UNNECESSARY);
     }
 
     private Usuario obtenerUsuarioAutenticado() {

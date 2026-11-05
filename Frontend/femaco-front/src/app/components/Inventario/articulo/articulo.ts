@@ -17,6 +17,11 @@ import { EstadoArticuloService } from '../../../core/services/catalogo-services/
 import { UnidadMedidaService } from '../../../core/services/unidad-medida.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 
+interface ArticuloDecimal {
+  coefficient: bigint;
+  scale: number;
+}
+
 @Component({
   selector: 'app-articulo',
   standalone: true,
@@ -251,16 +256,83 @@ export class Articulo implements OnInit {
     return this.calcularPrecioFinal(item.precioCompraUltimoProveedor, item.margenGanancia);
   }
 
+  montoDescuentoMayoristaFormulario(): number | null {
+    const precioFinal = this.precioFinalFormulario();
+    const descuento = this.numeroOpcional(this.form?.value.descuentoMayorista);
+    if (precioFinal === null || descuento === undefined) return null;
+    return this.calcularDescuentoMayorista(precioFinal, descuento);
+  }
+
   montoDescuentoMayorista(item: ArticuloModel): number | null {
     const precioFinal = this.precioFinal(item);
     if (precioFinal === null || item.descuentoMayorista == null) return null;
-    const descuento = Math.min(100, Math.max(0, Number(item.descuentoMayorista) || 0));
-    return precioFinal * descuento / 100;
+    return this.calcularDescuentoMayorista(precioFinal, item.descuentoMayorista);
   }
 
   private calcularPrecioFinal(precioCompra: number | undefined, margen: number | undefined): number | null {
     if (precioCompra === undefined || margen === undefined) return null;
-    return precioCompra * (1 + margen / 100);
+    const costo = this.decimal(precioCompra);
+    const incremento = this.dividirEntreCien(this.multiplicarDecimales(costo, this.decimal(margen)));
+    return this.redondearImporteQ05(this.sumarDecimales(costo, incremento));
+  }
+
+  private calcularDescuentoMayorista(precioFinal: number, porcentaje: number): number {
+    const descuento = Math.min(100, Math.max(0, Number(porcentaje) || 0));
+    const monto = this.dividirEntreCien(this.multiplicarDecimales(this.decimal(precioFinal), this.decimal(descuento)));
+    return this.redondearImporteQ05(monto);
+  }
+
+  private decimal(value: number): ArticuloDecimal {
+    const text = Number.isFinite(value) ? String(value) : '0';
+    const match = text.match(/^([+-]?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);
+    if (!match) return { coefficient: 0n, scale: 0 };
+
+    const fraction = match[3] ?? '';
+    const exponent = Number(match[4] ?? 0);
+    let coefficient = BigInt(`${match[1]}${match[2]}${fraction}`);
+    let scale = fraction.length - exponent;
+    if (scale < 0) {
+      coefficient *= this.potenciaDeDiez(-scale);
+      scale = 0;
+    }
+    return { coefficient, scale };
+  }
+
+  private potenciaDeDiez(exponente: number): bigint {
+    return 10n ** BigInt(exponente);
+  }
+
+  private sumarDecimales(left: ArticuloDecimal, right: ArticuloDecimal): ArticuloDecimal {
+    const scale = Math.max(left.scale, right.scale);
+    return {
+      coefficient: left.coefficient * this.potenciaDeDiez(scale - left.scale)
+        + right.coefficient * this.potenciaDeDiez(scale - right.scale),
+      scale,
+    };
+  }
+
+  private multiplicarDecimales(left: ArticuloDecimal, right: ArticuloDecimal): ArticuloDecimal {
+    return { coefficient: left.coefficient * right.coefficient, scale: left.scale + right.scale };
+  }
+
+  private dividirEntreCien(value: ArticuloDecimal): ArticuloDecimal {
+    return { coefficient: value.coefficient, scale: value.scale + 2 };
+  }
+
+  private redondearImporteQ05(value: ArticuloDecimal): number {
+    const centsValue = value.coefficient * 100n;
+    const divisor = this.potenciaDeDiez(value.scale);
+    let cents = centsValue / divisor;
+    const remainder = centsValue % divisor;
+    if (remainder !== 0n && (remainder < 0n ? -remainder : remainder) * 2n >= divisor) {
+      cents += centsValue < 0n ? -1n : 1n;
+    }
+
+    const nickelRemainder = cents % 5n;
+    if (nickelRemainder !== 0n) {
+      cents += cents >= 0n ? 5n - nickelRemainder : -nickelRemainder;
+    }
+    return Number(cents) / 100;
   }
 
   editar(item: ArticuloModel): void {

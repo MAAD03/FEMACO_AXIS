@@ -12,6 +12,10 @@
     background: rgba(20, 31, 25, .58);
 }
 
+.payment-overlay {
+    z-index: 1010;
+}
+
 .sale-complete-panel {
     position: relative;
     width: min(680px, 100%);
@@ -75,6 +79,19 @@
 
 .quote-form-panel h2 {
     text-align: center;
+}
+
+.payment-total {
+    padding: .8rem 1rem;
+    border-radius: 6px;
+    background: var(--crud-gray-100);
+    color: var(--crud-primary-dark);
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.payment-total strong {
+    font-size: 1.25rem;
 }
 
 .quote-form {
@@ -142,18 +159,12 @@
 
 .sale-complete-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: .75rem;
 }
 
 .sale-complete-actions .btn {
     min-height: 44px;
-}
-
-.fel-loading {
-    margin: 1rem 0 0;
-    color: var(--crud-primary-dark);
-    font-weight: 700;
 }
 
 .form-card,

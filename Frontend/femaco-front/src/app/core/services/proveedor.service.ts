@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable, of, tap } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { Proveedor } from '../models/proveedor.model';
+import { PageProveedor, Proveedor } from '../models/proveedor.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +18,22 @@ export class ProveedorService {
 
   buscarTodos(): Observable<Proveedor[]> {
     return this.http.get<Proveedor[]>(`${this.api}/buscar`);
+  }
+
+  buscarPaginado(
+    page: number = 0,
+    size: number = 20,
+    sort: string = 'fechaCreacion,desc'
+  ): Observable<PageProveedor> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    if (sort.trim()) {
+      params = params.set('sort', sort.trim());
+    }
+
+    return this.http.get<PageProveedor>(`${this.api}/buscarPaginado`, { params });
   }
 
   buscarProveedores(): Observable<Proveedor[]> {

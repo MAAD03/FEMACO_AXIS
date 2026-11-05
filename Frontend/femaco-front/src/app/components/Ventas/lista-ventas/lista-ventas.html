@@ -77,25 +77,48 @@
     </div>
   </div>
   }
-  @if (mostrarModalAnulacion()) {
-  <div class="fel-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="anulacionFacturaTitulo">
-    <form class="fel-modal" [formGroup]="motivoAnulacionForm" (ngSubmit)="anularFactura()">
-      <h3 id="anulacionFacturaTitulo">Anular factura</h3>
-      <p>Indica el motivo de la anulación. Este dato será enviado al certificador.</p>
-      <label for="motivoAnulacionFactura">Motivo</label>
-      <textarea id="motivoAnulacionFactura" formControlName="motivo" rows="4" maxlength="500"
-        placeholder="Escribe el motivo de la anulación" [disabled]="anulandoFactura()"></textarea>
-      @if (motivoAnulacionForm.get('motivo')?.touched && !motivoAnulacionForm.value.motivo?.trim()) {
-      <div class="error-msg">El motivo es obligatorio.</div>
-      }
-      <div class="fel-modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="cerrarModalAnulacion()"
-          [disabled]="anulandoFactura()">Cancelar</button>
-        <button type="submit" class="btn btn-danger" [disabled]="anulandoFactura()">
-          {{ anulandoFactura() ? 'Anulando factura...' : 'Confirmar anulación' }}
-        </button>
-      </div>
-    </form>
+  @if (mostrandoFormularioPago()) {
+  <div class="sale-complete-overlay payment-overlay" role="dialog" aria-modal="true" aria-labelledby="pagoVentaTitle">
+    <div class="sale-complete-panel quote-form-panel">
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
+        [disabled]="actualizandoPago() || pagoActualizado()" (click)="cerrarFormularioPago()">×</button>
+      <h2 id="pagoVentaTitle">Actualizar método de pago</h2>
+      <p>Venta {{ ventaSeleccionada()?.venta?.idVenta }}</p>
+      <p class="payment-total">Total de la venta:
+        <strong>{{ ventaSeleccionada()?.venta?.total ?? 0 | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+      </p>
+      @if (mensajePago()) { <div class="alert alert-success" role="status">{{ mensajePago() }}</div> }
+      @if (errorPago()) { <div class="alert alert-error" role="alert">{{ errorPago() }}</div> }
+      <form [formGroup]="pagoForm" (ngSubmit)="actualizarPago()" class="quote-form">
+        <div class="form-group">
+          <label for="metodoPagoVenta">Método de pago *</label>
+          <select id="metodoPagoVenta" formControlName="metodoPago" class="form-control">
+            <option [ngValue]="null">Seleccione un método de pago</option>
+            @for (metodo of metodosPago; track metodo) {
+            <option [value]="metodo">{{ metodo }}</option>
+            }
+          </select>
+          @if (pagoForm.get('metodoPago')?.touched && pagoForm.get('metodoPago')?.invalid) {
+          <div class="error-msg">El método de pago es obligatorio</div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="referenciaPagoVenta">Referencia de pago</label>
+          <input id="referenciaPagoVenta" type="text" formControlName="referenciaPago" class="form-control"
+            maxlength="45" placeholder="Ingrese la referencia (opcional)" />
+          @if (pagoForm.get('referenciaPago')?.touched && pagoForm.get('referenciaPago')?.hasError('maxlength')) {
+          <div class="error-msg">La referencia no puede exceder 45 caracteres</div>
+          }
+        </div>
+        <div class="quote-form-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="actualizandoPago() || pagoActualizado()"
+            (click)="cerrarFormularioPago()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="actualizandoPago() || pagoActualizado()">
+            {{ actualizandoPago() ? 'Actualizando...' : pagoActualizado() ? 'Pago actualizado' : 'Actualizar pago' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
   }
   <h2 class="crud-title">Ventas</h2>
@@ -108,8 +131,8 @@
     <div class="detail-header">
       <h3 class="card-title">Detalle de venta</h3>
       @if (ventaSeleccionada()) {
-      <button type="button" class="btn-icon btn-close" (click)="cerrarDetalle()"
-        [disabled]="anulando() || anulandoFactura()" title="Cerrar detalle">✕</button>
+      <button type="button" class="btn-icon btn-close" (click)="cerrarDetalle()" [disabled]="anulando()"
+        title="Cerrar detalle">✕</button>
       }
     </div>
 
@@ -137,7 +160,6 @@
         </div>
         <div><span>Estado</span><strong>{{ ventaSeleccionada()!.venta.idEstadoVenta | estadoVentaNombre }}</strong>
         </div>
-        <div><span>Estado documento</span><strong>{{ ventaSeleccionada()!.estadoDocumento }}</strong></div>
         <div><span>N.º factura</span><strong>{{ ventaSeleccionada()!.venta.numeroFactura || '—' }}</strong></div>
         <div><span>Subtotal</span><strong>{{ ventaSeleccionada()!.venta.subtotal | number:'1.2-2' }}</strong></div>
         <div><span>Descuento mayorista</span><strong>{{ ventaSeleccionada()!.venta.descuentoMayoristaTotal |
@@ -147,6 +169,9 @@
         <div><span>Descuento total</span><strong>{{ ventaSeleccionada()!.venta.descuentoTotal | number:'1.2-2'
             }}</strong></div>
         <div><span>Total</span><strong>{{ ventaSeleccionada()!.venta.total | number:'1.2-2' }}</strong></div>
+        <div><span>Método de pago</span><strong>{{ ventaSeleccionada()!.venta.metodoPago || '—' }}</strong></div>
+        <div><span>Referencia de pago</span><strong>{{ ventaSeleccionada()!.venta.referenciaPago || '—' }}</strong>
+        </div>
       </div>
 
       <div class="table-wrapper">
@@ -190,34 +215,22 @@
       </div>
 
       <div class="detail-actions">
+        @if (puedeActualizarPago) {
+        <button type="button" class="btn btn-primary" (click)="abrirFormularioPago()"
+          [disabled]="actualizandoPago()">Actualizar método de pago</button>
+        }
         @if (puedeAnular) {
         <button type="button" class="btn btn-danger" (click)="anularVenta()" [disabled]="anulando()">
           {{ anulando() ? 'Anulando...' : 'Anular venta' }}
         </button>
         }
         <button type="button" class="btn btn-secondary" (click)="generarComprobante()"
-          [disabled]="generandoComprobante() || certificandoFactura() || anulandoFactura()">
+          [disabled]="generandoComprobante()">
           {{ generandoComprobante() ? 'Generando comprobante...' : 'Generar comprobante' }}
-        </button>
-        <button type="button" class="btn btn-secondary" (click)="generarFactura()"
-          [disabled]="certificandoFactura() || anulandoFactura()">
-          {{ certificandoFactura() ? 'Generando factura...' : 'Generar factura' }}
         </button>
         @if (puedeCrearPedido) {
         <button type="button" class="btn btn-secondary" (click)="abrirFormularioPedido()"
           [disabled]="creandoPedido()">Generar pedido</button>
-        }
-        <button type="button" class="btn btn-danger" (click)="abrirModalAnulacion()"
-          [disabled]="certificandoFactura() || anulandoFactura()">
-          {{ anulandoFactura() ? 'Anulando factura...' : 'Anular factura' }}
-        </button>
-        @if (certificandoFactura() || anulandoFactura()) {
-        <span class="fel-loading" aria-live="polite">Procesando la factura. Esto puede tardar hasta un minuto...</span>
-        }
-        @if (errorFactura()) {
-        <div class="alert alert-error fel-error" role="alert">{{ errorFactura() }}</div>
-        <button type="button" class="btn btn-secondary" (click)="reintentarFactura()"
-          [disabled]="certificandoFactura() || anulandoFactura()">Reintentar operación FEL</button>
         }
         @if (errorComprobante()) {
         <div class="alert alert-error" role="alert">{{ errorComprobante() }}</div>

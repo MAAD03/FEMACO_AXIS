@@ -130,7 +130,7 @@ public class CotizacionPdfService {
         agregarEncabezado(document, cotizacion, usuario, sucursal);
         agregarTablaItems(document, detalles, articulosPorId);
         agregarTotales(document, cotizacion);
-        document.add(parrafoCompacto("Esta cotización tiene una validez de 2 días.", FUENTE_NORMAL,
+        document.add(parrafoCompacto("Los precios pueden variar despues de ser realizada la cotizacion", FUENTE_NORMAL,
                 Element.ALIGN_CENTER));
 
         document.close();

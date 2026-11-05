@@ -86,13 +86,13 @@
 		<div class="filters-heading">
 			<div>
 				<h3 class="card-title">Buscar artículos</h3>
-				<p>Combina texto, catálogos y rangos para refinar el listado.</p>
+				<p>Busca por ID, código, nombre o descripción, y combina catálogos y rangos.</p>
 			</div><span class="result-count">{{ totalElementos() }} resultados</span>
 		</div>
 		<form [formGroup]="filtrosForm" (ngSubmit)="buscar()" class="filters-form">
 			<div class="search-row">
 				<div class="form-group search-field"><label for="q">Búsqueda</label><input id="q" type="search"
-						formControlName="q" class="form-control" placeholder="Código, nombre o descripción" /></div>
+						formControlName="q" class="form-control" placeholder="ID, código, nombre o descripción" /></div>
 				<button type="submit" class="btn btn-primary search-button"
 					[disabled]="cargando()">Buscar</button><button type="button" class="btn btn-secondary clear-button"
 					(click)="limpiarFiltros()" [disabled]="cargando()">Limpiar filtros</button>

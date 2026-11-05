@@ -1,67 +1,83 @@
-<aside class="sidebar">
+<aside class="sidebar" [class.collapsed]="isCollapsed">
 
-  <!-- Header -->
-  <div class="sidebar-header">
-    <img class="sidebar-logo" src="/favicon.ico" alt="Logo de Distribuidora Femaco">
-    <h3 class="sidebar-title">Distribuidora Femaco</h3>
-  </div>
+  @if (!isCollapsed) {
+    <div class="sidebar-header">
+      <img class="sidebar-logo" src="/favicon.ico" alt="Logo de Distribuidora Femaco">
+      <h3 class="sidebar-title">Distribuidora Femaco</h3>
+    </div>
+  }
 
   <nav class="sidebar-nav">
-    <a class="inicio-link"
-       routerLink="/dashboard"
-       routerLinkActive="active"
-       [routerLinkActiveOptions]="{ exact: true }">
-      <span class="inicio-icon" aria-hidden="true"></span>
-      <span>Inicio</span>
-    </a>
+    <div class="sidebar-nav-header">
+      @if (!isCollapsed) {
+        <a class="inicio-link"
+           routerLink="/dashboard"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }">
+          <span>Inicio</span>
+        </a>
+      }
+      <button class="sidebar-toggle"
+              type="button"
+              [attr.aria-label]="isCollapsed ? 'Expandir menú' : 'Contraer menú'"
+              [attr.aria-expanded]="!isCollapsed"
+              (click)="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
 
-    @for (modulo of menuService.menu$ | async; track modulo.idModulo) {
-      <div class="modulo">
-        <button class="modulo-nombre"
-                [class.is-expanded]="isModuloExpanded(modulo)"
-                [title]="modulo.nombre"
-                (click)="toggleModulo(modulo)">
-          <span class="module-marker" aria-hidden="true"></span>
-          <span>{{ modulo.nombre }}</span>
-          <span class="chevron" aria-hidden="true"></span>
-        </button>
+    @if (!isCollapsed) {
+      @for (modulo of menuService.menu$ | async; track modulo.idModulo) {
+        <div class="modulo">
+          <button class="modulo-nombre"
+                  [class.is-expanded]="isModuloExpanded(modulo)"
+                  [title]="modulo.nombre"
+                  (click)="toggleModulo(modulo)">
+            <span class="module-marker" aria-hidden="true"></span>
+            <span>{{ modulo.nombre }}</span>
+            <span class="chevron" aria-hidden="true"></span>
+          </button>
 
-        @if (isModuloExpanded(modulo)) {
-          @for (menu of modulo.menus; track menu.idMenu) {
-            <div class="menu-group" [class.menu-active]="isMenuActive(menu)">
-              <button class="menu-nombre"
-                      [class.is-expanded]="isMenuExpanded(menu)"
-                      [title]="menu.nombre"
-                      (click)="toggleMenu(menu)">
-                <span class="menu-label">{{ menu.nombre }}</span>
-                <span class="chevron" aria-hidden="true"></span>
-              </button>
+          @if (isModuloExpanded(modulo)) {
+            @for (menu of modulo.menus; track menu.idMenu) {
+              <div class="menu-group" [class.menu-active]="isMenuActive(menu)">
+                <button class="menu-nombre"
+                        [class.is-expanded]="isMenuExpanded(menu)"
+                        [title]="menu.nombre"
+                        (click)="toggleMenu(menu)">
+                  <span class="menu-label">{{ menu.nombre }}</span>
+                  <span class="chevron" aria-hidden="true"></span>
+                </button>
 
-              @if (isMenuExpanded(menu)) {
-                <ul class="opciones">
-                  @for (opcion of menu.opciones; track opcion.idOpcion) {
-                    <li>
-                      <div class="opcion-link-wrapper" routerLinkActive="active">
-                        <a [routerLink]="opcion.pagina"
-                           routerLinkActive="active"
-                           class="opcion-link"
-                           [title]="opcion.nombre">
-                          <span>{{ opcion.nombre }}</span>
-                        </a>
-                      </div>
-                    </li>
-                  }
-                </ul>
-              }
-            </div>
+                @if (isMenuExpanded(menu)) {
+                  <ul class="opciones">
+                    @for (opcion of menu.opciones; track opcion.idOpcion) {
+                      <li>
+                        <div class="opcion-link-wrapper" routerLinkActive="active">
+                          <a [routerLink]="opcion.pagina"
+                             routerLinkActive="active"
+                             class="opcion-link"
+                             [title]="opcion.nombre">
+                            <span>{{ opcion.nombre }}</span>
+                          </a>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
           }
-        }
-      </div>
+        </div>
+      }
     }
   </nav>
 
-  <!-- Footer -->
-  <div class="sidebar-footer">
-    <button class="btn-logout" (click)="logout()">Cerrar sesión</button>
-  </div>
+  @if (!isCollapsed) {
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="logout()">Cerrar sesión</button>
+    </div>
+  }
 </aside>

@@ -14,6 +14,27 @@
   margin: 0;
 }
 
+.inventory-download-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.inventory-download-panel .card-title {
+  margin-bottom: 0.35rem;
+}
+
+.inventory-download-panel > div > p {
+  color: var(--crud-primary-dark);
+  margin: 0;
+}
+
+.inventory-download-panel .section-state {
+  grid-column: 1 / -1;
+}
+
 .filters-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -164,6 +185,10 @@
   .pagination-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .inventory-download-panel {
+    grid-template-columns: 1fr;
   }
 
   .rotation-panel,

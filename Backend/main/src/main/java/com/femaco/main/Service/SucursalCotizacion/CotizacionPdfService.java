@@ -90,6 +90,9 @@ public class CotizacionPdfService {
         Usuario usuario = usuarioRepository.findById(cotizacion.getIdUsuario())
                 .orElseThrow(() -> new IllegalStateException(
                         "Usuario no encontrado para la cotización " + idCotizacion));
+        Usuario vendedor = usuarioRepository.findById(cotizacion.getUsuarioCreacion().longValue())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Usuario creador no encontrado para la cotización " + idCotizacion));
         Sucursal sucursal = sucursalRepository.findById(usuario.getIdSucursal())
                 .orElseThrow(() -> new IllegalStateException("Sucursal no encontrada"));
 
@@ -111,14 +114,14 @@ public class CotizacionPdfService {
 
         float altoPagina = estimarAltoPagina(descripciones);
         try {
-            return construirPdf(cotizacion, usuario, sucursal, detalles, articulosPorId, altoPagina);
+            return construirPdf(cotizacion, vendedor, sucursal, detalles, articulosPorId, altoPagina);
         } catch (Exception e) {
             throw new IllegalStateException(
                     "No se pudo generar la cotización " + idCotizacion, e);
         }
     }
 
-    private byte[] construirPdf(Cotizacion cotizacion, Usuario usuario, Sucursal sucursal,
+    private byte[] construirPdf(Cotizacion cotizacion, Usuario vendedor, Sucursal sucursal,
                                 List<DetalleCotizacion> detalles, Map<Long, Articulo> articulosPorId,
                                 float altoPagina) throws Exception {
         Document document = new Document(new Rectangle(ANCHO_CARTA, altoPagina));
@@ -127,7 +130,7 @@ public class CotizacionPdfService {
         document.setMargins(MARGEN, MARGEN, MARGEN, MARGEN);
         document.open();
 
-        agregarEncabezado(document, cotizacion, usuario, sucursal);
+        agregarEncabezado(document, cotizacion, vendedor, sucursal);
         agregarTablaItems(document, detalles, articulosPorId);
         agregarTotales(document, cotizacion);
         document.add(parrafoCompacto("Los precios pueden variar despues de ser realizada la cotizacion", FUENTE_NORMAL,
@@ -170,7 +173,7 @@ public class CotizacionPdfService {
     }
 
     private void agregarEncabezado(Document document, Cotizacion cotizacion,
-                                   Usuario usuario, Sucursal sucursal) throws Exception {
+                                   Usuario vendedor, Sucursal sucursal) throws Exception {
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
         tabla.setWidths(new float[]{65f, 35f});
@@ -183,7 +186,7 @@ public class CotizacionPdfService {
         celdaIzquierda.addElement(parrafoCompacto(
                 "Fecha: " + formatearFecha(cotizacion.getFecha()), FUENTE_NORMAL));
         celdaIzquierda.addElement(parrafoCompacto(
-                "Usuario: " + nombreUsuario(usuario), FUENTE_NORMAL));
+                "Vendedor: " + nombreUsuario(vendedor), FUENTE_NORMAL));
         celdaIzquierda.addElement(parrafoCompacto(" ", FUENTE_NORMAL));
         celdaIzquierda.addElement(parrafoCompacto("Cliente", FUENTE_SUBTITULO));
         celdaIzquierda.addElement(parrafoCompacto(

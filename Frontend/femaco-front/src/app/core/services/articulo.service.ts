@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { map, Observable, of, tap } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import { Articulo, ArticuloFiltro, PageArticulo } from '../models/articulo.model';
@@ -18,6 +18,13 @@ export class ArticuloService {
 
   buscarTodos(): Observable<Articulo[]> {
     return this.http.get<Articulo[]>(`${this.api}/buscar`);
+  }
+
+  generarInventarioActual(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.api}/inventario-actual`, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 
   buscarPaginado(

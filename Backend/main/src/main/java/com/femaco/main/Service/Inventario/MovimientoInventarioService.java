@@ -27,6 +27,11 @@ public class MovimientoInventarioService {
                 .findAllByOrderByFechaCreacionDescIdMovimientoInventarioDesc(pageable);
     }
 
+    public Page<MovimientoInventario> buscarPorTipoMovimientoPaginado(String tipoMovimiento, Pageable pageable) {
+        return movimientoInventarioRepository
+                .findByTipoMovimientoOrderByFechaCreacionDescIdMovimientoInventarioDesc(tipoMovimiento, pageable);
+    }
+
     public List<MovimientoInventario> buscarPorArticulo(Long idArticulo) {
         return movimientoInventarioRepository.findByIdArticulo(idArticulo);
     }

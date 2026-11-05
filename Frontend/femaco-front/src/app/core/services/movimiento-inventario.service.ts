@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import { PageMovimientoInventario } from '../models/movimiento-inventario.model';
 
+export type TipoMovimientoFiltro = 'entrada' | 'salida' | 'ajuste';
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -15,12 +17,17 @@ export class MovimientoInventarioService {
 	buscarPaginado(
 		page: number = 0,
 		size: number = 20,
-		sort: string = 'fechaCreacion,desc'
+		sort: string = 'fechaCreacion,desc',
+		tipoMovimiento?: TipoMovimientoFiltro
 	): Observable<PageMovimientoInventario> {
-		const params = new HttpParams()
+		let params = new HttpParams()
 			.set('page', page)
 			.set('size', size)
 			.set('sort', sort);
+
+		if (tipoMovimiento) {
+			params = params.set('tipoMovimiento', tipoMovimiento);
+		}
 
 		return this.http.get<PageMovimientoInventario>(`${this.api}/buscar-paginado`, { params });
 	}

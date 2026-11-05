@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import { Observable } from 'rxjs';
+import { ArticuloService } from '../../../core/services/articulo.service';
 import { DatosArticulosService } from '../../../core/services/datos-articulos.service';
 import {
   AgrupacionDashboard,
@@ -47,9 +48,14 @@ interface ArticuloSeleccionado {
   styleUrl: './datos-articulos.css',
 })
 export class DatosArticulos implements OnInit {
+  private readonly articuloService = inject(ArticuloService);
   private readonly datosArticulosService = inject(DatosArticulosService);
   private readonly destroyRef = inject(DestroyRef);
   private historialRequestId = 0;
+
+  readonly inventarioPdfCargando = signal(false);
+  readonly inventarioPdfError = signal('');
+  readonly inventarioPdfMensaje = signal('');
 
   readonly desde = signal('');
   readonly hasta = signal('');
@@ -113,6 +119,51 @@ export class DatosArticulos implements OnInit {
 
     this.cargarStockBajo();
     this.cargarSeccionesFiltradas();
+  }
+
+  descargarInventarioActual(): void {
+    if (this.inventarioPdfCargando()) {
+      return;
+    }
+
+    const confirmado = window.confirm(
+      '¿Deseas descargar el PDF del inventario actual? El documento incluye todos los artículos activos y sus datos.'
+    );
+    if (!confirmado) {
+      return;
+    }
+
+    this.inventarioPdfCargando.set(true);
+    this.inventarioPdfError.set('');
+    this.inventarioPdfMensaje.set('');
+
+    this.articuloService.generarInventarioActual()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          if (!response.body || !response.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
+            this.inventarioPdfError.set('La respuesta no contiene un PDF de inventario válido.');
+            this.inventarioPdfCargando.set(false);
+            return;
+          }
+
+          this.guardarPdfInventario(response.body);
+          this.inventarioPdfMensaje.set('PDF del inventario actual descargado correctamente.');
+          this.inventarioPdfCargando.set(false);
+        },
+        error: (error: unknown) => {
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.inventarioPdfError.set('No tienes permiso para descargar el inventario actual.');
+          } else if (error instanceof HttpErrorResponse && error.status === 0) {
+            this.inventarioPdfError.set('No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+          } else if (error instanceof HttpErrorResponse) {
+            this.inventarioPdfError.set(`No se pudo generar el PDF del inventario (HTTP ${error.status}).`);
+          } else {
+            this.inventarioPdfError.set('Ocurrió un error inesperado al generar el PDF del inventario.');
+          }
+          this.inventarioPdfCargando.set(false);
+        },
+      });
   }
 
   actualizarDesde(event: Event): void {
@@ -411,5 +462,17 @@ export class DatosArticulos implements OnInit {
 
   private readCssColor(variable: string): string {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  }
+
+  private guardarPdfInventario(pdf: Blob): void {
+    const url = URL.createObjectURL(pdf);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = 'inventario-actual.pdf';
+    enlace.style.display = 'none';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
   }
 }

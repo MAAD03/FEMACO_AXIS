@@ -11,8 +11,12 @@
   top: 0;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  transition: width 0.3s ease;
+  transition: width 180ms ease-out;
   overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 72px;
 }
 
 .sidebar-header {
@@ -23,6 +27,46 @@
   justify-content: space-between;
   gap: 0.5rem;
   min-height: 64px;
+}
+
+.sidebar-toggle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0.5rem;
+  border: 2px solid var(--crud-bg-light);
+  border-radius: 8px;
+  background: var(--crud-primary-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background: var(--crud-primary);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.sidebar-toggle:focus-visible {
+  outline: 2px solid var(--crud-bg-light);
+  outline-offset: 2px;
+}
+
+.sidebar-toggle span {
+  width: 1.15rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--crud-primary-dark);
+}
+
+.sidebar-toggle:hover span {
+  background: white;
 }
 
 .sidebar-logo {
@@ -54,6 +98,21 @@
   scrollbar-color: rgba(220, 232, 180, 0.55) transparent;
 }
 
+.sidebar.collapsed .sidebar-nav {
+  padding: 0.75rem 0.45rem;
+}
+
+.sidebar-nav-header {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin: 0 0.35rem 1.35rem 0.8rem;
+}
+
+.sidebar.collapsed .sidebar-nav-header {
+  margin: 0;
+}
+
 .sidebar-nav::-webkit-scrollbar {
   width: 7px;
 }
@@ -74,9 +133,10 @@
 
 .inicio-link {
   display: flex;
+  flex: 1;
   align-items: center;
-  gap: 0.7rem;
-  margin: 0 0.35rem 1.35rem 0.8rem;
+  justify-content: center;
+  min-width: 0;
   padding: 0.7rem 0.85rem;
   border: 1px solid rgba(220, 232, 180, 0.2);
   border-radius: 8px;
@@ -86,6 +146,7 @@
   font-weight: 600;
   text-decoration: none;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  text-align: center;
 }
 
 .inicio-link:hover,
@@ -97,18 +158,6 @@
 
 .inicio-link:hover {
   transform: translateX(2px);
-}
-
-.inicio-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  flex: 0 0 1.5rem;
-  font-size: 1.25rem;
-  line-height: 1;
-  text-align: center;
 }
 
 .modulo {
@@ -261,4 +310,10 @@
 .btn-logout:hover {
   background: rgba(192, 57, 43, 0.85);
   border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
 }

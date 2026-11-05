@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MenuItem, ModuloMenu } from '../../core/models/conjunto-menu.model';
@@ -13,12 +13,20 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class Sidebar {
 
+  @Output() collapsedChange = new EventEmitter<boolean>();
+
   menuService = inject(ConjuntoMenuService);
   authService = inject(AuthService);
   private router = inject(Router);
 
+  isCollapsed = false;
   private expandedModulos = new Set<number>();
   private expandedMenus = new Set<number>();
+
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+    this.collapsedChange.emit(this.isCollapsed);
+  }
 
   logout(): void {
     this.authService.logout();

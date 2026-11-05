@@ -4,6 +4,28 @@
     <p>Existencias, movimientos y rotación de inventario</p>
   </header>
 
+  <section class="card inventory-download-panel" aria-labelledby="inventario-actual-titulo">
+    <div>
+      <h2 class="card-title" id="inventario-actual-titulo">Inventario actual</h2>
+      <p>Descarga un documento PDF con todos los artículos activos y sus datos.</p>
+    </div>
+    <button
+      class="btn btn-primary"
+      type="button"
+      [disabled]="inventarioPdfCargando()"
+      (click)="descargarInventarioActual()"
+    >
+      {{ inventarioPdfCargando() ? 'Generando PDF…' : 'Descargar inventario actual' }}
+    </button>
+    @if (inventarioPdfCargando()) {
+      <p class="section-state" aria-live="polite">Generando el PDF del inventario actual…</p>
+    } @else if (inventarioPdfError()) {
+      <p class="section-state error-msg" role="alert">{{ inventarioPdfError() }}</p>
+    } @else if (inventarioPdfMensaje()) {
+      <p class="section-state" role="status">{{ inventarioPdfMensaje() }}</p>
+    }
+  </section>
+
   <section class="card inventory-panel" aria-labelledby="stock-bajo-titulo">
     <div class="inventory-heading">
       <h2 class="card-title" id="stock-bajo-titulo">Stock bajo mínimo</h2>

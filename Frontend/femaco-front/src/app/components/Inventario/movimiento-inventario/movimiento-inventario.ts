@@ -4,7 +4,7 @@ import { ArticuloNombrePipe } from '../../../core/pipes/articulo-nombre-pipe-pip
 import { UsuariosEmailPipe } from '../../../core/pipes/usuarios-email';
 import { ArticuloService } from '../../../core/services/articulo.service';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
-import { MovimientoInventarioService } from '../../../core/services/movimiento-inventario.service';
+import { MovimientoInventarioService, type TipoMovimientoFiltro} from '../../../core/services/movimiento-inventario.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { MovimientoInventario as MovimientoInventarioModel } from '../../../core/models/movimiento-inventario.model';
 
@@ -29,6 +29,8 @@ export class MovimientoInventario implements OnInit {
   totalElementos = signal(0);
   readonly tamanosPagina = [10, 20, 30, 50];
   tamanoPagina = signal(20);
+  tipoMovimientoSeleccionado = signal<TipoMovimientoFiltro | ''>('');
+  private tipoMovimientoAplicado = signal<TipoMovimientoFiltro | undefined>(undefined);
 
   get permisos() {
     return this.conjuntoMenuService.getPermisosPorPagina('movimiento-inventario');
@@ -44,7 +46,12 @@ export class MovimientoInventario implements OnInit {
     this.cargando.set(true);
     this.error.set('');
 
-    this.movimientoInventarioService.buscarPaginado(this.paginaActual(), this.tamanoPagina()).subscribe({
+    this.movimientoInventarioService.buscarPaginado(
+      this.paginaActual(),
+      this.tamanoPagina(),
+      'fechaCreacion,desc',
+      this.tipoMovimientoAplicado()
+    ).subscribe({
       next: pagina => {
         this.lista.set(pagina.content ?? []);
         this.totalPaginas.set(pagina.totalPages ?? 0);
@@ -61,6 +68,17 @@ export class MovimientoInventario implements OnInit {
 
   cambiarTamano(tamano: string): void {
     this.tamanoPagina.set(Number(tamano) || 20);
+    this.paginaActual.set(0);
+    this.cargarLista();
+  }
+
+  cambiarTipoMovimiento(tipoMovimiento: TipoMovimientoFiltro | ''): void {
+    this.tipoMovimientoSeleccionado.set(tipoMovimiento);
+  }
+
+  aplicarFiltro(): void {
+    const tipoMovimiento = this.tipoMovimientoSeleccionado();
+    this.tipoMovimientoAplicado.set(tipoMovimiento || undefined);
     this.paginaActual.set(0);
     this.cargarLista();
   }

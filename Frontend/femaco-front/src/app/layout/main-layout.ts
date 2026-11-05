@@ -11,9 +11,9 @@ import { CacheLoaderService } from '../core/services/cache-loader.service';
   imports: [RouterOutlet, Sidebar],
   template: `
     <div class="app-layout">
-      <app-sidebar></app-sidebar>
+      <app-sidebar (collapsedChange)="isSidebarCollapsed = $event"></app-sidebar>
 
-      <main class="main-content">
+      <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -29,12 +29,23 @@ import { CacheLoaderService } from '../core/services/cache-loader.service';
       flex: 1;
       background: linear-gradient(180deg, var(--crud-bg-light) 0%, #f4f7ea 100%);
       min-height: 100vh;
-      transition: margin-left 0.3s ease;
+      transition: margin-left 180ms ease-out;
+    }
+
+    .main-content.sidebar-collapsed {
+      margin-left: 72px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .main-content {
+        transition: none;
+      }
     }
 
   `]
 })
 export class MainLayout implements OnInit {
+  isSidebarCollapsed = false;
   private conjuntoMenuService = inject(ConjuntoMenuService);
   private authService = inject(AuthService);
   private cacheLoaderService = inject(CacheLoaderService);

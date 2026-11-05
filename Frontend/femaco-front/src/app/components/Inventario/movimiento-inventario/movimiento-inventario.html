@@ -13,6 +13,20 @@
         <div class="alert alert-error">{{ error() }}</div>
         }
 
+        <div class="filters">
+            <label for="tipo-movimiento">Tipo de movimiento</label>
+            <select id="tipo-movimiento" [value]="tipoMovimientoSeleccionado()"
+                (change)="cambiarTipoMovimiento($any($event.target).value)">
+                <option value="">Todos</option>
+                <option value="entrada">Entrada</option>
+                <option value="salida">Salida</option>
+                <option value="ajuste">Ajuste</option>
+            </select>
+            <button class="btn btn-primary" type="button" (click)="aplicarFiltro()" [disabled]="cargando()">
+                Aplicar filtros
+            </button>
+        </div>
+
         @if (cargando() && lista().length === 0) {
         <p class="loading">Cargando movimientos...</p>
         } @else if (lista().length === 0) {

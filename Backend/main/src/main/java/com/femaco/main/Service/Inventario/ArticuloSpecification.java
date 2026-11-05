@@ -18,14 +18,21 @@ public class ArticuloSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Búsqueda de texto (código o nombre)
+            // Búsqueda por código, nombre, descripción o ID exacto cuando q es numérico.
             if (StringUtils.hasText(filtro.getQ())) {
-                String like = "%" + filtro.getQ().trim().toLowerCase() + "%";
-                predicates.add(cb.or(
+                String q = filtro.getQ().trim();
+                String like = "%" + q.toLowerCase() + "%";
+                List<Predicate> busqueda = new ArrayList<>(List.of(
                     cb.like(cb.lower(root.get("codigo")), like),
                     cb.like(cb.lower(root.get("nombre")), like),
                     cb.like(cb.lower(root.get("descripcion")), like)
                 ));
+                try {
+                    busqueda.add(cb.equal(root.get("idArticulo"), Long.valueOf(q)));
+                } catch (NumberFormatException ignored) {
+                    // q remains a text search when it is not a valid Long.
+                }
+                predicates.add(cb.or(busqueda.toArray(Predicate[]::new)));
             }
             if (filtro.getIdArea() != null) {
                 predicates.add(cb.equal(root.get("idAreaArticulo"), filtro.getIdArea()));

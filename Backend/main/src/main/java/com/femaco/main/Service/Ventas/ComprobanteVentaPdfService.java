@@ -48,7 +48,7 @@ public class ComprobanteVentaPdfService {
     private static final float MARGEN = 36f;
     private static final float ALTO_MINIMO = 330f;
     private static final float ALTO_MAXIMO = 792f * 3;
-    private static final float ALTURA_ENCABEZADO = 92f;
+    private static final float ALTURA_ENCABEZADO = 105f;
     private static final float ALTURA_ENCABEZADO_TABLA = 20f;
     private static final float ALTURA_FILA_BASE = 16f;
     private static final float ALTURA_POR_LINEA_EXTRA = 11f;
@@ -97,6 +97,10 @@ public class ComprobanteVentaPdfService {
         Usuario usuario = usuarioRepository.findById(venta.getIdUsuario())
                 .orElseThrow(() -> new IllegalStateException("Usuario no encontrado para la venta " + idVenta));
 
+        Usuario vendedor = usuarioRepository.findById(venta.getUsuarioCreacion().longValue())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Usuario creador no encontrado para la venta " + idVenta));
+
         Sucursal sucursal = sucursalRepository.findById(usuario.getIdSucursal())
                 .orElseThrow(() -> new IllegalStateException("Sucursal no encontrada"));
 
@@ -117,13 +121,13 @@ public class ComprobanteVentaPdfService {
 
         float altoPagina = estimarAltoPagina(descripciones);
         try {
-            return construirPdf(venta, cliente, sucursal, detalles, articulosPorId, altoPagina);
+            return construirPdf(venta, cliente, vendedor, sucursal, detalles, articulosPorId, altoPagina);
         } catch (Exception e) {
             throw new IllegalStateException("No se pudo generar el comprobante de la venta " + idVenta, e);
         }
     }
 
-    private byte[] construirPdf(Venta venta, Cliente cliente, Sucursal sucursal,
+    private byte[] construirPdf(Venta venta, Cliente cliente, Usuario vendedor, Sucursal sucursal,
                                 List<VentaDetalle> detalles, Map<Long, Articulo> articulosPorId,
                                 float altoPagina) throws Exception {
         Document document = new Document(new Rectangle(ANCHO_CARTA, altoPagina));
@@ -132,7 +136,7 @@ public class ComprobanteVentaPdfService {
         document.setMargins(MARGEN, MARGEN, MARGEN, MARGEN);
         document.open();
 
-        agregarEncabezado(document, venta, cliente, sucursal);
+        agregarEncabezado(document, venta, cliente, vendedor, sucursal);
         agregarTablaItems(document, detalles, articulosPorId);
         agregarTotales(document, venta);
 
@@ -172,7 +176,7 @@ public class ComprobanteVentaPdfService {
         document.add(espacio);
     }
 
-    private void agregarEncabezado(Document document, Venta venta, Cliente cliente,
+    private void agregarEncabezado(Document document, Venta venta, Cliente cliente, Usuario vendedor,
                                    Sucursal sucursal) throws Exception {
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
@@ -185,6 +189,8 @@ public class ComprobanteVentaPdfService {
                 "No. comprobante: " + valorOTexto(venta.getNumeroFactura()), FUENTE_NORMAL));
         celdaIzquierda.addElement(parrafoCompacto(
                 "Fecha: " + formatearFecha(venta.getFecha()), FUENTE_NORMAL));
+        celdaIzquierda.addElement(parrafoCompacto(
+                "Vendedor: " + nombreUsuario(vendedor), FUENTE_NORMAL));
         celdaIzquierda.addElement(parrafoCompacto(" ", FUENTE_NORMAL));
         celdaIzquierda.addElement(parrafoCompacto("Cliente", FUENTE_SUBTITULO));
         celdaIzquierda.addElement(parrafoCompacto(
@@ -215,6 +221,10 @@ public class ComprobanteVentaPdfService {
 
         document.add(tabla);
         agregarEspacio(document, 4f);
+    }
+
+    private String nombreUsuario(Usuario usuario) {
+        return valorOTexto(usuario.getNombre()) + " " + valorOTexto(usuario.getApellido());
     }
 
     private Image cargarLogo() {

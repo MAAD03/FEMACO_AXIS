@@ -6,7 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,15 +24,19 @@ import org.springframework.web.bind.annotation.RestController;
 import com.femaco.main.DTOs.ArticuloFiltroDTO;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Service.Inventario.ArticuloService;
+import com.femaco.main.Service.Inventario.InventarioActualPdfService;
 
 @RestController
 @RequestMapping("/articulo")
 public class ArticuloController {
     
     private final ArticuloService articuloService;
+    private final InventarioActualPdfService inventarioActualPdfService;
 
-    public ArticuloController(ArticuloService articuloService) {
+    public ArticuloController(ArticuloService articuloService,
+                              InventarioActualPdfService inventarioActualPdfService) {
         this.articuloService = articuloService;
+        this.inventarioActualPdfService = inventarioActualPdfService;
     }
 
 
@@ -39,6 +46,21 @@ public class ArticuloController {
         return ResponseEntity.ok(articuloService.buscarTodos());
     }
 
+    @GetMapping("/inventario-actual")
+    @PreAuthorize("hasAuthority('PERMISO_ARTICULO_ACCESO')")
+    public ResponseEntity<byte[]> generarInventarioActual() {
+        byte[] pdf = inventarioActualPdfService.generarPdf();
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename("inventario-actual.pdf")
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(disposition);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
 
   @GetMapping("/buscar-paginado")
         @PreAuthorize("hasAuthority('PERMISO_ARTICULO_ACCESO')")

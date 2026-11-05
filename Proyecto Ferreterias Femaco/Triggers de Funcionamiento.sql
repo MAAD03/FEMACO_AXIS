@@ -153,9 +153,7 @@ BEGIN
         FROM `orden_compra`
         WHERE `IdOrdenCompra` = NEW.`IdOrdenCompra`;
 
-        -- Registra la entrada de inventario (esto dispara en cascada
-        -- trg_movimiento_inventario_after_insert, que ya actualiza
-        -- articulo.StockActual, FechaModif y UsuarioModif)
+        -- Siempre registra la entrada de inventario (actualiza stock)
         INSERT INTO `movimiento_inventario` (
             `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
             `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
@@ -166,13 +164,15 @@ BEGIN
             NOW(), NEW.`UsuarioCreacion`, NOW(), NEW.`UsuarioModif`
         );
 
-        -- Actualiza el último precio de proveedor del artículo
-        -- según el precio unitario en la línea de compra.
-        UPDATE `articulo`
-        SET `PrecioCompraUltimoProveedor` = NEW.`PrecioUnitario`,
-            `FechaModif`            = NOW(),
-            `UsuarioModif`          = NEW.`UsuarioModif`
-        WHERE `IdArticulo` = NEW.`IdArticulo`;
+        -- Solo actualiza el precio de compra si ActualizarPrecio = 1
+        IF NEW.`ActualizarPrecio` = 1 THEN
+            UPDATE `articulo`
+            SET `PrecioCompraUltimoProveedor` = NEW.`PrecioUnitario`,
+                `FechaModif`                 = NOW(),
+                `UsuarioModif`               = NEW.`UsuarioModif`
+            WHERE `IdArticulo` = NEW.`IdArticulo`;
+        END IF;
+
     END IF;
 END$$
 

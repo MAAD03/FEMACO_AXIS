@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.ArticuloResumenDTO;
 import com.femaco.main.DTOs.ArticuloFiltroDTO;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Entity.Seguridad.Usuario;
@@ -32,8 +33,8 @@ public class ArticuloService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public List<Articulo> buscarTodos() {
-        return articuloRepository.findAll();
+    public List<ArticuloResumenDTO> buscarTodos() {
+        return articuloRepository.findAllResumen();
     }
 
     @Transactional(readOnly = true)

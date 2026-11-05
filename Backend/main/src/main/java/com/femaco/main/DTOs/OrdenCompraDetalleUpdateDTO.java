@@ -22,5 +22,7 @@ public class OrdenCompraDetalleUpdateDTO {
     @DecimalMin(value = "0.01", message = "El precio unitario debe ser mayor a 0")
     private BigDecimal precioUnitario;
 
+    private Boolean actualizarPrecio;
+
     private Long idEstadoOrdenCompra;
 }

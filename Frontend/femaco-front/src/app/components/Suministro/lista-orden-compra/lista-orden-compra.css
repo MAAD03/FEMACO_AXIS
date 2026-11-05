@@ -48,6 +48,23 @@
   margin-top: 1rem;
 }
 
+.price-update-help {
+  margin: 0.75rem 0;
+  color: var(--crud-text);
+  font-size: 0.88rem;
+}
+
+.price-update-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.price-update-checkbox input:disabled {
+  cursor: not-allowed;
+}
+
 .audit-stack {
   display: flex;
   flex-direction: column;

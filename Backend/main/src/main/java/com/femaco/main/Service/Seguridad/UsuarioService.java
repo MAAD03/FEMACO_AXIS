@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.UsuarioResumenDTO;
 import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Exception.UnauthorizedException;
 import com.femaco.main.Repository.Seguridad.UsuarioRepository;
@@ -34,8 +35,8 @@ public class UsuarioService {
         this.mailSender = mailSender;
     }
 
-    public List<Usuario> buscarTodos() {
-        return usuarioRepository.findAll();
+    public List<UsuarioResumenDTO> buscarTodos() {
+        return usuarioRepository.findAllResumen();
     }
 
     @Transactional(readOnly = true)

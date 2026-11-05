@@ -2,6 +2,10 @@ package com.femaco.main.Controller.Inventario;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.AreaArticuloResumenDTO;
 import com.femaco.main.Entity.Inventario.AreaArticulo;
 import com.femaco.main.Service.Inventario.AreaArticuloService;
 
@@ -28,8 +33,15 @@ public class AreaArticuloController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<AreaArticulo>> buscar() {
+    public ResponseEntity<List<AreaArticuloResumenDTO>> buscar() {
         return ResponseEntity.ok(areaArticuloService.buscarTodos());
+    }
+
+    @GetMapping("/buscarPaginado")
+    public ResponseEntity<Page<AreaArticulo>> buscarPaginado(
+            @PageableDefault(size = 20, sort = "nombre", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+        return ResponseEntity.ok(areaArticuloService.buscarTodos(pageable));
     }
 
     @PostMapping("/crear")

@@ -30,6 +30,9 @@ public class OrdenCompraDetalle  {
     @Column(name = "Total", precision = 12, scale = 2)
     private BigDecimal total;
 
+    @Column(name = "ActualizarPrecio", nullable = false)
+    private Boolean actualizarPrecio;
+
     @Column(name = "FechaCreacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 

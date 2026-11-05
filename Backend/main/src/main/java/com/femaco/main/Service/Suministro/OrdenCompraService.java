@@ -173,6 +173,7 @@ public class OrdenCompraService {
             detalle.setCantidad(cantidad);
             detalle.setPrecioUnitario(precioUnitario);
             detalle.setTotal(totalDetalle);
+            detalle.setActualizarPrecio(Boolean.TRUE.equals(detalleDto.getActualizarPrecio()));
             detalle.setIdArticulo(idArticulo);
             detalle.setIdEstadoOrdenCompra(ESTADO_PENDIENTE);
             detalle.setFechaCreacion(ahora);
@@ -302,10 +303,12 @@ public class OrdenCompraService {
                     || detalleExistente.getPrecioUnitario() == null
                     || detalleExistente.getCantidad().compareTo(cantidad) != 0
                     || detalleExistente.getPrecioUnitario().compareTo(precioUnitario) != 0;
+                boolean cambioActualizarPrecio = detalleDto.getActualizarPrecio() != null
+                    && !Objects.equals(detalleDto.getActualizarPrecio(), detalleExistente.getActualizarPrecio());
                 boolean cambioEstado = detalleDto.getIdEstadoOrdenCompra() != null
                     && !Objects.equals(detalleDto.getIdEstadoOrdenCompra(), detalleExistente.getIdEstadoOrdenCompra());
 
-                if (cambioArticulo || cambioCantidadPrecio || cambioEstado) {
+                if (cambioArticulo || cambioCantidadPrecio || cambioActualizarPrecio || cambioEstado) {
                     throw new BusinessException(
                         "El detalle con ID " + idDetalle + " ya está en estado final y no puede modificarse");
                 }
@@ -332,6 +335,9 @@ public class OrdenCompraService {
                     : detalleExistente.getIdArticulo());
             detalleExistente.setCantidad(cantidad);
             detalleExistente.setPrecioUnitario(precioUnitario);
+            if (detalleDto.getActualizarPrecio() != null) {
+                detalleExistente.setActualizarPrecio(detalleDto.getActualizarPrecio());
+            }
             detalleExistente.setIdEstadoOrdenCompra(nuevoEstadoDetalle);
 
             BigDecimal totalDetalle = cantidad.multiply(precioUnitario).setScale(2, RoundingMode.HALF_UP);

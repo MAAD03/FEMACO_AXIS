@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.femaco.main.DTOs.ArticuloFiltroDTO;
+import com.femaco.main.DTOs.ArticuloResumenDTO;
 import com.femaco.main.Entity.Inventario.Articulo;
 import com.femaco.main.Service.Inventario.ArticuloService;
 import com.femaco.main.Service.Inventario.InventarioActualPdfService;
@@ -42,7 +43,7 @@ public class ArticuloController {
 
     @GetMapping("/buscar")
     @PreAuthorize("hasAuthority('PERMISO_ARTICULO_ACCESO')")
-    public ResponseEntity<List<Articulo>> buscar() {
+    public ResponseEntity<List<ArticuloResumenDTO>> buscar() {
         return ResponseEntity.ok(articuloService.buscarTodos());
     }
 

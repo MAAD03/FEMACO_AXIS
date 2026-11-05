@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable, of, tap } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { AreaArticulo } from '../models/area-articulo.model';
+import { AreaArticulo, PageAreaArticulo } from '../models/area-articulo.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +18,15 @@ export class AreaArticuloService {
 
   buscarTodos(): Observable<AreaArticulo[]> {
     return this.http.get<AreaArticulo[]>(`${this.api}/buscar`);
+  }
+
+  buscarPaginado(page = 0, size = 20, sort = 'nombre,asc'): Observable<PageAreaArticulo> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size)
+      .set('sort', sort);
+
+    return this.http.get<PageAreaArticulo>(`${this.api}/buscarPaginado`, { params });
   }
 
   crear(areaArticulo: AreaArticulo): Observable<AreaArticulo> {

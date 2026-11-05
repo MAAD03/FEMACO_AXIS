@@ -32,10 +32,52 @@
 	padding-top: 0.25rem;
 }
 
+.table-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+}
+
+.table-summary,
+.page-size-label {
+	color: var(--crud-primary-dark);
+	font-weight: 600;
+}
+
+.page-size-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.compact {
+	width: auto;
+	min-width: 80px;
+	padding: 0.45rem 0.6rem;
+}
+
 .area-list {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 1rem;
+}
+
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.6rem;
+	flex-wrap: wrap;
+	margin-top: 1.5rem;
+}
+
+.page-indicator {
+	padding: 0 0.25rem;
+	color: var(--crud-primary-dark);
+	font-weight: 600;
 }
 
 .area-item {

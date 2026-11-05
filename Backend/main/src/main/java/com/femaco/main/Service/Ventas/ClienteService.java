@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.ClienteResumenDTO;
 import com.femaco.main.Entity.Ventas.Cliente;
 import com.femaco.main.Exception.BusinessException;
 import com.femaco.main.Repository.Ventas.ClienteRepository;
@@ -22,8 +23,8 @@ public class ClienteService {
         this.clienteRepository = clienteRepository;
     }
 
-    public List<Cliente> buscarTodos() {
-        return clienteRepository.findAll();
+    public List<ClienteResumenDTO> buscarTodos() {
+        return clienteRepository.findAllResumen();
     }
 
     public Page<Cliente> buscarTodosPaginado(Pageable pageable) {

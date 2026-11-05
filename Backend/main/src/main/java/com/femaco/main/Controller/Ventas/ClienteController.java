@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.ClienteResumenDTO;
 import com.femaco.main.Entity.Ventas.Cliente;
 import com.femaco.main.Service.Ventas.ClienteService;
 
@@ -30,7 +31,7 @@ public class ClienteController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<Cliente>> buscar() {
+    public ResponseEntity<List<ClienteResumenDTO>> buscar() {
         return ResponseEntity.ok(clienteService.buscarTodos());
     }
 

@@ -279,6 +279,23 @@ export class ListaOrdenCompra implements OnInit {
     );
   }
 
+  actualizarPrecioDetalle(idDetalle: number | undefined, actualizarPrecio: boolean): void {
+    if (!idDetalle || !this.puedeEditar || this.ordenBloqueada()) {
+      return;
+    }
+
+    const detalleActual = this.detallesOrden().find((detalle) => detalle.idOrdenCompraDetalle === idDetalle);
+    if (!detalleActual || this.detalleBloqueado(detalleActual)) {
+      return;
+    }
+
+    this.detallesOrden.update((detalles) =>
+      detalles.map((detalle) =>
+        detalle.idOrdenCompraDetalle === idDetalle ? { ...detalle, actualizarPrecio } : detalle
+      )
+    );
+  }
+
   guardarCambios(): void {
     const orden = this.ordenSeleccionada();
     if (!orden?.idOrdenCompra || !this.puedeEditar) {
@@ -316,9 +333,13 @@ export class ListaOrdenCompra implements OnInit {
       notas: orden.notas?.trim() || undefined,
       detalles: this.detallesOrden().map((detalle) => ({
         idOrdenCompraDetalle: detalle.idOrdenCompraDetalle ?? 0,
+        idArticulo: detalle.idArticulo ?? 0,
         cantidad: Number(detalle.cantidad ?? 0),
         precioUnitario: Number(detalle.precioUnitario ?? 0),
         idEstadoOrdenCompra: Number(detalle.idEstadoOrdenCompra ?? 0),
+        ...(typeof detalle.actualizarPrecio === 'boolean'
+          ? { actualizarPrecio: detalle.actualizarPrecio }
+          : {}),
       })),
     };
 

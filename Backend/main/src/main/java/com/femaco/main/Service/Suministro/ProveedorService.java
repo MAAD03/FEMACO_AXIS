@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.ProveedorResumenDTO;
 import com.femaco.main.Entity.Suministro.Proveedor;
 import com.femaco.main.Repository.Suministro.ProveedorRepository;
 
@@ -21,8 +22,8 @@ public class ProveedorService {
         this.proveedorRepository = proveedorRepository;
     }
 
-    public List<Proveedor> buscarTodos() {
-        return proveedorRepository.findAll();
+    public List<ProveedorResumenDTO> buscarTodos() {
+        return proveedorRepository.findAllResumen();
     }
 
     @Transactional(readOnly = true)

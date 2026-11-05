@@ -54,6 +54,16 @@
 
 	<div class="card table-card">
 		<h3 class="card-title">Listado de áreas de artículo</h3>
+		<div class="table-toolbar">
+			<span class="table-summary">Mostrando {{ lista().length }} de {{ totalElementos() }} áreas de artículo</span>
+			<label class="page-size-label">Mostrar
+				<select class="form-control compact" [value]="tamanioPagina()" (change)="onTamanioPaginaChange($event)">
+					@for (size of tamanosPagina; track size) {
+					<option [value]="size">{{ size }}</option>
+					}
+				</select>
+			</label>
+		</div>
 
 		@if (cargando() && lista().length === 0) {
 		<p class="loading">Cargando...</p>
@@ -104,6 +114,19 @@
 				</div>
 			</article>
 			}
+		</div>
+		<div class="pagination">
+			<button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0"
+				(click)="irAPagina(0)">Primera</button>
+			<button type="button" class="btn btn-secondary" [disabled]="paginaActual() === 0"
+				(click)="irAPagina(paginaActual() - 1)">Anterior</button>
+			<span class="page-indicator">Página {{ paginaActual() + 1 }} / {{ totalPaginas() || 1 }}</span>
+			<button type="button" class="btn btn-secondary"
+				[disabled]="paginaActual() >= totalPaginas() - 1 || totalPaginas() === 0"
+				(click)="irAPagina(paginaActual() + 1)">Siguiente</button>
+			<button type="button" class="btn btn-secondary"
+				[disabled]="totalPaginas() === 0 || paginaActual() >= totalPaginas() - 1"
+				(click)="irAPagina((totalPaginas() || 1) - 1)">Última</button>
 		</div>
 		}
 	</div>

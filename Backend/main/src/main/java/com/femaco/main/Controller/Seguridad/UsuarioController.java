@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.UsuarioResumenDTO;
 import com.femaco.main.Entity.Seguridad.Usuario;
 import com.femaco.main.Service.Seguridad.UsuarioService;
 
@@ -32,7 +33,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<Usuario>> buscar() {
+    public ResponseEntity<List<UsuarioResumenDTO>> buscar() {
         return ResponseEntity.ok(usuarioService.buscarTodos());
     }
 

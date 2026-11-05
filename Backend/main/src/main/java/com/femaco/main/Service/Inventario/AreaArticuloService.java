@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.femaco.main.DTOs.AreaArticuloResumenDTO;
 import com.femaco.main.Entity.Inventario.AreaArticulo;
 import com.femaco.main.Repository.Inventario.AreaArticuloRepository;
 
@@ -21,8 +24,13 @@ public class AreaArticuloService {
         this.areaArticuloRepository = areaArticuloRepository;
     }
 
-    public List<AreaArticulo> buscarTodos() {
-        return areaArticuloRepository.findAll();
+    public List<AreaArticuloResumenDTO> buscarTodos() {
+        return areaArticuloRepository.findAllResumen();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AreaArticulo> buscarTodos(Pageable pageable) {
+        return areaArticuloRepository.findAll(pageable);
     }
 
     @Transactional

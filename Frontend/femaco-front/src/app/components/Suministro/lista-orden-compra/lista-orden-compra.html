@@ -74,6 +74,11 @@
       </div>
     </form>
 
+    <p class="price-update-help">
+      Activa la casilla de un detalle si quieres que, al completarlo, se actualice el precio de compra del artículo
+      usando el precio unitario de esta orden. Los detalles en completado no se pueden cambiar.
+    </p>
+
     <div class="table-responsive">
       <table class="crud-table detail-table">
         <thead>
@@ -83,6 +88,7 @@
             <th>Cantidad</th>
             <th>Precio</th>
             <th>Total</th>
+            <th>Actualizar precio al completar</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -94,6 +100,17 @@
             <td>{{ detalle.cantidad | number:'1.2-2' }}</td>
             <td>Q {{ detalle.precioUnitario | number:'1.2-2' }}</td>
             <td>Q {{ detalle.total | number:'1.2-2' }}</td>
+            <td>
+              <label class="price-update-checkbox">
+                <input type="checkbox" [ngModel]="detalle.actualizarPrecio ?? false"
+                  (ngModelChange)="actualizarPrecioDetalle(detalle.idOrdenCompraDetalle, $event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  [disabled]="!puedeEditar || ordenBloqueada() || detalleBloqueado(detalle)"
+                  [title]="detalleBloqueado(detalle) ? 'Este detalle está en un estado final y no puede modificarse' : ''"
+                  [attr.aria-label]="'Actualizar precio al completar el artículo ' + (detalle.idArticulo ?? '')" />
+                Actualizar al completar
+              </label>
+            </td>
             <td>
               <select class="form-control compact-select" [ngModel]="detalle.idEstadoOrdenCompra ?? null"
                 (ngModelChange)="actualizarEstadoDetalle(detalle.idOrdenCompraDetalle, $event)"

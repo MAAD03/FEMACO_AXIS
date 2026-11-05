@@ -29,6 +29,7 @@ type OrdenCompraDetalleForm = {
   cantidad: number;
   precioUnitario: number;
   total: number;
+  actualizarPrecio: boolean;
 };
 
 @Component({
@@ -237,6 +238,7 @@ export class OrdenCompra implements OnInit {
         cantidad: 1,
         precioUnitario,
         total: precioUnitario,
+        actualizarPrecio: false,
       },
     ]);
   }
@@ -281,6 +283,14 @@ export class OrdenCompra implements OnInit {
     );
   }
 
+  actualizarPrecioAlCompletar(index: number, actualizarPrecio: boolean): void {
+    this.items.update((items) =>
+      items.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, actualizarPrecio } : item
+      )
+    );
+  }
+
   eliminarArticulo(index: number): void {
     this.items.update((items) => items.filter((_, itemIndex) => itemIndex !== index));
   }
@@ -314,6 +324,7 @@ export class OrdenCompra implements OnInit {
         idArticulo: item.idArticulo,
         cantidad: Number(item.cantidad),
         precioUnitario: Number(item.precioUnitario),
+        actualizarPrecio: item.actualizarPrecio,
       })),
     };
 

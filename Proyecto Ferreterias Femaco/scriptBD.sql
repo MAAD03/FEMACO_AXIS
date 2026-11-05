@@ -298,6 +298,7 @@ CREATE TABLE IF NOT EXISTS `orden_compra_detalle` (
   `Cantidad` DECIMAL(12,2) NOT NULL,
   `PrecioUnitario` DECIMAL(12,2) NOT NULL,
   `Total` DECIMAL(12,2) NOT NULL,
+  `ActualizarPrecio` TINYINT NOT NULL DEFAULT 0,
   `IdOrdenCompra` INT NOT NULL,
   `IdArticulo` INT NOT NULL,
   `IdEstadoOrdenCompra` INT NOT NULL,

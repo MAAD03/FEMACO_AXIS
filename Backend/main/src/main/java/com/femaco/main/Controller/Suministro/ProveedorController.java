@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.femaco.main.DTOs.ProveedorResumenDTO;
 import com.femaco.main.Entity.Suministro.Proveedor;
 import com.femaco.main.Service.Suministro.ProveedorService;
 
@@ -33,7 +34,7 @@ public class ProveedorController {
 
     @GetMapping("/buscar")
     @PreAuthorize("hasAuthority('PERMISO_PROVEEDOR_ACCESO')")
-    public ResponseEntity<List<Proveedor>> buscar() {
+    public ResponseEntity<List<ProveedorResumenDTO>> buscar() {
         return ResponseEntity.ok(proveedorService.buscarTodos());
     }
 

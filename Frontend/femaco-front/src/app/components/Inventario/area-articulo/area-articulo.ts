@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AreaArticulo as AreaArticuloModel } from '../../../core/models/area-articulo.model';
+import { AreaArticulo as AreaArticuloModel, PageAreaArticulo } from '../../../core/models/area-articulo.model';
 import { UsuariosEmailPipe } from '../../../core/pipes/usuarios-email';
 import { AreaArticuloService } from '../../../core/services/area-articulo.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -28,6 +28,11 @@ export class AreaArticulo implements OnInit {
   cargando = signal(false);
   mensaje = signal('');
   error = signal('');
+  paginaActual = signal(0);
+  totalPaginas = signal(0);
+  totalElementos = signal(0);
+  tamanioPagina = signal(20);
+  readonly tamanosPagina = [5, 10, 20, 50];
   editando = false;
   idEditando: number | null = null;
 
@@ -64,9 +69,12 @@ export class AreaArticulo implements OnInit {
     this.cargando.set(true);
     this.error.set('');
 
-    this.areaArticuloService.buscarTodos().subscribe({
-      next: (data) => {
-        this.lista.set(data ?? []);
+    this.areaArticuloService.buscarPaginado(this.paginaActual(), this.tamanioPagina()).subscribe({
+      next: (pagina: PageAreaArticulo) => {
+        this.lista.set(pagina.content ?? []);
+        this.totalPaginas.set(pagina.totalPages ?? 0);
+        this.totalElementos.set(pagina.totalElements ?? 0);
+        this.paginaActual.set(pagina.number ?? 0);
         this.cargando.set(false);
       },
       error: () => {
@@ -74,6 +82,19 @@ export class AreaArticulo implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  onTamanioPaginaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement | null;
+    this.tamanioPagina.set(Number(target?.value ?? this.tamanioPagina()));
+    this.paginaActual.set(0);
+    this.cargarLista();
+  }
+
+  irAPagina(pagina: number): void {
+    if (pagina < 0 || pagina >= this.totalPaginas() || pagina === this.paginaActual()) return;
+    this.paginaActual.set(pagina);
+    this.cargarLista();
   }
 
   private finalizarOperacion(mensaje: string): void {

@@ -19,4 +19,6 @@ public class OrdenCompraDetalleCreateDTO {
     @NotNull(message = "El precio unitario es obligatorio")
     @DecimalMin(value = "0.01", message = "El precio unitario debe ser mayor a 0")
     private BigDecimal precioUnitario;
+
+    private Boolean actualizarPrecio;
 }

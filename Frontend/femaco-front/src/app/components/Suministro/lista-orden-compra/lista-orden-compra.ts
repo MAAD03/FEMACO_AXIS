@@ -8,6 +8,7 @@ import { UsuariosEmailPipe } from '../../../core/pipes/usuarios-email';
 import { EstadoOrdenCompra } from '../../../core/models/catalogo-models/estado-orden-compra.model';
 import { OrdenCompra } from '../../../core/models/orden-compra.model';
 import { OrdenCompraDetalle, OrdenCompraUpdateRequest } from '../../../core/models/orden-compra-detalle.model';
+import { Proveedor } from '../../../core/models/proveedor.model';
 import { ArticuloService } from '../../../core/services/articulo.service';
 import { EstadoOrdenCompraService } from '../../../core/services/catalogo-services/estado-orden-compra.service';
 import { ConjuntoMenuService } from '../../../core/services/conjunto-menu.service';
@@ -62,14 +63,18 @@ export class ListaOrdenCompra implements OnInit {
   ordenes = signal<OrdenCompra[]>([]);
   ordenesPendientes = signal<OrdenCompra[]>([]);
   estadosOrdenCompra = signal<EstadoOrdenCompra[]>([]);
+  proveedoresFiltro = signal<Proveedor[]>([]);
   ordenSeleccionada = signal<OrdenCompra | null>(null);
   proveedorSeleccionado = signal<any | null>(null);
+  idProveedorSeleccionado = signal<number | null>(null);
   usuarioCreacionSeleccionado = signal<any | null>(null);
   detallesOrden = signal<OrdenCompraDetalle[]>([]);
+  private idProveedorAplicado: number | null = null;
 
   cargando = signal(false);
   cargandoDetalle = signal(false);
   guardando = signal(false);
+  generandoComprobante = signal(false);
   error = signal('');
 
   paginaActual = signal(0);
@@ -108,7 +113,10 @@ export class ListaOrdenCompra implements OnInit {
   }
 
   private cargarCatalogos(): void {
-    this.proveedorService.loadNombreCache().subscribe();
+    this.proveedorService.loadNombreCache().subscribe({
+      next: () => this.proveedoresFiltro.set(this.proveedorService.getProveedoresCache()),
+      error: () => this.error.set('No se pudo cargar la lista de proveedores'),
+    });
     this.usuarioService.loadEmailCache().subscribe();
     this.articuloService.loadNombreCache().subscribe();
     this.estadoOrdenCompraService.loadNombreCache().subscribe();
@@ -123,7 +131,13 @@ export class ListaOrdenCompra implements OnInit {
     this.cargando.set(true);
     this.error.set('');
 
-    this.ordenCompraService.buscarPaginado(this.paginaActual(), this.obtenerTamano(), 'fechaCreacion', 'desc').subscribe({
+    this.ordenCompraService.buscarPaginado(
+      this.paginaActual(),
+      this.obtenerTamano(),
+      'fechaCreacion',
+      'desc',
+      this.idProveedorAplicado ?? undefined
+    ).subscribe({
       next: (pagina) => {
         const ordenes = pagina.content ?? [];
         const totalPaginas = pagina.totalPages ?? 0;
@@ -158,6 +172,12 @@ export class ListaOrdenCompra implements OnInit {
         this.ordenesPendientes.set([]);
       },
     });
+  }
+
+  filtrarPorProveedor(): void {
+    this.idProveedorAplicado = this.idProveedorSeleccionado();
+    this.paginaActual.set(0);
+    this.cargarLista();
   }
 
   irAPagina(pagina: number): void {
@@ -227,6 +247,63 @@ export class ListaOrdenCompra implements OnInit {
     this.detallesOrden.set([]);
     this.detalleEstadosOriginales.clear();
     this.detalleForm.reset({ idEstadoOrdenCompra: null });
+  }
+
+  imprimirComprobante(): void {
+    const idOrdenCompra = this.ordenSeleccionada()?.idOrdenCompra;
+    if (idOrdenCompra == null || this.generandoComprobante()) {
+      return;
+    }
+
+    this.generandoComprobante.set(true);
+    this.error.set('');
+
+    this.ordenCompraService.generarComprobante(idOrdenCompra).subscribe({
+      next: (respuesta) => {
+        if (!respuesta.body || !respuesta.headers.get('Content-Type')?.toLowerCase().includes('application/pdf')) {
+          this.error.set('La respuesta no contiene un comprobante PDF válido.');
+          this.generandoComprobante.set(false);
+          return;
+        }
+
+        this.descargarComprobante(respuesta.body, respuesta.headers.get('Content-Disposition'), idOrdenCompra);
+        this.generandoComprobante.set(false);
+      },
+      error: (error: unknown) => {
+        this.generandoComprobante.set(false);
+        this.error.set(
+          error instanceof Error && error.name === 'TimeoutError'
+            ? 'La generación tardó demasiado. Puedes intentarlo nuevamente.'
+            : 'No se pudo generar el comprobante'
+        );
+      },
+    });
+  }
+
+  private descargarComprobante(pdf: Blob, contentDisposition: string | null, idOrdenCompra: number): void {
+    const nombre = this.obtenerNombreArchivo(contentDisposition) ?? `comprobante-orden-compra-${idOrdenCompra}.pdf`;
+    const url = URL.createObjectURL(pdf);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombre;
+    enlace.style.display = 'none';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  private obtenerNombreArchivo(contentDisposition: string | null): string | null {
+    if (!contentDisposition) {
+      return null;
+    }
+
+    const codificado = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (codificado) {
+      return decodeURIComponent(codificado.replace(/^"|"$/g, ''));
+    }
+
+    return contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null;
   }
 
   /**

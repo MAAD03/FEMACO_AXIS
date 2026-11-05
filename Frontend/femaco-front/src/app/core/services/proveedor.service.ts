@@ -107,6 +107,13 @@ export class ProveedorService {
     return `ID: ${idProveedor}`;
   }
 
+  getProveedoresCache(): Proveedor[] {
+    return Array.from(this.proveedorNombreCache(), ([idProveedor, nombre]) => ({
+      idProveedor,
+      nombre,
+    }));
+  }
+
   clearCache(): void {
     this.proveedorNombreCache.set(new Map());
     this.cacheLoaded = false;

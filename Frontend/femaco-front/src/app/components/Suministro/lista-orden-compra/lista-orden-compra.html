@@ -137,10 +137,16 @@
           userEmail }} · {{ ordenSeleccionada()!.fechaModif | date:'dd/MM/yyyy HH:mm' }}</span>
       </div>
 
-      <button type="button" class="btn btn-primary" (click)="guardarCambios()"
-        [disabled]="guardando() || !puedeEditar || ordenBloqueada()">
-        {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
-      </button>
+      <div class="detail-actions">
+        <button type="button" class="btn btn-secondary" (click)="imprimirComprobante()"
+          [disabled]="generandoComprobante()">
+          {{ generandoComprobante() ? 'Generando comprobante...' : 'Imprimir comprobante' }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarCambios()"
+          [disabled]="guardando() || !puedeEditar || ordenBloqueada()">
+          {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
     </div>
   </div>
   }
@@ -189,10 +195,27 @@
     }
   </div>
 
-  <div class="card table-card">
-    <div class="table-header">
-      <h3 class="card-title">Todas las órdenes de compra</h3>
-      <span class="result-count">{{ totalElementos() }} resultados</span>
+  <div class="card table-card all-orders-card">
+    <div class="table-header all-orders-toolbar">
+      <div class="all-orders-heading">
+        <h3 class="card-title all-orders-title">Todas las órdenes de compra</h3>
+        <span class="result-count">{{ totalElementos() }} resultados</span>
+      </div>
+      <div class="filter-controls">
+        <label for="proveedor-filtro">Proveedor</label>
+        <select id="proveedor-filtro" class="form-control compact-select"
+          [ngModel]="idProveedorSeleccionado()"
+          (ngModelChange)="idProveedorSeleccionado.set($event)"
+          [ngModelOptions]="{ standalone: true }">
+          <option [ngValue]="null">Todos los proveedores</option>
+          @for (proveedor of proveedoresFiltro(); track proveedor.idProveedor) {
+          <option [ngValue]="proveedor.idProveedor">{{ proveedor.nombre }}</option>
+          }
+        </select>
+        <button type="button" class="btn btn-primary btn-sm" (click)="filtrarPorProveedor()" [disabled]="cargando()">
+          Filtrar
+        </button>
+      </div>
     </div>
 
     @if (cargando() && ordenes().length === 0) {
@@ -201,7 +224,7 @@
     <p class="empty">No hay órdenes de compra registradas.</p>
     } @else {
     <div class="table-responsive">
-      <table class="crud-table">
+      <table class="crud-table all-orders-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -217,19 +240,21 @@
         <tbody>
           @for (orden of ordenes(); track orden.idOrdenCompra ?? $index) {
           <tr>
-            <td>{{ orden.idOrdenCompra }}</td>
-            <td>{{ orden.idProveedor | proveedorNombre }}</td>
-            <td>Q {{ (orden.total ?? 0) | number:'1.2-2' }}</td>
-            <td>{{ orden.idEstadoOrdenCompra | estadoOrdenCompraNombre }}</td>
-            <td>{{ orden.idUsuario | userEmail }}</td>
-            <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>
+            <td data-label="ID"><span class="order-id">#{{ orden.idOrdenCompra }}</span></td>
+            <td data-label="Proveedor">{{ orden.idProveedor | proveedorNombre }}</td>
+            <td data-label="Total"><span class="order-total">Q {{ (orden.total ?? 0) | number:'1.2-2' }}</span></td>
+            <td data-label="Estado">
+              <span class="order-status">{{ orden.idEstadoOrdenCompra | estadoOrdenCompraNombre }}</span>
+            </td>
+            <td data-label="Usuario">{{ orden.idUsuario | userEmail }}</td>
+            <td data-label="Fecha">{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td data-label="Auditoría">
               <div class="audit-stack">
                 <span>Creación: {{ orden.usuarioCreacion ?? orden.idUsuario | userEmail }}</span>
                 <span>Modif: {{ orden.usuarioModif ?? orden.idUsuario | userEmail }}</span>
               </div>
             </td>
-            <td class="acciones">
+            <td data-label="Acciones" class="acciones">
               <button type="button" class="btn btn-secondary btn-sm" (click)="verDetalles(orden.idOrdenCompra!)">
                 Ver detalles
               </button>

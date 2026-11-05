@@ -60,8 +60,11 @@ public class OrdenCompraService {
     }
 
     @Transactional(readOnly = true)
-    public Page<OrdenCompra> buscarTodos(Pageable pageable) {
-        return ordenCompraRepository.findAll(pageable);
+    public Page<OrdenCompra> buscarTodos(Pageable pageable, Long idProveedor) {
+        if (idProveedor == null) {
+            return ordenCompraRepository.findAll(pageable);
+        }
+        return ordenCompraRepository.findByIdProveedor(idProveedor, pageable);
     }
 
     public List<OrdenCompra> buscarTodos() {

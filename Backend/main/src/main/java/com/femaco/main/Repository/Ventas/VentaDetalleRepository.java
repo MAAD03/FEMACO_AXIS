@@ -10,4 +10,5 @@ import com.femaco.main.Entity.Ventas.VentaDetalle;
 @Repository("ventaDetalleRepository")
 public interface VentaDetalleRepository extends JpaRepository<VentaDetalle, Long> {
     List<VentaDetalle> findByIdVenta(Long idVenta);
+    boolean existsByIdVentaAndIdArticulo(Long idVenta, Long idArticulo);
 }

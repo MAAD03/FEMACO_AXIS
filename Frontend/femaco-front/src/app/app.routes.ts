@@ -138,6 +138,12 @@ export const routes: Routes = [
         path: 'datos-venta',
         loadComponent: () =>
           import('./components/Datos/datos-venta/datos-venta').then(m => m.DatosVenta)
+      },
+      {
+        path: 'modificar-ventas',
+        data: { permiso: 'ventas' },
+        loadComponent: () =>
+          import('./components/Ventas/modificar-ventas/modificar-ventas').then(m => m.ModificarVentas)
       }
     ]
   },

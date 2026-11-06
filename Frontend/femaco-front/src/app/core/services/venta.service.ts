@@ -33,6 +33,18 @@ export interface VentaCreateRequest {
   detalles: VentaDetalleCreateRequest[];
 }
 
+export type VentaDetalleModificarRequest = {
+  cantidad: number;
+  porcDescuentoManual?: number;
+} & (
+  | { idVentaDetalle: number; idArticulo?: never }
+  | { idArticulo: number; idVentaDetalle?: never }
+);
+
+export interface VentaModificarRequest {
+  detalle: VentaDetalleModificarRequest;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -88,6 +100,10 @@ export class VentaService {
 
   crearConDetalles(dto: VentaCreateRequest): Observable<Venta> {
     return this.http.post<Venta>(`${this.api}/crear-con-detalles`, dto);
+  }
+
+  modificarConDetalle(idVenta: number, dto: VentaModificarRequest): Observable<Venta> {
+    return this.http.put<Venta>(`${this.api}/modificar-con-detalles/${idVenta}`, dto);
   }
 
   anular(idVenta: number): Observable<Venta> {

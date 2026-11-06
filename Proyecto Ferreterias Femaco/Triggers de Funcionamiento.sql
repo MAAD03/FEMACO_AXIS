@@ -4,6 +4,9 @@
 -- ARQUITECTURA:
 --   1) ajuste_inventario (AFTER INSERT)        -> inserta en movimiento_inventario
 --   2) venta_detalle (AFTER INSERT)            -> inserta en movimiento_inventario
+--      + BEFORE/AFTER UPDATE                   -> calcula diferencia de cantidad
+--        y genera movimiento 'modificacion_venta'
+--      + BEFORE DELETE                         -> bloqueado
 --   3) orden_compra_detalle (AFTER UPDATE)     -> inserta en movimiento_inventario
 --      SOLO cuando IdEstadoOrdenCompra cambia hacia el Id fijo 2
 --      (Completada)
@@ -11,7 +14,7 @@
 --      PrecioUnitario de esa línea de compra
 --   4) movimiento_inventario (BEFORE/AFTER INSERT) -> valida stock no-negativo
 --      y es quien realmente actualiza articulo.StockActual
---   5) venta (BEFORE/AFTER UPDATE)             -> anulación de ventas (NUEVO)
+--   5) venta (BEFORE/AFTER UPDATE)             -> anulación de ventas
 --      - Solo se anula desde Completada (1) hacia Anulada (2)
 --      - Una venta Anulada no puede volver a otro estado ni cambiar montos
 --      - Al anular: inserta una 'entrada' con motivo 'devolucion' en
@@ -22,17 +25,19 @@
 --   - No se puede insertar directamente desde la aplicación
 --     (el usuario de la app NO tiene privilegio INSERT sobre esta tabla)
 --   - No se puede UPDATE ni DELETE nunca
---   - venta_detalle y ajuste_inventario tampoco se pueden UPDATE/DELETE
---     una vez creados (usar un nuevo ajuste_inventario para corregir)
+--   - venta_detalle y ajuste_inventario tampoco se pueden DELETE
+--     una vez creados (usar modificación de cantidad o nuevo ajuste)
 --   - orden_compra_detalle no se puede modificar/eliminar una vez Completada
 -- =====================================================================
 
 USE `femacodb`;
 
 DELIMITER $$
+
 -- =======================================================================
 -- 1) AJUSTE_INVENTARIO
 -- =======================================================================
+
 DROP TRIGGER IF EXISTS `trg_ajuste_inventario_after_insert`$$
 CREATE TRIGGER `trg_ajuste_inventario_after_insert`
 AFTER INSERT ON `ajuste_inventario`
@@ -52,6 +57,7 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'El ajuste dejaría el stock del artículo en negativo';
     END IF;
+
     INSERT INTO `movimiento_inventario` (
         `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
         `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
@@ -85,6 +91,8 @@ END$$
 -- =======================================================================
 -- 2) VENTA_DETALLE
 -- =======================================================================
+
+-- 2.1 AFTER INSERT (línea nueva) - se mantiene igual
 DROP TRIGGER IF EXISTS `trg_venta_detalle_after_insert`$$
 CREATE TRIGGER `trg_venta_detalle_after_insert`
 AFTER INSERT ON `venta_detalle`
@@ -121,14 +129,115 @@ BEGIN
     );
 END$$
 
+-- 2.2 BEFORE UPDATE - validaciones al modificar cantidad
+DROP TRIGGER IF EXISTS `trg_venta_detalle_before_update`$$
+CREATE TRIGGER `trg_venta_detalle_before_update`
+BEFORE UPDATE ON `venta_detalle`
+FOR EACH ROW
+BEGIN
+    DECLARE v_IdEstadoVenta INT;
+    DECLARE v_Anulada       INT DEFAULT 2; -- estado_venta "Anulada"
+    DECLARE v_StockActual   DECIMAL(12,2);
+    DECLARE v_Delta         DECIMAL(12,2);
+
+    -- No permitir modificar detalles de una venta ya Anulada
+    SELECT `IdEstadoVenta` INTO v_IdEstadoVenta
+    FROM `venta`
+    WHERE `IdVenta` = NEW.`IdVenta`;
+
+    IF v_IdEstadoVenta = v_Anulada THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se puede modificar el detalle de una venta Anulada';
+    END IF;
+
+    -- No permitir cambiar el artículo (solo cantidad y otros campos de la línea)
+    IF NEW.`IdArticulo` <> OLD.`IdArticulo` THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se permite cambiar el artículo de un detalle de venta; elimine la línea y cree una nueva';
+    END IF;
+
+    -- Validar que el cambio de cantidad no deje stock negativo
+    -- Delta positivo = se vende más → se resta más stock
+    SET v_Delta = NEW.`Cantidad` - OLD.`Cantidad`;
+
+    IF v_Delta <> 0 THEN
+        SELECT COALESCE(`StockActual`, 0) INTO v_StockActual
+        FROM `articulo`
+        WHERE `IdArticulo` = NEW.`IdArticulo`
+        FOR UPDATE;
+
+        IF (v_StockActual - v_Delta) < 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Stock insuficiente para aumentar la cantidad de la venta';
+        END IF;
+    END IF;
+END$$
+
+-- 2.3 AFTER UPDATE - aplica la diferencia de cantidad al stock
+DROP TRIGGER IF EXISTS `trg_venta_detalle_after_update`$$
+CREATE TRIGGER `trg_venta_detalle_after_update`
+AFTER UPDATE ON `venta_detalle`
+FOR EACH ROW
+BEGIN
+    DECLARE v_Delta       DECIMAL(12,2);
+    DECLARE v_StockViejo  DECIMAL(12,2);
+    DECLARE v_StockNuevo  DECIMAL(12,2);
+    DECLARE v_IdUsuario   INT;
+    DECLARE v_TipoMov     VARCHAR(20);
+    DECLARE v_CantidadAbs DECIMAL(12,2);
+
+    SET v_Delta = NEW.`Cantidad` - OLD.`Cantidad`;
+
+    -- Solo actuamos si realmente cambió la cantidad
+    IF v_Delta <> 0 THEN
+
+        SELECT COALESCE(`StockActual`, 0) INTO v_StockViejo
+        FROM `articulo`
+        WHERE `IdArticulo` = NEW.`IdArticulo`
+        FOR UPDATE;
+
+        -- Delta > 0 → se vende más → salida adicional
+        -- Delta < 0 → se vende menos → se devuelve stock (entrada)
+        SET v_StockNuevo  = v_StockViejo - v_Delta;
+        SET v_CantidadAbs = ABS(v_Delta);
+
+        IF v_Delta > 0 THEN
+            SET v_TipoMov = 'salida';
+        ELSE
+            SET v_TipoMov = 'entrada';
+        END IF;
+
+        -- Tomamos el usuario de la venta
+        SELECT `IdUsuario` INTO v_IdUsuario
+        FROM `venta`
+        WHERE `IdVenta` = NEW.`IdVenta`;
+
+        INSERT INTO `movimiento_inventario` (
+            `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
+            `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
+            `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`
+        ) VALUES (
+            v_TipoMov, v_CantidadAbs, v_StockViejo, v_StockNuevo, 'modificacion_venta',
+            NEW.`IdArticulo`, NEW.`IdVenta`, NULL, NULL, v_IdUsuario,
+            NOW(), NEW.`UsuarioModif`, NOW(), NEW.`UsuarioModif`
+        );
+    END IF;
+END$$
+
+-- 2.4 BEFORE DELETE - no se permite eliminar detalles
+DROP TRIGGER IF EXISTS `trg_venta_detalle_no_delete`$$
+CREATE TRIGGER `trg_venta_detalle_no_delete`
+BEFORE DELETE ON `venta_detalle`
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'No se permite eliminar un detalle de venta; ajuste la cantidad a 0 o anule la venta';
+END$$
 
 -- =======================================================================
 -- 3) ORDEN_COMPRA_DETALLE
 -- =======================================================================
--- Solo genera movimiento cuando el estado del DETALLE cambia hacia
--- IdEstadoOrdenCompra = 2 (Completada).
--- Además de registrar la entrada de inventario, actualiza
--- articulo.PrecioCompraUltimoProveedor con el PrecioUnitario de esta línea.
+
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_after_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_after_update`
 AFTER UPDATE ON `orden_compra_detalle`
@@ -137,7 +246,7 @@ BEGIN
     DECLARE v_StockViejo DECIMAL(12,2);
     DECLARE v_StockNuevo DECIMAL(12,2);
     DECLARE v_IdUsuario  INT;
-    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada" (estado_orden_compra)
+    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada"
 
     IF NEW.`IdEstadoOrdenCompra` = v_IdEntregado
        AND OLD.`IdEstadoOrdenCompra` <> v_IdEntregado THEN
@@ -153,7 +262,6 @@ BEGIN
         FROM `orden_compra`
         WHERE `IdOrdenCompra` = NEW.`IdOrdenCompra`;
 
-        -- Siempre registra la entrada de inventario (actualiza stock)
         INSERT INTO `movimiento_inventario` (
             `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
             `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
@@ -164,7 +272,6 @@ BEGIN
             NOW(), NEW.`UsuarioCreacion`, NOW(), NEW.`UsuarioModif`
         );
 
-        -- Solo actualiza el precio de compra si ActualizarPrecio = 1
         IF NEW.`ActualizarPrecio` = 1 THEN
             UPDATE `articulo`
             SET `PrecioCompraUltimoProveedor` = NEW.`PrecioUnitario`,
@@ -172,19 +279,15 @@ BEGIN
                 `UsuarioModif`               = NEW.`UsuarioModif`
             WHERE `IdArticulo` = NEW.`IdArticulo`;
         END IF;
-
     END IF;
 END$$
 
--- Una vez Completada, no se puede cambiar Cantidad/Articulo ni revertir el estado.
--- Nse permite marcar como Completada con un PrecioUnitario <= 0
--- (evita precios negativos o en cero).
 DROP TRIGGER IF EXISTS `trg_orden_compra_detalle_before_update`$$
 CREATE TRIGGER `trg_orden_compra_detalle_before_update`
 BEFORE UPDATE ON `orden_compra_detalle`
 FOR EACH ROW
 BEGIN
-    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada" (estado_orden_compra)
+    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada"
 
     IF OLD.`IdEstadoOrdenCompra` = v_IdEntregado THEN
         IF NEW.`Cantidad` <> OLD.`Cantidad` OR NEW.`IdArticulo` <> OLD.`IdArticulo` THEN
@@ -197,6 +300,7 @@ BEGIN
             SET MESSAGE_TEXT = 'No se puede revertir el estado de un detalle ya Completado; use un ajuste de inventario';
         END IF;
     END IF;
+
     IF NEW.`IdEstadoOrdenCompra` = v_IdEntregado
        AND OLD.`IdEstadoOrdenCompra` <> v_IdEntregado THEN
         IF NEW.`PrecioUnitario` IS NULL OR NEW.`PrecioUnitario` <= 0 THEN
@@ -211,7 +315,7 @@ CREATE TRIGGER `trg_orden_compra_detalle_no_delete_entregado`
 BEFORE DELETE ON `orden_compra_detalle`
 FOR EACH ROW
 BEGIN
-    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada" (estado_orden_compra)
+    DECLARE v_IdEntregado INT DEFAULT 2; -- Id fijo del estado "Completada"
 
     IF OLD.`IdEstadoOrdenCompra` = v_IdEntregado THEN
         SIGNAL SQLSTATE '45000'
@@ -222,7 +326,7 @@ END$$
 -- =======================================================================
 -- 4) MOVIMIENTO_INVENTARIO (núcleo: valida stock y actualiza articulo)
 -- =======================================================================
--- Solo validación de stock negativo
+
 DROP TRIGGER IF EXISTS `trg_movimiento_inventario_before_insert`$$
 CREATE TRIGGER `trg_movimiento_inventario_before_insert`
 BEFORE INSERT ON `movimiento_inventario`
@@ -265,18 +369,16 @@ BEGIN
 END$$
 
 -- =======================================================================
--- 5) VENTA - Anulación 
+-- 5) VENTA - Anulación
 -- =======================================================================
--- Una venta Anulada no puede volver a otro estado.
--- Solo se puede anular una venta Completada (1).
--- Una venta Anulada no puede cambiar montos ni cliente.
+
 DROP TRIGGER IF EXISTS `trg_venta_before_update`$$
 CREATE TRIGGER `trg_venta_before_update`
 BEFORE UPDATE ON `venta`
 FOR EACH ROW
 BEGIN
-    DECLARE v_Completada INT DEFAULT 1; -- Id fijo "Completada" (estado_venta)
-    DECLARE v_Anulada    INT DEFAULT 2; -- Id fijo "Anulada" (estado_venta)
+    DECLARE v_Completada INT DEFAULT 1; -- Id fijo "Completada"
+    DECLARE v_Anulada    INT DEFAULT 2; -- Id fijo "Anulada"
 
     IF OLD.`IdEstadoVenta` = v_Anulada
        AND NEW.`IdEstadoVenta` <> v_Anulada THEN
@@ -304,13 +406,6 @@ BEGIN
     END IF;
 END$$
 
--- Al pasar de Completada (1) a Anulada (2):
---   a) Devuelve el stock: una 'entrada' con motivo 'devolucion' en
---      movimiento_inventario por cada línea de venta_detalle.
---      Se usa cursor (no INSERT...SELECT) porque el trigger de
---      movimiento_inventario actualiza articulo y MySQL no permite
---      modificar una tabla que la sentencia disparadora está leyendo (error 1442).
---   b) Pasa los pedidos Pendiente (1) de esa venta a Cancelado (3).
 DROP TRIGGER IF EXISTS `trg_venta_after_update`$$
 CREATE TRIGGER `trg_venta_after_update`
 AFTER UPDATE ON `venta`
@@ -321,10 +416,10 @@ BEGIN
     DECLARE v_Cantidad   DECIMAL(12,2);
     DECLARE v_StockViejo DECIMAL(12,2);
     DECLARE v_StockNuevo DECIMAL(12,2);
-    DECLARE v_Completada       INT DEFAULT 1; -- estado_venta
-    DECLARE v_Anulada          INT DEFAULT 2; -- estado_venta
-    DECLARE v_PedidoPendiente  INT DEFAULT 1; -- estado_pedido
-    DECLARE v_PedidoCancelado  INT DEFAULT 3; -- estado_pedido
+    DECLARE v_Completada      INT DEFAULT 1;
+    DECLARE v_Anulada         INT DEFAULT 2;
+    DECLARE v_PedidoPendiente INT DEFAULT 1;
+    DECLARE v_PedidoCancelado INT DEFAULT 3;
 
     DECLARE cur_detalle CURSOR FOR
         SELECT `IdArticulo`, `Cantidad`
@@ -351,6 +446,7 @@ BEGIN
             FOR UPDATE;
 
             SET v_StockNuevo = v_StockViejo + v_Cantidad;
+
             INSERT INTO `movimiento_inventario` (
                 `TipoMovimiento`, `Cantidad`, `StockViejo`, `StockNuevo`, `Motivo`,
                 `IdArticulo`, `IdVenta`, `IdOrdenCompra`, `IdAjusteInventario`, `IdUsuario`,
@@ -361,9 +457,10 @@ BEGIN
                 NOW(), NEW.`UsuarioModif`, NOW(), NEW.`UsuarioModif`
             );
         END LOOP;
+
         CLOSE cur_detalle;
 
-        -- b) Cancelar pedidos pendientes de esta venta
+        -- Cancelar pedidos pendientes de esta venta
         UPDATE `pedido`
         SET `IdEstadoPedido` = v_PedidoCancelado,
             `FechaModif`     = NOW(),

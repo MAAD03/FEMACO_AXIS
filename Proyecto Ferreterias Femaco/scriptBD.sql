@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS `movimiento_inventario` (
   `Cantidad` DECIMAL(12,2) NOT NULL,
   `StockViejo` DECIMAL(12,2) NOT NULL,
   `StockNuevo` DECIMAL(12,2) NOT NULL,
-  `Motivo` ENUM('venta', 'orden_compra', 'ajuste_manual', 'devolucion') NOT NULL,
+  `Motivo` ENUM('venta', 'orden_compra', 'ajuste_manual', 'devolucion', 'modificacion_venta') NOT NULL,
   `IdArticulo` INT NOT NULL,
   `IdVenta` INT NULL,
   `IdOrdenCompra` INT NULL,
@@ -650,7 +650,7 @@ VALUES
 INSERT INTO `rol` (`IdRol`, `Nombre`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
 (1, 'Super Usuario', NOW(), 1, NOW(), 1);
- 
+
 -- 2. MÓDULOS
 INSERT INTO `modulo` (`IdModulo`, `Nombre`, `OrdenMenu`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -661,7 +661,7 @@ VALUES
 (5, 'Suministro', 5, NOW(), 1, NOW(), 1),
 (6, 'Ventas', 6, NOW(), 1, NOW(), 1),
 (7, 'Datos', 7, NOW(), 1, NOW(), 1);
- 
+
 -- 3. MENÚS
 INSERT INTO `menu` (`IdMenu`, `Nombre`, `OrdenMenu`, `IdModulo`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -681,7 +681,7 @@ VALUES
 (8, 'Clientes y Ventas', 1, 6, NOW(), 1, NOW(), 1),
 -- Datos
 (9, 'Consultas de Datos', 1, 7, NOW(), 1, NOW(), 1);
- 
+
 -- 4. OPCIONES
 INSERT INTO `opcion` (`IdOpcion`, `Nombre`, `OrdenMenu`, `Pagina`, `IdMenu`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -715,10 +715,11 @@ VALUES
 (25, 'Lista Ventas', 2, 'lista-ventas', 8, NOW(), 1, NOW(), 1),
 (19, 'Clientes', 3, 'cliente', 8, NOW(), 1, NOW(), 1),
 (20, 'Pedidos', 4, 'pedidos', 8, NOW(), 1, NOW(), 1),
+(26, 'Modificar Ventas', 5, 'modificar-ventas', 8, NOW(), 1, NOW(), 1),   -- ← NUEVA OPCIÓN
 -- Datos
 (23, 'Datos Artículos', 1, 'datos-articulos', 9, NOW(), 1, NOW(), 1),
 (24, 'Datos Venta', 2, 'datos-venta', 9, NOW(), 1, NOW(), 1);
- 
+
 -- 5. ROL_OPCION (Super Usuario con TODOS los permisos)
 INSERT INTO `rol_opcion` (`IdRol`, `IdOpcion`, `Alta`, `Baja`, `Cambio`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
 VALUES
@@ -745,7 +746,8 @@ VALUES
 (1, 22, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Lista Órdenes de Compra
 (1, 23, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Datos Artículos
 (1, 24, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Datos Venta
-(1, 25, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Lista Ventas
+(1, 25, 1, 1, 1, NOW(), 1, NOW(), 1),  -- Lista Ventas
+(1, 26, 1, 1, 1, NOW(), 1, NOW(), 1);  -- Modificar Ventas  ← NUEVO PERMISO
 
 -- 6. USUARIO (Super Administrador) - password: Admin2026+
 INSERT INTO `usuario` 
@@ -755,7 +757,8 @@ INSERT INTO `usuario`
 VALUES
 (1, 'Admin', 'Sistema', '$2y$10$8MbTCB/6rl4VfDgfUEMa8OQmZ3PVhnZBtIRm0tj3DYCXXUyAzTi4e', 
  'administrador@femaco.com', 0, 1, 0, 1, 1, 1, 1, NOW(), 1, NOW(), 1);
- 
+
+
 -- 13.1 Áreas de artículo (15 registros)
 INSERT INTO `area_articulo`
 (`Nombre`, `Descripcion`, `FechaCreacion`, `UsuarioCreacion`, `FechaModif`, `UsuarioModif`)
@@ -866,10 +869,6 @@ VALUES
 -- Cliente CF para funcionamiento de facturas consumidor final
 INSERT INTO cliente (idCliente, Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)
 VALUES (1, 'CF', 'Consumidor Final', '0000-0000', 'consumidorfinal@femaco.com.gt', 'Guatemala', 1, NOW(), 1, NOW(), 1);
-
--- Cliente de prueba (usa NIT ficticio válido para ambiente de pruebas en TEKRA)
-INSERT INTO cliente (Nit, Nombre, Telefono, Correo, Direccion, IdEstadoCliente, FechaCreacion, UsuarioCreacion, FechaModif, UsuarioModif)
-VALUES ('107310384', 'BYRON MENDOZA', '1234-5678', 'prueba@correo.com', 'Zona 1, Guatemala', 1, NOW(), 1, NOW(), 1);
 
 CREATE INDEX idx_venta_estado_fecha    ON venta (IdEstadoVenta, Fecha);
 CREATE INDEX idx_movinv_fecha          ON movimiento_inventario (FechaCreacion);

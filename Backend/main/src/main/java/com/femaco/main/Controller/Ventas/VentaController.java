@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.femaco.main.DTOs.VentaConDetallesDTO;
 import com.femaco.main.DTOs.VentaCreateDTO;
+import com.femaco.main.DTOs.VentaModificarConDetallesDTO;
 import com.femaco.main.DTOs.VentaFiltroDTO;
 import com.femaco.main.DTOs.VentaPagoDTO;
 import com.femaco.main.Entity.Ventas.Venta;
@@ -88,6 +89,14 @@ public class VentaController {
     public ResponseEntity<Venta> crearConDetalles(@Valid @RequestBody VentaCreateDTO dto) {
         Venta creada = ventaService.crearConDetalles(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    }
+
+    @PutMapping("/modificar-con-detalles/{idVenta}")
+    @PreAuthorize("hasAuthority('PERMISO_VENTAS_CAMBIO')")
+    public ResponseEntity<Venta> modificarConDetalles(
+            @PathVariable Long idVenta,
+            @Valid @RequestBody VentaModificarConDetallesDTO dto) {
+        return ResponseEntity.ok(ventaService.modificarConDetalles(idVenta, dto));
     }
 
     @PutMapping("/anular/{idVenta}")

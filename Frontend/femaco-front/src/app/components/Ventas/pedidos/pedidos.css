@@ -49,6 +49,19 @@
   color: var(--crud-text);
 }
 
+.producto-pedido-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+}
+
+.producto-pedido-textarea { resize: vertical; }
+
+.btn-producto-pedido-compact {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+}
+
 .pedidos-semana-header {
   display: flex;
   align-items: flex-start;
@@ -278,6 +291,48 @@
 }
 
 .venta-detalles-table { min-width: 620px; }
+
+.editor-productos-modal {
+  width: min(1120px, 100%);
+  max-height: min(850px, 94vh);
+  padding: 2rem;
+}
+
+.editor-productos-modal .venta-consultada-header {
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.editor-productos-modal .venta-consultada-header .form-hint {
+  margin: 0.35rem 0 0;
+  line-height: 1.5;
+}
+
+.editor-productos-instruccion {
+  max-width: 90ch;
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+}
+
+.editor-productos-table { min-width: 700px; }
+
+.producto-actual-section { margin-bottom: 1rem; }
+
+.producto-actual-section label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--crud-primary-dark);
+  font-weight: 600;
+}
+
+.producto-actual-section textarea { white-space: pre-line; }
+
+.cantidad-producto-input { min-width: 110px; }
+
+.editor-productos-actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
 
 .table-card .crud-table { min-width: 980px; }
 

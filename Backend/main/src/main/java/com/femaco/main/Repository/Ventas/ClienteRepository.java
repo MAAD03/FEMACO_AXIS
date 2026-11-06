@@ -13,7 +13,7 @@ import com.femaco.main.Entity.Ventas.Cliente;
 @Repository("clienteRepository")
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
-    @Query("select new com.femaco.main.DTOs.ClienteResumenDTO(c.idCliente, c.nombre) from Cliente c")
+    @Query("select new com.femaco.main.DTOs.ClienteResumenDTO(c.idCliente, c.nombre, c.nit) from Cliente c")
     List<ClienteResumenDTO> findAllResumen();
 
     Optional<Cliente> findByNit(String nit);

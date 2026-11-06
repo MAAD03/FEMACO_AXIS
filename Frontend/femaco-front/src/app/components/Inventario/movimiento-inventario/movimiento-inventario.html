@@ -68,8 +68,13 @@
                         <td>{{ item.motivo }}</td>
                         <td>{{ item.idArticulo | articuloNombre }}</td>
                         <td>{{ item.idUsuario | userEmail }}</td>
-                        <td [class.positivo]="item.cantidad > 0" [class.negativo]="item.cantidad < 0">
+                        <td [class.positivo]="item.tipoMovimiento !== 'salida' && item.cantidad > 0"
+                            [class.negativo]="item.tipoMovimiento === 'salida' || item.cantidad < 0">
+                            @if (item.tipoMovimiento === 'salida') {
+                            <span aria-hidden="true">-</span>{{ (item.cantidad < 0 ? -item.cantidad : item.cantidad) | number:'1.2-2' }}
+                            } @else {
                             {{ item.cantidad | number:'1.2-2' }}
+                            }
                         </td>
                         <td [class.positivo]="item.stockViejo > 0" [class.negativo]="item.stockViejo < 0">
                             {{ item.stockViejo | number:'1.2-2' }}

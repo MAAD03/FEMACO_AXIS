@@ -1,0 +1,279 @@
+<div class="crud-container">
+  @if (modificacionCompletada()) {
+  <div class="sale-complete-overlay" role="dialog" aria-modal="true" aria-labelledby="saleModifiedTitle">
+    <div class="sale-complete-panel">
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
+        [disabled]="generandoComprobante() || modificando() || actualizandoPago()"
+        (click)="cerrarVentaActualizada()">×</button>
+      <div class="sale-complete-icon" aria-hidden="true">✓</div>
+      <h2 id="saleModifiedTitle">Venta actualizada exitosamente</h2>
+      <p>La venta {{ ventaActual()?.venta?.idVenta }} fue actualizada correctamente.</p>
+      <div class="sale-complete-actions">
+        @if (puedeCambiar) {
+        <button type="button" class="btn btn-primary" (click)="abrirFormularioPago()">
+          Actualizar método de pago
+        </button>
+        }
+        <button type="button" class="btn btn-primary" [disabled]="generandoComprobante()"
+          (click)="generarComprobante()">
+          {{ generandoComprobante() ? 'Generando comprobante...' : 'Descargar comprobante' }}
+        </button>
+      </div>
+      @if (errorComprobante()) {
+      <div class="alert alert-error" role="alert">{{ errorComprobante() }}</div>
+      }
+    </div>
+  </div>
+  }
+
+  @if (mostrandoFormularioPago()) {
+  <div class="sale-complete-overlay payment-overlay" role="dialog" aria-modal="true"
+    aria-labelledby="pagoVentaTitle">
+    <div class="sale-complete-panel quote-form-panel">
+      <button type="button" class="sale-complete-close" title="Cerrar" aria-label="Cerrar"
+        [disabled]="actualizandoPago()" (click)="cerrarFormularioPago()">×</button>
+      <h2 id="pagoVentaTitle">Actualizar método de pago</h2>
+      <p>Venta {{ ventaActual()?.venta?.idVenta }}</p>
+      <p class="payment-total">Total de la venta:
+        <strong>{{ ventaActual()?.venta?.total ?? total | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+      </p>
+      @if (mensajePago()) { <div class="alert alert-success" role="status">{{ mensajePago() }}</div> }
+      @if (errorPago()) { <div class="alert alert-error" role="alert">{{ errorPago() }}</div> }
+      <form [formGroup]="pagoForm" (ngSubmit)="actualizarPago()" class="quote-form">
+        <div class="form-group">
+          <label for="metodoPagoVentaModificada">Método de pago *</label>
+          <select id="metodoPagoVentaModificada" formControlName="metodoPago" class="form-control">
+            <option [ngValue]="null">Seleccione un método de pago</option>
+            @for (metodo of metodosPago; track metodo) {
+            <option [value]="metodo">{{ metodo }}</option>
+            }
+          </select>
+          @if (pagoForm.get('metodoPago')?.touched && pagoForm.get('metodoPago')?.invalid) {
+          <div class="error-msg">El método de pago es obligatorio</div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="referenciaPagoVentaModificada">Referencia de pago</label>
+          <input id="referenciaPagoVentaModificada" type="text" formControlName="referenciaPago"
+            class="form-control" maxlength="45" placeholder="Ingrese la referencia (opcional)" />
+          @if (pagoForm.get('referenciaPago')?.touched && pagoForm.get('referenciaPago')?.hasError('maxlength')) {
+          <div class="error-msg">La referencia no puede exceder 45 caracteres</div>
+          }
+        </div>
+        <div class="quote-form-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="actualizandoPago() || pagoActualizado()"
+            (click)="cerrarFormularioPago()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="actualizandoPago() || pagoActualizado()">
+            {{ actualizandoPago() ? 'Actualizando...' : pagoActualizado() ? 'Pago actualizado' : 'Actualizar pago' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  }
+
+  <h2 class="crud-title">Modificar venta</h2>
+  @if (mensaje()) { <div class="alert alert-success" role="status">{{ mensaje() }}</div> }
+  @if (error()) { <div class="alert alert-error" role="alert">{{ error() }}</div> }
+
+  <div class="card search-card form-card">
+    <h3 class="card-title">Buscar venta por ID</h3>
+    <form [formGroup]="busquedaForm" (ngSubmit)="buscarVenta()" class="search-form">
+      <div class="form-group search-field">
+        <label for="idVentaBuscar">ID de venta</label>
+        <input id="idVentaBuscar" type="number" min="1" step="1" formControlName="idVenta" class="form-control"
+          placeholder="Ingrese el ID de la venta" />
+        @if (busquedaForm.get('idVenta')?.touched && busquedaForm.get('idVenta')?.invalid) {
+        <div class="error-msg">Ingrese un ID de venta válido</div>
+        }
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="buscandoVenta() || modificando()">
+        {{ buscandoVenta() ? 'Buscando...' : 'Modificar' }}
+      </button>
+    </form>
+  </div>
+
+  @if (buscandoVenta()) {
+  <p class="loading">Cargando venta y artículos...</p>
+  } @else if (ventaActual(); as venta) {
+  <div class="card form-card">
+    <div class="cart-header">
+      <h3 class="card-title">Venta {{ venta.venta.idVenta }}</h3>
+      <span class="result-count">Factura: {{ venta.venta.numeroFactura || '—' }}</span>
+    </div>
+    <div class="detail-summary sale-detail-summary">
+      <div><span>Fecha</span><strong>{{ venta.venta.fecha | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+      <div><span>Cliente</span><strong>{{ venta.venta.idCliente | clienteNombre }}</strong></div>
+      <div><span>Método de pago</span><strong>{{ venta.venta.metodoPago || '—' }}</strong></div>
+      <div><span>Referencia</span><strong>{{ venta.venta.referenciaPago || '—' }}</strong></div>
+    </div>
+
+    <div class="cart-card">
+      <div class="cart-header">
+        <h4 class="card-title">Artículos de la venta</h4>
+        <span class="result-count">{{ items().length }} artículos</span>
+      </div>
+      @if (items().length === 0) {
+      <p class="empty">Esta venta no tiene artículos. Selecciona artículos del listado inferior para agregarlos.</p>
+      } @else {
+      <div class="cart-list">
+        <div class="cart-list-header">
+          <span>ID</span><span>Artículo</span><span>Stock</span><span>Cant.</span><span>Precio</span>
+          <span>Desc. mayorista</span><span>Desc. manual</span><span>Subtotal</span><span></span>
+        </div>
+        @for (item of items(); track item.idVentaDetalle ?? item.idArticulo; let i = $index) {
+        <div class="cart-item">
+          <span class="cart-article-id">{{ item.idArticulo }}</span>
+          <div class="item-name">
+            <strong>{{ item.nombre }}</strong>
+            <small>{{ item.codigo || ('ID ' + item.idArticulo) }}</small>
+          </div>
+          <span class="cart-stock">{{ item.stockActual | number:'1.2-2' }}</span>
+          <input type="number" min="0" step="0.01" class="form-control compact-input" [ngModel]="item.cantidad"
+            [disabled]="!puedeCambiar || modificando()" (ngModelChange)="actualizarCantidad(i, $event)"
+            [ngModelOptions]="{ standalone: true }" />
+          <span class="money">Q {{ item.precioUnitario | number:'1.2-2' }}</span>
+          <span class="discount">{{ item.porcDescuentoMayorista | number:'1.2-2' }}%<small>Q
+              {{ item.montoDescuentoMayorista | number:'1.2-2' }}</small></span>
+          @if (puedeAplicarDescuento) {
+          <span class="discount discount-manual">
+            <input type="number" min="0" [max]="100 - item.porcDescuentoMayorista" step="0.01"
+              class="form-control compact-input" [ngModel]="item.porcDescuentoManual"
+              [disabled]="!puedeCambiar || modificando()" (input)="limitarDescuentoInput($event)"
+              (ngModelChange)="actualizarDescuentoManual(i, $event)" [ngModelOptions]="{ standalone: true }" />
+            <small>Q {{ item.montoDescuentoManual | number:'1.2-2' }}</small>
+          </span>
+          } @else {
+          <span class="muted">No disponible</span>
+          }
+          <span class="money total-cell">Q {{ item.subtotal | number:'1.2-2' }}</span>
+          <button type="button" class="btn-icon btn-delete" [disabled]="!puedeCambiar || modificando()"
+            (click)="quitarArticulo(i)" title="Quitar artículo">Quitar</button>
+        </div>
+        }
+      </div>
+      }
+      <div class="summary">
+        <div><span>Subtotal</span><strong>Q {{ subtotal | number:'1.2-2' }}</strong></div>
+        <div><span>Desc. mayorista</span><strong>Q {{ descuentoMayoristaTotal | number:'1.2-2' }}</strong></div>
+        <div><span>Desc. manual</span><strong>Q {{ descuentoManualTotal | number:'1.2-2' }}</strong></div>
+        <div class="summary-total"><span>Total</span><strong>Q {{ total | number:'1.2-2' }}</strong></div>
+      </div>
+      <div class="form-actions">
+        @if (puedeCambiar) {
+        <button type="button" class="btn btn-primary" [disabled]="!puedeGuardarCambios || buscandoVenta()"
+          (click)="guardarModificacion()">
+          {{ modificando() ? 'Guardando...' : 'Guardar modificación' }}
+        </button>
+        }
+      </div>
+      @if (!puedeCambiar) {
+      <p class="muted">No tienes permiso para modificar ventas.</p>
+      }
+    </div>
+  </div>
+
+  <div class="card filters-card">
+    <div class="filters-heading">
+      <div>
+        <h3 class="card-title">Artículos activos</h3>
+        <p>Los artículos ya incluidos en la venta se identifican y no se duplican.</p>
+      </div>
+      <span class="result-count">{{ totalElementos() }} resultados</span>
+    </div>
+    <form [formGroup]="filtrosForm" (ngSubmit)="buscarArticulos()" class="filters-form">
+      <div class="search-row">
+        <div class="form-group search-field">
+          <label for="articuloQ">Búsqueda</label>
+          <input id="articuloQ" type="search" formControlName="q" class="form-control"
+            placeholder="ID, código, nombre o descripción" />
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <button type="button" class="btn btn-secondary" (click)="limpiarFiltros()">Limpiar</button>
+      </div>
+      <div class="filters-grid">
+        <div class="form-group">
+          <label for="articuloArea">Área</label>
+          <select id="articuloArea" formControlName="idArea" class="form-control">
+            <option [ngValue]="null">Todas</option>
+            @for (area of areas(); track area.idAreaArticulo) {
+            <option [ngValue]="area.idAreaArticulo">{{ area.idAreaArticulo }} · {{ area.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="articuloUnidad">Unidad</label>
+          <select id="articuloUnidad" formControlName="idUnidad" class="form-control">
+            <option [ngValue]="null">Todas</option>
+            @for (unidad of unidades(); track unidad.idUnidadMedida) {
+            <option [ngValue]="unidad.idUnidadMedida">
+              {{ unidad.idUnidadMedida }} · {{ unidad.nombre }} ({{ unidad.abreviatura }})
+            </option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="articuloStockMin">Stock desde</label>
+          <input id="articuloStockMin" type="number" min="0" step="0.01" formControlName="stockMin"
+            class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="articuloStockMax">Stock hasta</label>
+          <input id="articuloStockMax" type="number" min="0" step="0.01" formControlName="stockMax"
+            class="form-control" />
+        </div>
+      </div>
+    </form>
+    @if (buscandoArticulos()) {
+    <p class="loading">Cargando artículos...</p>
+    } @else if (!articulos().length) {
+    <p class="empty">No hay artículos activos que coincidan con la búsqueda.</p>
+    } @else {
+    <div class="article-list">
+      @for (articulo of articulos(); track articulo.idArticulo) {
+      <article class="article-item" [class.selected]="items().some(item => item.idArticulo === articulo.idArticulo)">
+        <div class="article-heading">
+          <div>
+            <small>ID {{ articulo.idArticulo }} · {{ articulo.codigo }}</small>
+            <h4>{{ articulo.nombre }}</h4>
+          </div>
+          <span class="stock">Stock {{ articulo.stockActual ?? 0 | number:'1.2-2' }}</span>
+        </div>
+        <p>{{ articulo.descripcion || 'Sin descripción' }}</p>
+        <div class="article-metrics">
+          <span>Precio venta<strong>Q
+              {{ calcularPrecioVenta(articulo.precioCompraUltimoProveedor ?? 0,
+              articulo.margenGanancia ?? 0) | number:'1.2-2' }}</strong></span>
+          <span>Min. mayorista<strong>{{ articulo.cantidadMinimaDescuento ?? 0 | number:'1.2-2' }}</strong></span>
+          <span>Desc. mayorista<strong>{{ articulo.descuentoMayorista ?? 0 | number:'1.2-2' }}%</strong></span>
+          <span>Área / unidad<strong>{{ articulo.idAreaArticulo | areaArticuloNombre }} ·
+              {{ articulo.idUnidadMedida | unidadMedidaAbreviatura }}</strong></span>
+        </div>
+        <button type="button" class="btn btn-primary"
+          [disabled]="!puedeCambiar || modificando() || items().some(item => item.idArticulo === articulo.idArticulo)"
+          (click)="agregarArticulo(articulo)">
+          {{ items().some(item => item.idArticulo === articulo.idArticulo) ? 'Ya está en la venta' : 'Agregar' }}
+        </button>
+      </article>
+      }
+    </div>
+    }
+    <div class="pagination">
+      <span>Mostrando {{ articulos().length }} de {{ totalElementos() }}</span>
+      <label for="articuloSize">Por página</label>
+      <select id="articuloSize" [formControl]="tamanoControl" (change)="cambiarTamano()">
+        <option [ngValue]="6">6</option>
+        <option [ngValue]="9">9</option>
+        <option [ngValue]="12">12</option>
+        <option [ngValue]="18">18</option>
+        <option [ngValue]="24">24</option>
+      </select>
+      <button type="button" class="btn btn-secondary" (click)="irAPagina(paginaActual() - 1)"
+        [disabled]="paginaActual() === 0">Anterior</button>
+      <strong>Página {{ totalPaginas() ? paginaActual() + 1 : 0 }} de {{ totalPaginas() }}</strong>
+      <button type="button" class="btn btn-secondary" (click)="irAPagina(paginaActual() + 1)"
+        [disabled]="paginaActual() >= totalPaginas() - 1">Siguiente</button>
+    </div>
+  </div>
+  }
+</div>

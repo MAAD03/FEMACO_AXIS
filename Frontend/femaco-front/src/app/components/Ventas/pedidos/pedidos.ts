@@ -2,6 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Pedido, PagePedido, PedidoFiltros } from '../../../core/models/pedido.model';
+import { VentaDetalle } from '../../../core/models/venta-detalle.model';
 import { EstadoPedidoNombrePipe } from '../../../core/pipes/catalogo-pipes/estado-pedido-nombre-pipe';
 import { EstadoPedido } from '../../../core/models/catalogo-models/estado-pedido.model';
 import { ArticuloNombrePipe } from '../../../core/pipes/articulo-nombre-pipe-pipe';
@@ -21,6 +22,11 @@ interface DiaPedidos {
   nombre: string;
   fecha: string;
   pedidos: Pedido[];
+}
+
+interface DetalleVentaPedidoEditable {
+  detalle: VentaDetalle;
+  cantidad: number;
 }
 
 @Component({
@@ -57,6 +63,11 @@ export class Pedidos implements OnInit {
   ventaConsultada = signal<VentaConDetalles | null>(null);
   cargandoVenta = signal(false);
   errorVenta = signal('');
+  mostrandoEditorProductos = signal(false);
+  ventaProductos = signal<VentaConDetalles | null>(null);
+  detallesProductosPedido = signal<DetalleVentaPedidoEditable[]>([]);
+  cargandoVentaProductos = signal(false);
+  errorProductosPedido = signal('');
   generandoListado = signal(false);
   paginaActual = signal(0);
   totalPaginas = signal(0);
@@ -251,6 +262,67 @@ export class Pedidos implements OnInit {
     if (pedido) this.verVenta(pedido);
   }
 
+  editarProductosPedido(): void {
+    const pedido = this.pedidoEditando();
+    if (!this.modoEdicion || !this.puedeEditar || pedido?.idVenta == null) return;
+
+    this.mostrandoEditorProductos.set(true);
+    this.cargandoVentaProductos.set(true);
+    this.errorProductosPedido.set('');
+    this.ventaProductos.set(null);
+    this.detallesProductosPedido.set([]);
+    this.ventaService.buscarPorId(pedido.idVenta).subscribe({
+      next: venta => {
+        this.ventaProductos.set(venta);
+        this.detallesProductosPedido.set((venta.detalles ?? []).map(detalle => ({
+          detalle,
+          cantidad: Math.max(0, Number(detalle.cantidad) || 0),
+        })));
+        this.cargandoVentaProductos.set(false);
+      },
+      error: () => {
+        this.errorProductosPedido.set('Error al consultar la venta asociada');
+        this.cargandoVentaProductos.set(false);
+      },
+    });
+  }
+
+  actualizarCantidadProductoPedido(index: number, event: Event): void {
+    const detalleEditable = this.detallesProductosPedido()[index];
+    if (!detalleEditable) return;
+
+    const input = event.target as HTMLInputElement;
+    const cantidadMaxima = Math.max(0, Number(detalleEditable.detalle.cantidad) || 0);
+    const cantidad = Math.min(cantidadMaxima, Math.max(0, Number(input.value) || 0));
+    detalleEditable.cantidad = cantidad;
+    input.value = cantidad.toString();
+    this.detallesProductosPedido.set([...this.detallesProductosPedido()]);
+  }
+
+  aplicarProductosPedido(): void {
+    if (this.cargandoVentaProductos() || !this.ventaProductos()) return;
+    const productoDePedido = this.construirTextoProductosPedido();
+    this.form.patchValue({ productoDePedido });
+    this.cerrarEditorProductos();
+  }
+
+  cerrarEditorProductos(): void {
+    this.mostrandoEditorProductos.set(false);
+    this.ventaProductos.set(null);
+    this.detallesProductosPedido.set([]);
+    this.errorProductosPedido.set('');
+    this.cargandoVentaProductos.set(false);
+  }
+
+  private construirTextoProductosPedido(): string {
+    return this.detallesProductosPedido()
+      .filter(item => item.cantidad > 0)
+      .map(item =>
+        `ID artículo: ${item.detalle.idArticulo ?? '—'} - ${this.articuloService.getNombreById(item.detalle.idArticulo)} - Cantidad: ${item.cantidad}`
+      )
+      .join('\n');
+  }
+
   imprimirListado(): void {
     const idPedido = this.pedidoEditando()?.idPedido;
     if (idPedido == null || this.generandoListado()) return;
@@ -317,16 +389,18 @@ export class Pedidos implements OnInit {
   onSubmit(): void {
     if (!this.modoEdicion || !this.puedeEditar || this.idEditando == null) return;
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (!window.confirm(`¿Desea guardar los cambios del pedido #${this.idEditando}?`)) return;
 
     const usuarioId = this.authService.getCurrentUser()?.idUsuario;
     if (!usuarioId) { this.error.set('No se encontró el usuario autenticado'); return; }
 
-    const value = this.form.value;
+    const value = this.form.getRawValue();
     const datos: Pedido = {
       fechaEntrega: value.fechaEntrega,
       direccionEntrega: value.direccionEntrega?.trim(),
       numeroEntrega: value.numeroEntrega?.trim() || undefined,
       notasEntrega: value.notasEntrega?.trim() || undefined,
+      productoDePedido: value.productoDePedido ?? '',
       idEstadoPedido: Number(value.idEstadoPedido),
       usuarioModif: usuarioId,
     };

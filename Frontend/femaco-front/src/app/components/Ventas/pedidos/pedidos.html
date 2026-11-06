@@ -71,7 +71,16 @@
                 <div class="form-section-heading form-group-wide">Información del pedido</div>
                 <div class="form-group form-group-wide"><label for="productoDePedido">Producto de
                         pedido</label><textarea id="productoDePedido" formControlName="productoDePedido"
-                        class="form-control" rows="2" readonly></textarea></div>
+                        class="form-control producto-pedido-textarea" rows="4" readonly></textarea>
+                    @if (modoEdicion && pedidoEditando()?.idVenta != null) {
+                    <p class="form-hint producto-pedido-hint">Para modificar los productos, abre la ventana de edición.
+                        Se consultarán los datos actuales de la venta asociada.</p>
+                    @if (puedeEditar) {
+                    <button type="button" class="btn btn-secondary btn-producto-pedido-compact" (click)="editarProductosPedido()"
+                        [disabled]="mostrandoEditorProductos() || cargandoVentaProductos()">Editar productos del pedido</button>
+                    }
+                    }
+                </div>
                 <div class="form-group"><label for="idEstadoPedido">Estado *</label><select id="idEstadoPedido"
                         formControlName="idEstadoPedido" class="form-control">
                         <option [ngValue]="null">Seleccione estado</option>@for (estado of estados(); track
@@ -178,6 +187,83 @@
         </div>
         }
     </div>
+
+    @if (mostrandoEditorProductos()) {
+    <div class="venta-modal-backdrop" (click)="cerrarEditorProductos()">
+        <div class="venta-modal editor-productos-modal" role="dialog" aria-modal="true"
+            aria-labelledby="editorProductosTitle" (click)="$event.stopPropagation()">
+            <div class="venta-consultada-header">
+                <div>
+                    <h3 id="editorProductosTitle" class="card-title">Actualizar productos del pedido</h3>
+                    <p class="form-hint">Pedido #{{ pedidoEditando()?.idPedido }} · Venta #{{ pedidoEditando()?.idVenta
+                        }}</p>
+                </div>
+                <button type="button" class="venta-modal-close" (click)="cerrarEditorProductos()"
+                    [disabled]="cargandoVentaProductos()" aria-label="Cerrar edición de productos" title="Cerrar">
+                    &times;</button>
+            </div>
+            <p class="form-hint editor-productos-instruccion">Las cantidades inician con las de la venta actual. Modifica solo las cantidades que
+                deseas incluir en el pedido; coloca 0 para quitar un artículo. Estos cambios se aplicarán al formulario
+                y se enviarán junto con el pedido al pulsar «Actualizar pedido».</p>
+            @if (errorProductosPedido()) {
+            <div class="alert alert-error" role="alert">{{ errorProductosPedido() }}</div>
+            }
+            @if (cargandoVentaProductos()) {
+            <p class="loading">Consultando la venta asociada...</p>
+            } @else if (ventaProductos(); as consulta) {
+            <div class="pedido-metadata">
+                <span>Fecha: <strong>{{ consulta.venta.fecha | date:'dd/MM/yyyy' }}</strong></span>
+                <span>Factura: <strong>{{ consulta.venta.numeroFactura || '—' }}</strong></span>
+                <span>NIT cliente: <strong>{{ consulta.venta.idCliente | clieneNit }}</strong></span>
+                <span>Total venta: <strong>{{ consulta.venta.total ?? 0 | number:'1.2-2' }}</strong></span>
+            </div>
+            <div class="producto-actual-section">
+                <label for="productoPedidoActual">Productos actualmente guardados en el pedido</label>
+                <textarea id="productoPedidoActual" class="form-control producto-pedido-textarea" rows="4" readonly
+                    [value]="pedidoEditando()?.productoDePedido || 'Sin productos registrados'"></textarea>
+            </div>
+            @if (detallesProductosPedido().length) {
+            <div class="table-responsive">
+                <table class="crud-table venta-detalles-table editor-productos-table">
+                    <thead>
+                        <tr>
+                            <th>ID artículo</th>
+                            <th>Artículo</th>
+                            <th>Cantidad en venta</th>
+                            <th>Cantidad en pedido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of detallesProductosPedido(); track item.detalle.idVentaDetalle ?? $index) {
+                        <tr>
+                            <td>{{ item.detalle.idArticulo ?? '—' }}</td>
+                            <td>{{ item.detalle.idArticulo | articuloNombre }}</td>
+                            <td>{{ item.detalle.cantidad | number:'1.0-2' }}</td>
+                            <td><input type="number" min="0" [max]="item.detalle.cantidad" step="0.01"
+                                    class="form-control cantidad-producto-input" [value]="item.cantidad"
+                                    (input)="actualizarCantidadProductoPedido($index, $event)"
+                                    [disabled]="cargandoVentaProductos()" [attr.aria-label]="'Cantidad para ' + (item.detalle.idArticulo | articuloNombre)" />
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            } @else {
+            <p class="empty">La venta no tiene artículos registrados.</p>
+            }
+            <div class="form-actions editor-productos-actions">
+                <button type="button" class="btn btn-secondary" (click)="cerrarEditorProductos()"
+                [disabled]="cargandoVentaProductos()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="aplicarProductosPedido()"
+                [disabled]="cargandoVentaProductos() || !ventaProductos()">
+                Aplicar al formulario
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+    }
 
     @if (cargandoVenta()) {
     <div class="venta-modal-backdrop">
